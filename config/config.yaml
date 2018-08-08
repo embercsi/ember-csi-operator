@@ -1,0 +1,3 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+projectName: ember-csi-operator

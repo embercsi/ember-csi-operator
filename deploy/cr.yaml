@@ -1,0 +1,4 @@
+apiVersion: "ember-csi.io/v1alpha1"
+kind: "EmberCSI"
+metadata:
+  name: "example"
