@@ -25,6 +25,8 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
 	case *v1alpha1.EmberCSI:
 
+		embercsi := o
+
 		// Ignore the delete event since the garbage collector will clean up all secondary resources for the CR
 		// All secondary resources must have the CR set as their OwnerReference for this to be the case
 		if event.Deleted {
@@ -36,13 +38,35 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 			logrus.Errorf("Failed to create busybox pod : %v", err)
 			return err
 		}
+
+		// Create the Controller StatefulSet if it doesn't exist
+		ss := statefulsetForEmberCSI(embercsi)
+		err := sdk.Create(ss)
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create statefulset: %v", err)
+		}
+
+		// Ensure the statefulset size is the same as the spec
+		err = sdk.Get(ss)
+		if err != nil {
+			return fmt.Errorf("failed to get StatefulSet: %v", err)
+		}
+		size := embercsi.Spec.Size
+		if *ss.Spec.Replicas != size {
+			ss.Spec.Replicas = &size
+			err = sdk.Update(ss)
+			if err != nil {
+				return fmt.Errorf("failed to update StatefulSet: %v", err)
+			}
+		}
+
 	}
 	return nil
 }
 
 // statefulsetForEmberCSI returns a EmberCSI StatefulSet object
-func statefulsetForEmberCSI(cr *v1alpha1.EmberCSI) *appsv1.StatefulSet {
-	ls := labelsForEmberCSI(cr.Name)
+func statefulsetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
+	ls := labelsForEmberCSI(ecsi.Name)
 
 	// There *must* only be one replica
 	replicas := 1
@@ -53,8 +77,8 @@ func statefulsetForEmberCSI(cr *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 			Kind:       "StatefulSet",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-controller", cr.Name),
-			Namespace: cr.Namespace,
+			Name:      fmt.Sprintf("%s-controller", ecsi.Name),
+			Namespace: ecsi.Namespace,
 			Labels:	   ls,
 		},
 		Spec: appsv1.StatefulSetSpec{
@@ -78,46 +102,62 @@ func statefulsetForEmberCSI(cr *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 					},{
 						Image:   "akrog/ember-csi:master",
 						Name:    "ember-csi-driver",
-						Env: []v1.EnvVar{{
-							Name: "PYTHONUNBUFFERED",
-							Value: "0",
-						},{
-							Name: "CSI_ENDPOINT",
-							Value: "unix:///csi-data/csi.sock",
-						}.{
-							Name: "CSI_MODE",
-							Value: "controller",
-						}.{
-							Name: "X_CSI_PERSISTENCE_CONFIG",
-							Value: '{"storage":"crd"}',
-						}.{
-							Name: "X_CSI_BACKEND_CONFIG",
-							ValueFrom: &v1.EnvVarSource{
-								SecretKeyRef: &v1.SecretKeySelector{
-									LocalObjectReference: v1.LocalObjectReference{Name: secretName},
-									Key:  "csi_backend_config",
+						Env: []v1.EnvVar{
+							{
+								Name: "PYTHONUNBUFFERED",
+								Value: "0",
+							},{
+								Name: "CSI_ENDPOINT",
+								Value: "unix:///csi-data/csi.sock",
+							}.{
+								Name: "CSI_MODE",
+								Value: "controller",
+							}.{
+								Name: "X_CSI_PERSISTENCE_CONFIG",
+								Value: '{"storage":"crd"}',
+							}.{
+								Name: "X_CSI_BACKEND_CONFIG",
+								ValueFrom: &v1.EnvVarSource{
+									SecretKeyRef: &v1.SecretKeySelector{
+										LocalObjectReference: v1.LocalObjectReference{Name: secretName},
+										Key:  "csi_backend_config",
+									},
 								},
 							},
-						}},
-						VolumeMounts: []v1.VolumeMount{{
-							MountPath: "/csi-data", Name: "socket-dir",
-						},{
-							MountPath: "/dev", Name: "dev-dir",
-						},{
-							MountPath: "/etc/localtime", Name: "localtime",
-						}},
-					}},
-					Volumes: []v1.Volume{{
-						Name: "docket-dir",
-						VolumeSource: v1.VolumeSource{
-							EmptyDir: &v1.EmptyDirVolumeSource{},
+						},
+						VolumeMounts: []v1.VolumeMount{
+							{
+								MountPath: "/csi-data", Name: "socket-dir",
+							},{
+								MountPath: "/dev", Name: "dev-dir",
+							},{
+								MountPath: "/etc/localtime", Name: "localtime",
+							}
 						},
 					}},
+					Volumes: []v1.Volume{
+						{
+							Name: "socket-dir",
+							VolumeSource: v1.VolumeSource{
+								EmptyDir: &v1.EmptyDirVolumeSource{},
+							},
+						},{
+							Name: "dev-dir",
+							VolumeSource: v1.VolumeSource{
+								HostPath: &v1.HostPathVolumeSource{},
+							},
+						},{
+							Name: "localtime",
+							VolumeSource: v1.VolumeSource{
+								HostPath: &v1.HostPathVolumeSource{},
+							},
+						}
+					},
 				},
 			},
 		},
 	}
-	addOwnerRefToObject(ss, asOwner(cr))
+	addOwnerRefToObject(ss, asOwner(ecsi))
 	return ss
 }
 
@@ -133,13 +173,13 @@ func addOwnerRefToObject(obj metav1.Object, ownerRef metav1.OwnerReference) {
 }
 
 // asOwner returns an OwnerReference set as the EmberCSI CR
-func asOwner(cr *v1alpha1.EmberCSI) metav1.OwnerReference {
+func asOwner(ecsi *v1alpha1.EmberCSI) metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
-		APIVersion: cr.APIVersion,
-		Kind:       cr.Kind,
-		Name:       cr.Name,
-		UID:        cr.UID,
+		APIVersion: ecsi.APIVersion,
+		Kind:       ecsi.Kind,
+		Name:       ecsi.Name,
+		UID:        ecsi.UID,
 		Controller: &trueVar,
 	}
 }
@@ -163,36 +203,140 @@ func getPodNames(pods []v1.Pod) []string {
 	return podNames
 }
 
-// newbusyBoxPod demonstrates how to create a busybox pod
-func newbusyBoxPod(cr *v1alpha1.EmberCSI) *corev1.Pod {
-	labels := map[string]string{
-		"app": "busy-box",
-	}
-	return &corev1.Pod{
+// serviceAccountForDS returns a ServiceAccount used by Ember CSI DaemonSet
+func serviceAccountForDS(ecsi *v1alpha1.EmberCSI) *appsv1.ServiceAccount {
+	dsa := &appsv1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
+			APIVersion: "apps/v1",
+			Kind:       "ServiceAccount",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "busy-box",
-			Namespace: cr.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				*metav1.NewControllerRef(cr, schema.GroupVersionKind{
-					Group:   v1alpha1.SchemeGroupVersion.Group,
-					Version: v1alpha1.SchemeGroupVersion.Version,
-					Kind:    "EmberCSI",
-				}),
-			},
-			Labels: labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
+                        Name:      fmt.Sprintf("%s-node-sa", ecsi.Name),
+                        Namespace: ecsi.Namespace,
 		},
 	}
+	return dsa
+}
+
+// daemonSetForEmberCSI returns a EmberCSI DaemonSet object
+func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
+	ls := labelsForEmberCSI(ecsi.Name)
+
+	ds := &appsv1.DaemonSet{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "DaemonSet",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+                        Name:      fmt.Sprintf("%s-node", ecsi.Name),
+                        Namespace: ecsi.Namespace,
+			Labels:    ls,
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: ls,
+			},
+                        Template: v1.PodTemplateSpec{
+                                ObjectMeta: metav1.ObjectMeta{
+                                        Labels: ls,
+                                },
+                                Spec: v1.PodSpec{
+                                        Containers: []v1.Container{{
+                                                Image:   "quay.io/k8scsi/driver-registrar:v0.3.0",
+                                                Name:    "driver-registrar",
+                                                Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
+                                        },{
+                                                Image:   "akrog/ember-csi:master",
+                                                Name:    "ember-csi-driver",
+                                                Env: []v1.EnvVar{
+                                                        {
+                                                                Name: "PYTHONUNBUFFERED",
+                                                                Value: "0",
+                                                        },{
+                                                                Name: "CSI_ENDPOINT",
+                                                                Value: "unix:///csi-data/csi.sock",
+                                                        }.{
+                                                                Name: "CSI_MODE",
+                                                                Value: "node",
+                                                        }.{
+                                                                Name: "X_CSI_PERSISTENCE_CONFIG",
+                                                                Value: '{"storage":"crd"}',
+                                                        }.{
+                                                                Name: "X_CSI_BACKEND_CONFIG",
+                                                                ValueFrom: &v1.EnvVarSource{
+                                                                        SecretKeyRef: &v1.SecretKeySelector{
+                                                                                LocalObjectReference: v1.LocalObjectReference{Name: secretName},
+                                                                                Key:  "csi_backend_config",
+                                                                        },
+                                                                },
+                                                        },{
+                                                                Name: "X_CSI_NODE_ID",
+								ValueFrom:  &v1.EnvVarSource{
+									FieldRef: &v1.ObjectFieldSelector{
+										FieldPath: "status.podIP",
+									}
+								},
+							},
+                                                },
+                                                VolumeMounts: []v1.VolumeMount{
+                                                        {
+                                                                MountPath: "/csi-data", Name: "socket-dir",
+                                                        },{
+                                                                MountPath: "/dev", Name: "dev-dir",
+                                                        },{
+                                                                MountPath: "/etc/localtime", Name: "localtime",
+                                                        },{
+                                                                MountPath: "/var/lib/origin/openshift.local.volumes", Name: "mountpoint-dir",
+                                                        },{
+                                                                MountPath: "/var/lib/kubelet/device-plugins", Name: "kubelet-socket-dir",
+                                                        },
+                                                },
+                                        }},
+                                        Volumes: []v1.Volume{
+                                                {
+                                                        Name: "socket-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/plugins/io.ember-csi",
+									Type: HostPathDirectoryOrCreate
+								},
+                                                        },
+						},{
+                                                        Name: "mountpoint-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/var/lib/origin/openshift.local.volumes",
+								},
+                                                        },
+                                                },{
+                                                        Name: "kubelet-socket-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/var/lib/kubelet/device-plugins",
+								},
+                                                        },
+                                                },{
+                                                        Name: "dev-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/dev",
+								},
+                                                        },
+                                                },{
+                                                        Name: "localtime",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/etc/localtime",
+								},
+                                                        },
+                                                },
+					}
+				},
+			},
+
+		},
+	}
+
+        addOwnerRefToObject(ds, asOwner(ecsi))
+	return ds
 }
