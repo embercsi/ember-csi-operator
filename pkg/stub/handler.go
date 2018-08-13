@@ -5,13 +5,14 @@ import (
 
 	"github.com/kirankt/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 
+	"fmt"
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+// 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func NewHandler() sdk.Handler {
@@ -33,11 +34,7 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 			return nil
 		}
 
-		err := sdk.Create(newbusyBoxPod(o))
-		if err != nil && !errors.IsAlreadyExists(err) {
-			logrus.Errorf("Failed to create busybox pod : %v", err)
-			return err
-		}
+		logrus.Infof("Creating StatefulSet for Ember CSI Controller")
 
 		// Create the Controller StatefulSet if it doesn't exist
 		ss := statefulsetForEmberCSI(embercsi)
@@ -53,7 +50,7 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 		}
 		size := embercsi.Spec.Size
 		if *ss.Spec.Replicas != size {
-			ss.Spec.Replicas = &size
+			*ss.Spec.Replicas = size
 			err = sdk.Update(ss)
 			if err != nil {
 				return fmt.Errorf("failed to update StatefulSet: %v", err)
@@ -69,7 +66,9 @@ func statefulsetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	ls := labelsForEmberCSI(ecsi.Name)
 
 	// There *must* only be one replica
-	replicas := 1
+	var replicas int32 = 1
+
+	secretName := ecsi.Spec.Secret
 
 	ss := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -109,30 +108,35 @@ func statefulsetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 							},{
 								Name: "CSI_ENDPOINT",
 								Value: "unix:///csi-data/csi.sock",
-							}.{
+							},{
 								Name: "CSI_MODE",
 								Value: "controller",
-							}.{
+							},{
 								Name: "X_CSI_PERSISTENCE_CONFIG",
-								Value: '{"storage":"crd"}',
-							}.{
+								Value: "{\"storage\":\"crd\"}",
+							},{
 								Name: "X_CSI_BACKEND_CONFIG",
 								ValueFrom: &v1.EnvVarSource{
 									SecretKeyRef: &v1.SecretKeySelector{
 										LocalObjectReference: v1.LocalObjectReference{Name: secretName},
-										Key:  "csi_backend_config",
+										Key:  "backend_config",
 									},
 								},
+							},{
+								Name: "X_CSI_BACKEND_CONFIG",
 							},
 						},
 						VolumeMounts: []v1.VolumeMount{
 							{
-								MountPath: "/csi-data", Name: "socket-dir",
+								MountPath: "/csi-data", 
+								Name: "socket-dir",
 							},{
-								MountPath: "/dev", Name: "dev-dir",
+								MountPath: "/dev", 
+								Name: "dev-dir",
 							},{
-								MountPath: "/etc/localtime", Name: "localtime",
-							}
+								MountPath: "/etc/localtime", 
+								Name: "localtime",
+							},
 						},
 					}},
 					Volumes: []v1.Volume{
@@ -151,7 +155,7 @@ func statefulsetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 							VolumeSource: v1.VolumeSource{
 								HostPath: &v1.HostPathVolumeSource{},
 							},
-						}
+						},
 					},
 				},
 			},
@@ -204,8 +208,8 @@ func getPodNames(pods []v1.Pod) []string {
 }
 
 // serviceAccountForDS returns a ServiceAccount used by Ember CSI DaemonSet
-func serviceAccountForDS(ecsi *v1alpha1.EmberCSI) *appsv1.ServiceAccount {
-	dsa := &appsv1.ServiceAccount{
+func serviceAccountForDS(ecsi *v1alpha1.EmberCSI) *v1.ServiceAccount {
+	dsa := &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "apps/v1",
 			Kind:       "ServiceAccount",
@@ -221,6 +225,10 @@ func serviceAccountForDS(ecsi *v1alpha1.EmberCSI) *appsv1.ServiceAccount {
 // daemonSetForEmberCSI returns a EmberCSI DaemonSet object
 func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 	ls := labelsForEmberCSI(ecsi.Name)
+
+	var dirOrCreate v1.HostPathType = v1.HostPathDirectoryOrCreate
+
+	secretName := ecsi.Spec.Secret
 
 	ds := &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -255,18 +263,18 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
                                                         },{
                                                                 Name: "CSI_ENDPOINT",
                                                                 Value: "unix:///csi-data/csi.sock",
-                                                        }.{
+                                                        },{
                                                                 Name: "CSI_MODE",
                                                                 Value: "node",
-                                                        }.{
+                                                        },{
                                                                 Name: "X_CSI_PERSISTENCE_CONFIG",
-                                                                Value: '{"storage":"crd"}',
-                                                        }.{
+                                                                Value: "{\"storage\":\"crd\"}",
+                                                        },{
                                                                 Name: "X_CSI_BACKEND_CONFIG",
                                                                 ValueFrom: &v1.EnvVarSource{
                                                                         SecretKeyRef: &v1.SecretKeySelector{
                                                                                 LocalObjectReference: v1.LocalObjectReference{Name: secretName},
-                                                                                Key:  "csi_backend_config",
+                                                                                Key:  "backend_config",
                                                                         },
                                                                 },
                                                         },{
@@ -274,7 +282,7 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 								ValueFrom:  &v1.EnvVarSource{
 									FieldRef: &v1.ObjectFieldSelector{
 										FieldPath: "status.podIP",
-									}
+									},
 								},
 							},
                                                 },
@@ -293,12 +301,12 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
                                                 },
                                         }},
                                         Volumes: []v1.Volume{
-                                                {
+						{
                                                         Name: "socket-dir",
                                                         VolumeSource: v1.VolumeSource{
                                                                 HostPath: &v1.HostPathVolumeSource{
 									Path: "/var/lib/kubelet/plugins/io.ember-csi",
-									Type: HostPathDirectoryOrCreate
+									Type: &dirOrCreate,
 								},
                                                         },
 						},{
@@ -330,7 +338,7 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 								},
                                                         },
                                                 },
-					}
+					},
 				},
 			},
 
