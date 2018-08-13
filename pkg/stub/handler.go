@@ -52,28 +52,28 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 		// Create ClusterRole for Controller
 		crc := clusterRoleForController(ecsi)
 		err = sdk.Create(crc)
-		if err != nil ) {
+		if err != nil {
 			return fmt.Errorf("failed to create clusterrole for controller: %v", err)
 		}
 
 		// Create ClusterRole for Node(s)
 		crn := clusterRoleForNode(ecsi)
 		err = sdk.Create(crn)
-		if err != nil ) {
+		if err != nil {
 			return fmt.Errorf("failed to create clusterrole for node: %v", err)
 		}
 
 		// Create RoleBindings for Controller
-		crbc := clusterRoleBindingsForController(ecsi)
+		crbc := clusterRoleBindingForController(ecsi)
 		err = sdk.Create(crbc)
-		if err != nil ) {
+		if err != nil {
 			return fmt.Errorf("failed to create clusterrole for controller: %v", err)
 		}
 
 		// Create RoleBindings for Node(s)
-		crbn := clusterRoleBindingsForNode(ecsi)
+		crbn := clusterRoleBindingForNode(ecsi)
 		err = sdk.Create(crbn)
-		if err != nil ) {
+		if err != nil {
 			return fmt.Errorf("failed to create clusterrole for node: %v", err)
 		}
 
@@ -101,7 +101,7 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 
 		logrus.Infof("Creating DaemonSet for Ember CSI Nodes")
 		ds := daemonSetForEmberCSI(ecsi)
-		err := sdk.Create(ds)
+		err = sdk.Create(ds)
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			return fmt.Errorf("failed to create node daemonset: %v", err)
 		}
