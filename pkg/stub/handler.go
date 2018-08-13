@@ -64,15 +64,15 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 		}
 
 		// Create RoleBindings for Controller
-		crc := clusterRoleBindingsForController(ecsi)
-		err = sdk.Create(crc)
+		crbc := clusterRoleBindingsForController(ecsi)
+		err = sdk.Create(crbc)
 		if err != nil ) {
 			return fmt.Errorf("failed to create clusterrole for controller: %v", err)
 		}
 
 		// Create RoleBindings for Node(s)
-		crn := clusterRoleBindingsForNode(ecsi)
-		err = sdk.Create(crn)
+		crbn := clusterRoleBindingsForNode(ecsi)
+		err = sdk.Create(crbn)
 		if err != nil ) {
 			return fmt.Errorf("failed to create clusterrole for node: %v", err)
 		}
