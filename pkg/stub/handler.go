@@ -9,6 +9,7 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +27,7 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
 	case *v1alpha1.EmberCSI:
 
-		embercsi := o
+		ecsi := o
 
 		// Ignore the delete event since the garbage collector will clean up all secondary resources for the CR
 		// All secondary resources must have the CR set as their OwnerReference for this to be the case
@@ -34,21 +35,62 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 			return nil
 		}
 
-		logrus.Infof("Creating StatefulSet for Ember CSI Controller")
-
-		// Create the Controller StatefulSet if it doesn't exist
-		ss := statefulsetForEmberCSI(embercsi)
-		err := sdk.Create(ss)
+		logrus.Infof("Creating Ember CSI Service Account for Controller")
+		ssa := serviceAccountForSS(ecsi)
+		err := sdk.Create(ssa)
 		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return fmt.Errorf("failed to create statefulset: %v", err)
+			return fmt.Errorf("failed to create controller serviceaccount: %v", err)
 		}
 
-		// Ensure the statefulset size is the same as the spec
+		logrus.Infof("Creating Ember CSI Service Account for Controller")
+		dsa := serviceAccountForDS(ecsi)
+		err = sdk.Create(dsa)
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create controller serviceaccount: %v", err)
+		}
+
+		// Create ClusterRole for Controller
+		crc := clusterRoleForController(ecsi)
+		err = sdk.Create(crc)
+		if err != nil ) {
+			return fmt.Errorf("failed to create clusterrole for controller: %v", err)
+		}
+
+		// Create ClusterRole for Node(s)
+		crn := clusterRoleForNode(ecsi)
+		err = sdk.Create(crn)
+		if err != nil ) {
+			return fmt.Errorf("failed to create clusterrole for node: %v", err)
+		}
+
+		// Create RoleBindings for Controller
+		crc := clusterRoleBindingsForController(ecsi)
+		err = sdk.Create(crc)
+		if err != nil ) {
+			return fmt.Errorf("failed to create clusterrole for controller: %v", err)
+		}
+
+		// Create RoleBindings for Node(s)
+		crn := clusterRoleBindingsForNode(ecsi)
+		err = sdk.Create(crn)
+		if err != nil ) {
+			return fmt.Errorf("failed to create clusterrole for node: %v", err)
+		}
+
+		logrus.Infof("Creating StatefulSet for Ember CSI Controller")
+		// Create the Controller StatefulSet if it doesn't exist
+		ss := statefulSetForEmberCSI(ecsi)
+		err = sdk.Create(ss)
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create controller statefulset: %v", err)
+		}
+
+		// Ensure the StatefulSet size is the same as the spec
 		err = sdk.Get(ss)
 		if err != nil {
 			return fmt.Errorf("failed to get StatefulSet: %v", err)
 		}
-		size := embercsi.Spec.Size
+		size := ecsi.Spec.Size
 		if *ss.Spec.Replicas != size {
 			*ss.Spec.Replicas = size
 			err = sdk.Update(ss)
@@ -57,12 +99,20 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 			}
 		}
 
+		logrus.Infof("Creating DaemonSet for Ember CSI Nodes")
+		ds := daemonSetForEmberCSI(ecsi)
+		err := sdk.Create(ds)
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create node daemonset: %v", err)
+		}
+
+
 	}
 	return nil
 }
 
-// statefulsetForEmberCSI returns a EmberCSI StatefulSet object
-func statefulsetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
+// statefulSetForEmberCSI returns a EmberCSI StatefulSet object
+func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	ls := labelsForEmberCSI(ecsi.Name)
 
 	// There *must* only be one replica
@@ -207,7 +257,177 @@ func getPodNames(pods []v1.Pod) []string {
 	return podNames
 }
 
-// serviceAccountForDS returns a ServiceAccount used by Ember CSI DaemonSet
+// clusterRoleBindingForController returns a ClusterRoleBinding used by Ember CSI Controller
+func clusterRoleBindingForController(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRoleBinding {
+	roleBinding := &rbacv1.ClusterRoleBinding{
+                TypeMeta: metav1.TypeMeta{
+                        APIVersion: "rbac.authorization.k8s.io/v1",
+                        Kind:       "ClusterRoleBinding",
+                },
+		ObjectMeta: metav1.ObjectMeta{
+                        Name:      fmt.Sprintf("%s-controller-cr", ecsi.Name),
+                        Namespace: ecsi.Namespace,
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+                        Name:      fmt.Sprintf("%s-controller-cr", ecsi.Name),
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
+	roleBinding.Subjects = append(roleBinding.Subjects, rbacv1.Subject{
+		Kind:      "ServiceAccount",
+		Name:      fmt.Sprintf("%s-controller-ca", ecsi.Name),
+		Namespace: ecsi.Namespace,
+	})
+
+	return roleBinding
+}
+
+// clusterRoleBindingForNode returns a ClusterRoleBinding used by Ember CSI Node
+func clusterRoleBindingForNode(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRoleBinding {
+	roleBinding := &rbacv1.ClusterRoleBinding{
+                TypeMeta: metav1.TypeMeta{
+                        APIVersion: "rbac.authorization.k8s.io/v1",
+                        Kind:       "ClusterRoleBinding",
+                },
+		ObjectMeta: metav1.ObjectMeta{
+                        Name:      fmt.Sprintf("%s-node-cr", ecsi.Name),
+                        Namespace: ecsi.Namespace,
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+                        Name:      fmt.Sprintf("%s-node-cr", ecsi.Name),
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
+	roleBinding.Subjects = append(roleBinding.Subjects, rbacv1.Subject{
+		Kind:      "ServiceAccount",
+		Name:      fmt.Sprintf("%s-node-ca", ecsi.Name),
+		Namespace: ecsi.Namespace,
+	})
+
+	return roleBinding
+}
+
+// clusterRoleForNode returns a ClusterRole used by Ember CSI Node
+func clusterRoleForNode(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRole {
+	role := &rbacv1.ClusterRole {
+                TypeMeta: metav1.TypeMeta{
+                        APIVersion: "rbac.authorization.k8s.io/v1",
+                        Kind:       "ClusterRole",
+                },
+                ObjectMeta: metav1.ObjectMeta{
+                        Name:      fmt.Sprintf("%s-node-cr", ecsi.Name),
+                        Namespace: ecsi.Namespace,
+                },
+	}
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{"ember-csi.io"},
+                Resources: []string{"*"},
+                Verbs:     []string{"*"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{"apiextensions.k8s.io"},
+                Resources: []string{"customresourcedefinitions"},
+                Verbs:     []string{"list", "create"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{""},
+                Resources: []string{"persistentvolumes"},
+                Verbs:     []string{"get", "list", "watch", "update"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{""},
+                Resources: []string{"nodes"},
+                Verbs:     []string{"get", "list", "watch", "update"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{"storage.k8s.io"},
+                Resources: []string{"volumeattachments"},
+                Verbs:     []string{"get", "list", "watch", "update"},
+        })
+
+	return role
+
+}
+
+// clusterRoleForController returns a ClusterRole used by Ember CSI Controller
+func clusterRoleForController(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRole {
+	role := &rbacv1.ClusterRole {
+                TypeMeta: metav1.TypeMeta{
+                        APIVersion: "rbac.authorization.k8s.io/v1",
+                        Kind:       "ClusterRole",
+                },
+                ObjectMeta: metav1.ObjectMeta{
+                        Name:      fmt.Sprintf("%s-controller-cr", ecsi.Name),
+                        Namespace: ecsi.Namespace,
+                },
+	}
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{"ember-csi.io"},
+                Resources: []string{"*"},
+                Verbs:     []string{"*"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{"apiextensions.k8s.io"},
+                Resources: []string{"customresourcedefinitions"},
+                Verbs:     []string{"list", "create"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{""},
+                Resources: []string{"persistentvolumes"},
+                Verbs:     []string{"get", "list", "create", "delete", "watch", "update"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{""},
+                Resources: []string{"persistentvolumeclaims"},
+                Verbs:     []string{"get", "list", "watch", "update"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{""},
+                Resources: []string{"secrets"},
+                Verbs:     []string{"list", "create"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{""},
+                Resources: []string{"nodes"},
+                Verbs:     []string{"get", "list", "watch"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{"storage.k8s.io"},
+                Resources: []string{"volumeattachments"},
+                Verbs:     []string{"get", "list", "watch", "update"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{"storage.k8s.io"},
+                Resources: []string{"storageclasses"},
+                Verbs:     []string{"get", "list", "watch"},
+        })
+        role.Rules = append(role.Rules, rbacv1.PolicyRule{
+                APIGroups: []string{""},
+                Resources: []string{"events"},
+                Verbs:     []string{"list", "watch", "create", "update", "patch"},
+        })
+
+	return role
+}
+
+// serviceAccountForSS returns a ServiceAccount used by Ember CSI Controller
+func serviceAccountForSS(ecsi *v1alpha1.EmberCSI) *v1.ServiceAccount {
+	ssa := &v1.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "ServiceAccount",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+                        Name:      fmt.Sprintf("%s-controller-sa", ecsi.Name),
+                        Namespace: ecsi.Namespace,
+		},
+	}
+	return ssa
+}
+
+// serviceAccountForDS returns a ServiceAccount used by Ember CSI Node
 func serviceAccountForDS(ecsi *v1alpha1.EmberCSI) *v1.ServiceAccount {
 	dsa := &v1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
