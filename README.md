@@ -18,6 +18,9 @@ oc adm policy add-scc-to-user privileged -n csi -z csi-node-sa
 # Kubernetes
 kubectl create namespace csi
 
+# Create configmap which the CR will use
+kubectl -n csi create configmap ceph-configs  --from-file=/path/to/ceph.conf --from-file=/path/to/keyring
+
 # Deploy the ember-csi-operator
 $ kubectl create -f deploy/rbac.yaml
 $ kubectl create -f deploy/crd.yaml
