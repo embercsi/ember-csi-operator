@@ -28,7 +28,7 @@ $ kubectl create -f deploy/operator.yaml
 # The CR will create a statefulset and daemonset 
 $ kubectl create -f deploy/cr.yaml
 
-# Verify that the busybox pod is created
+# Verify that the pods are created
 $ kubectl get pods -n csi
 NAME            READY     STATUS    RESTARTS   AGE
 ember-csi-operator-786769bdc7-dfl4l   1/1       Running   0          11m
