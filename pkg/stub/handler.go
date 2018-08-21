@@ -96,6 +96,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	backendConfig 		:= ecsi.Spec.Config.BackendConfig
 	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
 	configMapName		:= ecsi.Spec.ConfigMap
+	trueVar 		:= true
 
 	ss := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -121,6 +122,9 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 						Name:    "external-attacher",
 						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher:v0.3.0", AttacherVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
+						SecurityContext: &v1.SecurityContext{
+							Privileged: &trueVar,
+						},
 						VolumeMounts: []v1.VolumeMount{
 							{
 								MountPath: "/csi-data", 
@@ -137,6 +141,9 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 						Name:    "external-provisioner",
 						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner:v0.3.0", ProvisionerVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", "--provisioner=io.ember-csi"},
+						SecurityContext: &v1.SecurityContext{
+							Privileged: &trueVar,
+						},
 						VolumeMounts: []v1.VolumeMount{
 							{
 								MountPath: "/csi-data", 
@@ -152,6 +159,9 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 					},{
 						Name:    "ember-csi-driver",
 						Image:   fmt.Sprintf("%s:%s", "akrog/ember-csi:master", DriverVersion),
+						SecurityContext: &v1.SecurityContext{
+							Privileged: &trueVar,
+						},
 						Env: []v1.EnvVar{
 							{
 								Name: "PYTHONUNBUFFERED",
@@ -174,8 +184,6 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 										Key:  "backend_config",
 									},
 								},*/
-							},{
-								Name: "X_CSI_BACKEND_CONFIG",
 							},
 						},
 						VolumeMounts: []v1.VolumeMount{
