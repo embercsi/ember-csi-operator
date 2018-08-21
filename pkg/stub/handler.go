@@ -121,7 +121,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 					ServiceAccountName: ControllerSA,
 					Containers: []v1.Container{{
 						Name:    "external-attacher",
-						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher:v0.3.0", AttacherVersion),
+						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher", AttacherVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
@@ -140,7 +140,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 						},
 					},{
 						Name:    "external-provisioner",
-						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner:v0.3.0", ProvisionerVersion),
+						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner", ProvisionerVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", "--provisioner=io.ember-csi"},
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
