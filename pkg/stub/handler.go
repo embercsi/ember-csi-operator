@@ -118,6 +118,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 					Labels: ls,
 				},
 				Spec: v1.PodSpec{
+					ServiceAccountName: ControllerSA,
 					Containers: []v1.Container{{
 						Name:    "external-attacher",
 						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher:v0.3.0", AttacherVersion),
@@ -158,7 +159,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 						},
 					},{
 						Name:    "ember-csi-driver",
-						Image:   fmt.Sprintf("%s:%s", "akrog/ember-csi:master", DriverVersion),
+						Image:   fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
 						},
