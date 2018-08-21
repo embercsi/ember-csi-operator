@@ -355,7 +355,7 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 							},
 						},{
 							Name:		"ember-csi-driver",
-							Image:		fmt.Sprintf("%s:%s", "akrog/ember-csi:master", DriverVersion),
+							Image:		fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
 							ImagePullPolicy: v1.PullAlways,
 							SecurityContext: &v1.SecurityContext{
 								Privileged: 		  &trueVar,
