@@ -1,4 +1,9 @@
 apiVersion: "ember-csi.io/v1alpha1"
 kind: "EmberCSI"
 metadata:
-  name: "example"
+  name: "ember-csi-test"
+spec:
+  size: 1
+  config:
+    backendConfig: '{"volume_backend_name": "rbd", "volume_driver": "cinder.volume.drivers.rbd.RBDDriver", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
+    persistenceConfig: '{"storage":"crd"}'

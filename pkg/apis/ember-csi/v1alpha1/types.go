@@ -23,12 +23,18 @@ type EmberCSI struct {
 
 type EmberCSISpec struct {
 	// Size is the size of the Controller StatefulSet
-	Size 		int32  `json:"size"`
-	// ConfigMap to backend specific secrets
-	ConfigMap 	string `json:"configMap"`
-	Secret 		string `json:"secret"`
+	Size 		int32  		`json:"size"`
+	Config		EmberCSIConfig	`json:"config"`
+	ConfigMap 	string 		`json:"configMap"`
 }
+
 type EmberCSIStatus struct {
-	// Nodes are the names of the EmberCSI pods
-	Nodes []string `json:"nodes"`
+	Phase string	`json:"phase"`
+}
+
+
+type EmberCSIConfig struct {
+	BackendConfig 		string 		`json:"backendConfig"`
+	PersistenceConfig	string 		`json:"persistenceConfig"`
+//	EmberConfig		string 		`json:"emberConfig"`
 }

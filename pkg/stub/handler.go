@@ -9,7 +9,7 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+//	rbacv1 "k8s.io/api/rbac/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,58 +23,32 @@ func NewHandler() sdk.Handler {
 type Handler struct {
 }
 
+// Constants we'll reference throughout
+
+const (
+	// Node DaemonSet's ServiceAccount
+	NodeSA string = 	"csi-sa"
+	// Controller StatefulSet's ServiceAccount
+	ControllerSA string 	= "csi-sa"
+
+	// Image Versions
+	RegistrarVersion string   = "v0.3.0"
+	AttacherVersion string 	  = "v0.3.0"
+	ProvisionerVersion string = "v0.3.0"
+	DriverVersion string 	  = "master"
+)
+
 func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
 	case *v1alpha1.EmberCSI:
 
 		ecsi := o
+		var err error
 
 		// Ignore the delete event since the garbage collector will clean up all secondary resources for the CR
 		// All secondary resources must have the CR set as their OwnerReference for this to be the case
 		if event.Deleted {
 			return nil
-		}
-
-		logrus.Infof("Creating Ember CSI Service Account for Controller")
-		ssa := serviceAccountForSS(ecsi)
-		err := sdk.Create(ssa)
-		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return fmt.Errorf("failed to create controller serviceaccount: %v", err)
-		}
-
-		logrus.Infof("Creating Ember CSI Service Account for Controller")
-		dsa := serviceAccountForDS(ecsi)
-		err = sdk.Create(dsa)
-		if err != nil && !apierrors.IsAlreadyExists(err) {
-			return fmt.Errorf("failed to create controller serviceaccount: %v", err)
-		}
-
-		// Create ClusterRole for Controller
-		crc := clusterRoleForController(ecsi)
-		err = sdk.Create(crc)
-		if err != nil {
-			return fmt.Errorf("failed to create clusterrole for controller: %v", err)
-		}
-
-		// Create ClusterRole for Node(s)
-		crn := clusterRoleForNode(ecsi)
-		err = sdk.Create(crn)
-		if err != nil {
-			return fmt.Errorf("failed to create clusterrole for node: %v", err)
-		}
-
-		// Create RoleBindings for Controller
-		crbc := clusterRoleBindingForController(ecsi)
-		err = sdk.Create(crbc)
-		if err != nil {
-			return fmt.Errorf("failed to create clusterrole for controller: %v", err)
-		}
-
-		// Create RoleBindings for Node(s)
-		crbn := clusterRoleBindingForNode(ecsi)
-		err = sdk.Create(crbn)
-		if err != nil {
-			return fmt.Errorf("failed to create clusterrole for node: %v", err)
 		}
 
 		logrus.Infof("Creating StatefulSet for Ember CSI Controller")
@@ -118,7 +92,9 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	// There *must* only be one replica
 	var replicas int32 = 1
 
-	secretName := ecsi.Spec.Secret
+	//secretName := ecsi.Spec.Secret
+	backendConfig := ecsi.Spec.Config.BackendConfig
+	persistenceConfig := ecsi.Spec.Config.PersistenceConfig
 
 	ss := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -141,16 +117,40 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{{
-						Image:   "quay.io/k8scsi/csi-attacher:v0.3.0",
 						Name:    "external-attacher",
+						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher:v0.3.0", AttacherVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
+						VolumeMounts: []v1.VolumeMount{
+							{
+								MountPath: "/csi-data", 
+								Name: "socket-dir",
+							},{
+								MountPath: "/dev", 
+								Name: "dev-dir",
+							},{
+								MountPath: "/etc/localtime", 
+								Name: "localtime",
+							},
+						},
 					},{
-						Image:   "quay.io/k8scsi/csi-provisioner:v0.3.0",
 						Name:    "external-provisioner",
+						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner:v0.3.0", ProvisionerVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", "--provisioner=io.ember-csi"},
+						VolumeMounts: []v1.VolumeMount{
+							{
+								MountPath: "/csi-data", 
+								Name: "socket-dir",
+							},{
+								MountPath: "/dev", 
+								Name: "dev-dir",
+							},{
+								MountPath: "/etc/localtime", 
+								Name: "localtime",
+							},
+						},
 					},{
-						Image:   "akrog/ember-csi:master",
 						Name:    "ember-csi-driver",
+						Image:   fmt.Sprintf("%s:%s", "akrog/ember-csi:master", DriverVersion),
 						Env: []v1.EnvVar{
 							{
 								Name: "PYTHONUNBUFFERED",
@@ -163,15 +163,16 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 								Value: "controller",
 							},{
 								Name: "X_CSI_PERSISTENCE_CONFIG",
-								Value: "{\"storage\":\"crd\"}",
+								Value: persistenceConfig,
 							},{
 								Name: "X_CSI_BACKEND_CONFIG",
-								ValueFrom: &v1.EnvVarSource{
+								Value: backendConfig,
+								/* ValueFrom: &v1.EnvVarSource{
 									SecretKeyRef: &v1.SecretKeySelector{
 										LocalObjectReference: v1.LocalObjectReference{Name: secretName},
 										Key:  "backend_config",
 									},
-								},
+								},*/
 							},{
 								Name: "X_CSI_BACKEND_CONFIG",
 							},
@@ -195,17 +196,22 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 							VolumeSource: v1.VolumeSource{
 								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
-						},{
-							Name: "dev-dir",
-							VolumeSource: v1.VolumeSource{
-								HostPath: &v1.HostPathVolumeSource{},
-							},
-						},{
-							Name: "localtime",
-							VolumeSource: v1.VolumeSource{
-								HostPath: &v1.HostPathVolumeSource{},
-							},
-						},
+                                                },{
+                                                        Name: "dev-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/dev",
+                                                                },
+                                                        },
+                                                },{
+                                                        Name: "localtime",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/etc/localtime",
+                                                                },
+                                                        },
+                                                },
+
 					},
 				},
 			},
@@ -257,198 +263,17 @@ func getPodNames(pods []v1.Pod) []string {
 	return podNames
 }
 
-// clusterRoleBindingForController returns a ClusterRoleBinding used by Ember CSI Controller
-func clusterRoleBindingForController(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRoleBinding {
-	roleBinding := &rbacv1.ClusterRoleBinding{
-                TypeMeta: metav1.TypeMeta{
-                        APIVersion: "rbac.authorization.k8s.io/v1",
-                        Kind:       "ClusterRoleBinding",
-                },
-		ObjectMeta: metav1.ObjectMeta{
-                        Name:      fmt.Sprintf("%s-controller-cr", ecsi.Name),
-                        Namespace: ecsi.Namespace,
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-                        Name:      fmt.Sprintf("%s-controller-cr", ecsi.Name),
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-	}
-	roleBinding.Subjects = append(roleBinding.Subjects, rbacv1.Subject{
-		Kind:      "ServiceAccount",
-		Name:      fmt.Sprintf("%s-controller-ca", ecsi.Name),
-		Namespace: ecsi.Namespace,
-	})
-
-	return roleBinding
-}
-
-// clusterRoleBindingForNode returns a ClusterRoleBinding used by Ember CSI Node
-func clusterRoleBindingForNode(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRoleBinding {
-	roleBinding := &rbacv1.ClusterRoleBinding{
-                TypeMeta: metav1.TypeMeta{
-                        APIVersion: "rbac.authorization.k8s.io/v1",
-                        Kind:       "ClusterRoleBinding",
-                },
-		ObjectMeta: metav1.ObjectMeta{
-                        Name:      fmt.Sprintf("%s-node-cr", ecsi.Name),
-                        Namespace: ecsi.Namespace,
-		},
-		RoleRef: rbacv1.RoleRef{
-			Kind:     "ClusterRole",
-                        Name:      fmt.Sprintf("%s-node-cr", ecsi.Name),
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-	}
-	roleBinding.Subjects = append(roleBinding.Subjects, rbacv1.Subject{
-		Kind:      "ServiceAccount",
-		Name:      fmt.Sprintf("%s-node-ca", ecsi.Name),
-		Namespace: ecsi.Namespace,
-	})
-
-	return roleBinding
-}
-
-// clusterRoleForNode returns a ClusterRole used by Ember CSI Node
-func clusterRoleForNode(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRole {
-	role := &rbacv1.ClusterRole {
-                TypeMeta: metav1.TypeMeta{
-                        APIVersion: "rbac.authorization.k8s.io/v1",
-                        Kind:       "ClusterRole",
-                },
-                ObjectMeta: metav1.ObjectMeta{
-                        Name:      fmt.Sprintf("%s-node-cr", ecsi.Name),
-                        Namespace: ecsi.Namespace,
-                },
-	}
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{"ember-csi.io"},
-                Resources: []string{"*"},
-                Verbs:     []string{"*"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{"apiextensions.k8s.io"},
-                Resources: []string{"customresourcedefinitions"},
-                Verbs:     []string{"list", "create"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{""},
-                Resources: []string{"persistentvolumes"},
-                Verbs:     []string{"get", "list", "watch", "update"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{""},
-                Resources: []string{"nodes"},
-                Verbs:     []string{"get", "list", "watch", "update"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{"storage.k8s.io"},
-                Resources: []string{"volumeattachments"},
-                Verbs:     []string{"get", "list", "watch", "update"},
-        })
-
-	return role
-
-}
-
-// clusterRoleForController returns a ClusterRole used by Ember CSI Controller
-func clusterRoleForController(ecsi *v1alpha1.EmberCSI) *rbacv1.ClusterRole {
-	role := &rbacv1.ClusterRole {
-                TypeMeta: metav1.TypeMeta{
-                        APIVersion: "rbac.authorization.k8s.io/v1",
-                        Kind:       "ClusterRole",
-                },
-                ObjectMeta: metav1.ObjectMeta{
-                        Name:      fmt.Sprintf("%s-controller-cr", ecsi.Name),
-                        Namespace: ecsi.Namespace,
-                },
-	}
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{"ember-csi.io"},
-                Resources: []string{"*"},
-                Verbs:     []string{"*"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{"apiextensions.k8s.io"},
-                Resources: []string{"customresourcedefinitions"},
-                Verbs:     []string{"list", "create"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{""},
-                Resources: []string{"persistentvolumes"},
-                Verbs:     []string{"get", "list", "create", "delete", "watch", "update"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{""},
-                Resources: []string{"persistentvolumeclaims"},
-                Verbs:     []string{"get", "list", "watch", "update"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{""},
-                Resources: []string{"secrets"},
-                Verbs:     []string{"list", "create"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{""},
-                Resources: []string{"nodes"},
-                Verbs:     []string{"get", "list", "watch"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{"storage.k8s.io"},
-                Resources: []string{"volumeattachments"},
-                Verbs:     []string{"get", "list", "watch", "update"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{"storage.k8s.io"},
-                Resources: []string{"storageclasses"},
-                Verbs:     []string{"get", "list", "watch"},
-        })
-        role.Rules = append(role.Rules, rbacv1.PolicyRule{
-                APIGroups: []string{""},
-                Resources: []string{"events"},
-                Verbs:     []string{"list", "watch", "create", "update", "patch"},
-        })
-
-	return role
-}
-
-// serviceAccountForSS returns a ServiceAccount used by Ember CSI Controller
-func serviceAccountForSS(ecsi *v1alpha1.EmberCSI) *v1.ServiceAccount {
-	ssa := &v1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "ServiceAccount",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-                        Name:      fmt.Sprintf("%s-controller-sa", ecsi.Name),
-                        Namespace: ecsi.Namespace,
-		},
-	}
-	return ssa
-}
-
-// serviceAccountForDS returns a ServiceAccount used by Ember CSI Node
-func serviceAccountForDS(ecsi *v1alpha1.EmberCSI) *v1.ServiceAccount {
-	dsa := &v1.ServiceAccount{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "apps/v1",
-			Kind:       "ServiceAccount",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-                        Name:      fmt.Sprintf("%s-node-sa", ecsi.Name),
-                        Namespace: ecsi.Namespace,
-		},
-	}
-	return dsa
-}
-
 // daemonSetForEmberCSI returns a EmberCSI DaemonSet object
 func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 	ls := labelsForEmberCSI(ecsi.Name)
 
-	var dirOrCreate v1.HostPathType = v1.HostPathDirectoryOrCreate
-
-	secretName := ecsi.Spec.Secret
+	var dirOrCreate v1.HostPathType = 		v1.HostPathDirectoryOrCreate
+	var bidirectional v1.MountPropagationMode = 	v1.MountPropagationBidirectional
+	var hostToContainer v1.MountPropagationMode = 	v1.MountPropagationHostToContainer
+	//secretName := 	ecsi.Spec.Secret
+	backendConfig := ecsi.Spec.Config.BackendConfig
+	persistenceConfig := ecsi.Spec.Config.PersistenceConfig
+	trueVar := 	true
 
 	ds := &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -469,57 +294,108 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
                                         Labels: ls,
                                 },
                                 Spec: v1.PodSpec{
-                                        Containers: []v1.Container{{
-                                                Image:   "quay.io/k8scsi/driver-registrar:v0.3.0",
-                                                Name:    "driver-registrar",
-                                                Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
-                                        },{
-                                                Image:   "akrog/ember-csi:master",
-                                                Name:    "ember-csi-driver",
-                                                Env: []v1.EnvVar{
-                                                        {
-                                                                Name: "PYTHONUNBUFFERED",
-                                                                Value: "0",
-                                                        },{
-                                                                Name: "CSI_ENDPOINT",
-                                                                Value: "unix:///csi-data/csi.sock",
-                                                        },{
-                                                                Name: "CSI_MODE",
-                                                                Value: "node",
-                                                        },{
-                                                                Name: "X_CSI_PERSISTENCE_CONFIG",
-                                                                Value: "{\"storage\":\"crd\"}",
-                                                        },{
-                                                                Name: "X_CSI_BACKEND_CONFIG",
-                                                                ValueFrom: &v1.EnvVarSource{
-                                                                        SecretKeyRef: &v1.SecretKeySelector{
-                                                                                LocalObjectReference: v1.LocalObjectReference{Name: secretName},
-                                                                                Key:  "backend_config",
-                                                                        },
-                                                                },
-                                                        },{
-                                                                Name: "X_CSI_NODE_ID",
-								ValueFrom:  &v1.EnvVarSource{
-									FieldRef: &v1.ObjectFieldSelector{
-										FieldPath: "status.podIP",
+					ServiceAccountName: NodeSA,
+					HostNetwork: true,
+                                        Containers: []v1.Container{
+						{
+							Name:		"driver-registrar",
+							Image:		fmt.Sprintf("%s:%s","quay.io/k8scsi/driver-registrar",RegistrarVersion),
+							ImagePullPolicy: v1.PullAlways,
+							Args: 		 []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
+							SecurityContext: &v1.SecurityContext{
+								Privileged: &trueVar,
+							},
+							Env:	[]v1.EnvVar{
+								{
+									Name: "KUBE_NODE_NAME",
+									ValueFrom:  &v1.EnvVarSource{
+										FieldRef: &v1.ObjectFieldSelector{
+											FieldPath: "spec.nodeName",
+										},
 									},
 								},
 							},
-                                                },
-                                                VolumeMounts: []v1.VolumeMount{
-                                                        {
-                                                                MountPath: "/csi-data", Name: "socket-dir",
-                                                        },{
-                                                                MountPath: "/dev", Name: "dev-dir",
-                                                        },{
-                                                                MountPath: "/etc/localtime", Name: "localtime",
-                                                        },{
-                                                                MountPath: "/var/lib/origin/openshift.local.volumes", Name: "mountpoint-dir",
-                                                        },{
-                                                                MountPath: "/var/lib/kubelet/device-plugins", Name: "kubelet-socket-dir",
-                                                        },
-                                                },
-                                        }},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									MountPath: "/csi-data", 
+									Name: 	   "socket-dir",
+								},{
+									MountPath: 	  "/etc/localtime", 
+									Name: 		  "localtime",
+									MountPropagation: &hostToContainer,
+								},{
+									MountPath: 	  "/var/lib/origin/openshift.local.volumes", 
+									Name: 		  "mountpoint-dir",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: 	  "/var/lib/kubelet/device-plugins", 
+									Name: 		  "kubelet-socket-dir",
+									MountPropagation: &bidirectional,
+								},
+							},
+						},{
+							Name:		"ember-csi-driver",
+							Image:		fmt.Sprintf("%s:%s", "akrog/ember-csi:master", DriverVersion),
+							ImagePullPolicy: v1.PullAlways,
+							SecurityContext: &v1.SecurityContext{
+								Privileged: 		  &trueVar,
+								AllowPrivilegeEscalation: &trueVar,
+							},
+							TerminationMessagePath: "/tmp/termination-log",
+							Env:	[]v1.EnvVar{
+								{
+									Name: "PYTHONUNBUFFERED",
+									Value: "0",
+								},{
+									Name: "CSI_ENDPOINT",
+									Value: "unix:///csi-data/csi.sock",
+								},{
+									Name: "CSI_MODE",
+									Value: "node",
+								},{
+									Name: "X_CSI_PERSISTENCE_CONFIG",
+									Value: persistenceConfig,
+									//Value: "{\"storage\":\"crd\"}",
+								},{
+									Name: "X_CSI_BACKEND_CONFIG",
+									Value: backendConfig,
+								},{
+									Name: "X_CSI_NODE_ID",
+									ValueFrom:  &v1.EnvVarSource{
+										FieldRef: &v1.ObjectFieldSelector{
+											FieldPath: "status.podIP",
+										},
+									},
+								},
+							},
+							VolumeMounts: []v1.VolumeMount{
+								{
+									MountPath: "/csi-data", 
+									Name: "socket-dir",
+								},{
+									MountPath: "/run/udev", 
+									Name: "run-dir",
+									MountPropagation: &hostToContainer,
+								},{
+									MountPath: "/dev", 
+									Name: "dev-dir",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/etc/localtime", 
+									Name: "localtime",
+									MountPropagation: &hostToContainer,
+								},{
+									MountPath: "/var/lib/origin/openshift.local.volumes", 
+									Name: "mountpoint-dir",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/var/lib/kubelet/device-plugins", 
+									Name: "kubelet-socket-dir",
+									MountPropagation: &bidirectional,
+								},
+							},
+						},
+					},
                                         Volumes: []v1.Volume{
 						{
                                                         Name: "socket-dir",
@@ -541,6 +417,13 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
                                                         VolumeSource: v1.VolumeSource{
                                                                 HostPath: &v1.HostPathVolumeSource{
 									Path: "/var/lib/kubelet/device-plugins",
+								},
+                                                        },
+                                                },{
+                                                        Name: "run-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/run/udev",
 								},
                                                         },
                                                 },{
