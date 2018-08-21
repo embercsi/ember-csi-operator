@@ -27,9 +27,9 @@ type Handler struct {
 
 const (
 	// Node DaemonSet's ServiceAccount
-	NodeSA string = 	"csi-sa"
+	NodeSA string 		= "csi-node-sa"
 	// Controller StatefulSet's ServiceAccount
-	ControllerSA string 	= "csi-sa"
+	ControllerSA string 	= "csi-controller-sa"
 
 	// Image Versions
 	RegistrarVersion string   = "v0.3.0"
@@ -90,11 +90,12 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	ls := labelsForEmberCSI(ecsi.Name)
 
 	// There *must* only be one replica
-	var replicas int32 = 1
+	var replicas int32 	= 1
 
 	//secretName := ecsi.Spec.Secret
-	backendConfig := ecsi.Spec.Config.BackendConfig
-	persistenceConfig := ecsi.Spec.Config.PersistenceConfig
+	backendConfig 		:= ecsi.Spec.Config.BackendConfig
+	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
+	configMapName		:= ecsi.Spec.ConfigMap
 
 	ss := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -187,6 +188,9 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 							},{
 								MountPath: "/etc/localtime", 
 								Name: "localtime",
+							},{
+								MountPath: "/etc/ceph",
+								Name: "config",
 							},
 						},
 					}},
@@ -210,8 +214,14 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
                                                                         Path: "/etc/localtime",
                                                                 },
                                                         },
-                                                },
-
+                                                },{
+							Name: "config",
+								VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{Name:configMapName},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -267,13 +277,14 @@ func getPodNames(pods []v1.Pod) []string {
 func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 	ls := labelsForEmberCSI(ecsi.Name)
 
-	var dirOrCreate v1.HostPathType = 		v1.HostPathDirectoryOrCreate
-	var bidirectional v1.MountPropagationMode = 	v1.MountPropagationBidirectional
-	var hostToContainer v1.MountPropagationMode = 	v1.MountPropagationHostToContainer
-	//secretName := 	ecsi.Spec.Secret
-	backendConfig := ecsi.Spec.Config.BackendConfig
-	persistenceConfig := ecsi.Spec.Config.PersistenceConfig
-	trueVar := 	true
+	var dirOrCreate v1.HostPathType 		= v1.HostPathDirectoryOrCreate
+	var bidirectional v1.MountPropagationMode 	= v1.MountPropagationBidirectional
+	var hostToContainer v1.MountPropagationMode 	= v1.MountPropagationHostToContainer
+	//secretName 		:= ecsi.Spec.Secret
+	backendConfig 		:= ecsi.Spec.Config.BackendConfig
+	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
+	configMapName		:= ecsi.Spec.ConfigMap
+	trueVar 		:= true
 
 	ds := &appsv1.DaemonSet{
 		TypeMeta: metav1.TypeMeta{
@@ -392,6 +403,9 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 									MountPath: "/var/lib/kubelet/device-plugins", 
 									Name: "kubelet-socket-dir",
 									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/etc/ceph", 
+									Name: "config",
 								},
 							},
 						},
@@ -440,7 +454,14 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 									Path: "/etc/localtime",
 								},
                                                         },
-                                                },
+                                                },{
+							Name: "config",
+								VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{Name:configMapName},
+								},
+							},
+						},
 					},
 				},
 			},
