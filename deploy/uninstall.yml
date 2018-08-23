@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ember-csi-operator
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: embercsis.ember-csi.io
+---
+kind: Namespace
+metadata:
+  name: ember-csi
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: ember-csi-operator
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: default-account-ember-csi-operator
+subjects:
+- kind: ServiceAccount
+  name: default
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-controller-sa
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-controller-cr
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-controller-rb
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: csi-controller-cr
+subjects:
+- kind: ServiceAccount
+  name: csi-controller-sa
+  namespace: ember-csi
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-node-sa
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-node-cr
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-node-rb
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: csi-node-cr
+subjects:
+- kind: ServiceAccount
+  name: csi-node-sa
+  namespace: ember-csi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ember-csi-operator
+
