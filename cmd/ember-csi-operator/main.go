@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"runtime"
+	"flag"
 
 	stub "github.com/kirankt/ember-csi-operator/pkg/stub"
 	sdk "github.com/operator-framework/operator-sdk/pkg/sdk"
@@ -30,6 +31,12 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("Failed to get watch namespace: %v", err)
 	}
+	configFile := flag.String("config", "", "Config file. (Optional)")
+	flag.Parse()
+
+	// Config File
+	stub.ReadConfig(configFile)
+
 	resyncPeriod := 5
 	logrus.Infof("Watching %s, %s, %s, %d", resource, kind, namespace, resyncPeriod)
 	sdk.Watch(resource, kind, namespace, resyncPeriod)

@@ -92,7 +92,7 @@ kind: SecurityContextConstraints
 metadata:
   name: ember-csi-scc
 
----
-kind: Namespace
-metadata:
-  name: ember-csi
+#---
+#kind: Namespace
+#metadata:
+#  name: ember-csi

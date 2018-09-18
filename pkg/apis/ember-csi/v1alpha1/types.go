@@ -25,7 +25,6 @@ type EmberCSISpec struct {
 	// Size is the size of the Controller StatefulSet
 	Size 		int32  		`json:"size"`
 	Config		EmberCSIConfig	`json:"config"`
-	ConfigMap 	string 		`json:"configMap"`
 }
 
 type EmberCSIStatus struct {
@@ -36,5 +35,5 @@ type EmberCSIStatus struct {
 type EmberCSIConfig struct {
 	BackendConfig 		string 		`json:"backendConfig"`
 	PersistenceConfig	string 		`json:"persistenceConfig"`
-//	EmberConfig		string 		`json:"emberConfig"`
+	SystemFiles		string 		`json:"systemFiles"`
 }

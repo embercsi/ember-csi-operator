@@ -95,7 +95,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	//secretName := ecsi.Spec.Secret
 	backendConfig 		:= ecsi.Spec.Config.BackendConfig
 	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
-	configMapName		:= ecsi.Spec.ConfigMap
+	systemFiles		:= ecsi.Spec.Config.SystemFiles
 	trueVar 		:= true
 
 	ss := &appsv1.StatefulSet{
@@ -131,10 +131,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 								MountPath: "/csi-data", 
 								Name: "socket-dir",
 							},{
-								MountPath: "/dev", 
-								Name: "dev-dir",
-							},{
-								MountPath: "/etc/localtime", 
+								MountPath: "/etc/localtime",
 								Name: "localtime",
 							},
 						},
@@ -150,10 +147,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 								MountPath: "/csi-data", 
 								Name: "socket-dir",
 							},{
-								MountPath: "/dev", 
-								Name: "dev-dir",
-							},{
-								MountPath: "/etc/localtime", 
+								MountPath: "/etc/localtime",
 								Name: "localtime",
 							},
 						},
@@ -178,13 +172,15 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 								Value: persistenceConfig,
 							},{
 								Name: "X_CSI_BACKEND_CONFIG",
-								Value: backendConfig,
-								/* ValueFrom: &v1.EnvVarSource{
+								ValueFrom: &v1.EnvVarSource{
 									SecretKeyRef: &v1.SecretKeySelector{
-										LocalObjectReference: v1.LocalObjectReference{Name: secretName},
-										Key:  "backend_config",
+										LocalObjectReference: v1.LocalObjectReference{Name: backendConfig},
+										Key:  "X_CSI_BACKEND_CONFIG",
 									},
-								},*/
+								},
+							},{
+								Name: "X_CSI_SYSTEM_FILES",
+								Value: "/tmp/ember-csi-system-files.tar",
 							},
 						},
 						VolumeMounts: []v1.VolumeMount{
@@ -192,14 +188,35 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 								MountPath: "/csi-data", 
 								Name: "socket-dir",
 							},{
+								MountPath: "/etc/iscsi", 
+								Name: "iscsi-dir",
+							},{
+								MountPath: "/etc/lvm", 
+								Name: "lvm-dir",
+							},{
+								MountPath: "/var/lock/lvm", 
+								Name: "lvm-lock",
+							},{
+								MountPath: "/etc/multipath", 
+								Name: "multipath-dir",
+							},{
+								MountPath: "/etc/multipath.conf", 
+								Name: "multipath-conf",
+							},{
+								MountPath: "/lib/modules", 
+								Name: "modules-dir",
+							},{
 								MountPath: "/dev", 
 								Name: "dev-dir",
 							},{
-								MountPath: "/etc/localtime", 
+								MountPath: "/run/udev", 
+								Name: "run-dir",
+							},{
+								MountPath: "/etc/localtime",
 								Name: "localtime",
 							},{
-								MountPath: "/etc/ceph",
-								Name: "config",
+								MountPath: "/tmp/ember-csi-system-files.tar",
+								Name: "system-files",
 							},
 						},
 					}},
@@ -210,10 +227,59 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 								EmptyDir: &v1.EmptyDirVolumeSource{},
 							},
                                                 },{
+                                                        Name: "iscsi-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/etc/iscsi",
+                                                                },
+                                                        },
+                                                },{
+                                                        Name: "lvm-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/etc/lvm",
+                                                                },
+                                                        },
+                                                },{
+                                                        Name: "lvm-lock",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/var/lock/lvm",
+                                                                },
+                                                        },
+                                                },{
+                                                        Name: "multipath-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/etc/multipath",
+                                                                },
+                                                        },
+                                                },{
+                                                        Name: "multipath-conf",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/etc/multipath.conf",
+                                                                },
+                                                        },
+                                                },{
+                                                        Name: "modules-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/lib/modules",
+                                                                },
+                                                        },
+                                                },{
                                                         Name: "dev-dir",
                                                         VolumeSource: v1.VolumeSource{
                                                                 HostPath: &v1.HostPathVolumeSource{
                                                                         Path: "/dev",
+                                                                },
+                                                        },
+                                                },{
+                                                        Name: "run-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+                                                                        Path: "/run/udev",
                                                                 },
                                                         },
                                                 },{
@@ -224,13 +290,17 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
                                                                 },
                                                         },
                                                 },{
-							Name: "config",
-								VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{Name:configMapName},
-								},
-							},
-						},
+                                                        Name: "system-files",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                Secret: &v1.SecretVolumeSource{
+                                                                        SecretName: systemFiles,
+                                                                        Items: []v1.KeyToPath{{
+                                                                                Key: "X_CSI_SYSTEM_FILES",
+                                                                                Path: "/tmp/ember-csi-system-files.tar",},
+                                                                        },
+                                                                },
+                                                        },
+                                                },
 					},
 				},
 			},
@@ -289,10 +359,9 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 	var dirOrCreate v1.HostPathType 		= v1.HostPathDirectoryOrCreate
 	var bidirectional v1.MountPropagationMode 	= v1.MountPropagationBidirectional
 	var hostToContainer v1.MountPropagationMode 	= v1.MountPropagationHostToContainer
-	//secretName 		:= ecsi.Spec.Secret
 	backendConfig 		:= ecsi.Spec.Config.BackendConfig
 	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
-	configMapName		:= ecsi.Spec.ConfigMap
+	systemFiles		:= ecsi.Spec.Config.SystemFiles
 	trueVar 		:= true
 
 	ds := &appsv1.DaemonSet{
@@ -343,14 +412,6 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 									MountPath: 	  "/etc/localtime", 
 									Name: 		  "localtime",
 									MountPropagation: &hostToContainer,
-								},{
-									MountPath: 	  "/var/lib/origin/openshift.local.volumes", 
-									Name: 		  "mountpoint-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: 	  "/var/lib/kubelet/device-plugins", 
-									Name: 		  "kubelet-socket-dir",
-									MountPropagation: &bidirectional,
 								},
 							},
 						},{
@@ -375,10 +436,17 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 								},{
 									Name: "X_CSI_PERSISTENCE_CONFIG",
 									Value: persistenceConfig,
-									//Value: "{\"storage\":\"crd\"}",
 								},{
 									Name: "X_CSI_BACKEND_CONFIG",
-									Value: backendConfig,
+									ValueFrom: &v1.EnvVarSource{
+										SecretKeyRef: &v1.SecretKeySelector{
+											LocalObjectReference: v1.LocalObjectReference{Name: backendConfig},
+											Key:  "X_CSI_BACKEND_CONFIG",
+										},
+									},
+								},{
+									Name: "X_CSI_SYSTEM_FILES",
+									Value: "/tmp/ember-csi-system-files.tar",
 								},{
 									Name: "X_CSI_NODE_ID",
 									ValueFrom:  &v1.EnvVarSource{
@@ -392,6 +460,31 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 								{
 									MountPath: "/csi-data", 
 									Name: "socket-dir",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/etc/iscsi", 
+									Name: "iscsi-dir",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/etc/lvm", 
+									Name: "lvm-dir",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/var/lock/lvm", 
+									Name: "lvm-lock",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/etc/multipath", 
+									Name: "multipath-dir",
+									MountPropagation: &bidirectional,
+								},{
+									MountPath: "/etc/multipath.conf", 
+									Name: "multipath-conf",
+									MountPropagation: &hostToContainer,
+								},{
+									MountPath: "/lib/modules", 
+									Name: "modules-dir",
+									MountPropagation: &hostToContainer,
 								},{
 									MountPath: "/run/udev", 
 									Name: "run-dir",
@@ -413,8 +506,8 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 									Name: "kubelet-socket-dir",
 									MountPropagation: &bidirectional,
 								},{
-									MountPath: "/etc/ceph", 
-									Name: "config",
+									MountPath: "/tmp/ember-csi-system-files.tar", 
+									Name: "system-files",
 								},
 							},
 						},
@@ -457,6 +550,48 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 								},
                                                         },
                                                 },{
+                                                        Name: "iscsi-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/etc/iscsi",
+								},
+                                                        },
+                                                },{
+                                                        Name: "lvm-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/etc/lvm",
+								},
+                                                        },
+                                                },{
+                                                        Name: "lvm-lock",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/var/lock/lvm",
+								},
+                                                        },
+                                                },{
+                                                        Name: "multipath-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/etc/multipath",
+								},
+                                                        },
+                                                },{
+                                                        Name: "multipath-conf",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/etc/multipath.conf",
+								},
+                                                        },
+                                                },{
+                                                        Name: "modules-dir",
+                                                        VolumeSource: v1.VolumeSource{
+                                                                HostPath: &v1.HostPathVolumeSource{
+									Path: "/lib/modules",
+								},
+                                                        },
+                                                },{
                                                         Name: "localtime",
                                                         VolumeSource: v1.VolumeSource{
                                                                 HostPath: &v1.HostPathVolumeSource{
@@ -464,20 +599,22 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 								},
                                                         },
                                                 },{
-							Name: "config",
-								VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{Name:configMapName},
+							Name: "system-files",
+							VolumeSource: v1.VolumeSource{
+                                                                Secret: &v1.SecretVolumeSource{
+                                                                        SecretName: systemFiles,
+									Items: []v1.KeyToPath{{
+										Key: "X_CSI_SYSTEM_FILES",
+										Path: "/tmp/ember-csi-sysstem-files.tar",},
+									},
 								},
 							},
 						},
 					},
 				},
 			},
-
 		},
 	}
-
         addOwnerRefToObject(ds, asOwner(ecsi))
 	return ds
 }

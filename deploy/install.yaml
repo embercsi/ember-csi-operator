@@ -7,14 +7,14 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ember-csi-controller-sa
+  name: csi-controller-sa
   namespace: ember-csi
 
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ember-csi-node-sa
+  name: csi-node-sa
   namespace: ember-csi
 
 ---
@@ -39,8 +39,8 @@ fsGroup:
 supplementalGroups:
   type: RunAsAny
 users:
-- system:serviceaccount:ember-csi:ember-csi-node-sa
-- system:serviceaccount:ember-csi:ember-csi-controller-sa
+- system:serviceaccount:ember-csi:csi-node-sa
+- system:serviceaccount:ember-csi:csi-controller-sa
 groups: []
 volumes:
 - configMap
@@ -57,6 +57,7 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: ember-csi-operator
+  namespace: ember-csi
 rules:
 - apiGroups:
   - ember-csi.io
@@ -98,9 +99,10 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: ember-csi-operator-rb
+  namespace: ember-csi
 subjects:
 - kind: ServiceAccount
-  name: ember-csi
+  name: csi-controller-sa
 roleRef:
   kind: Role
   name: ember-csi-operator
@@ -111,6 +113,7 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: ember-csi-controller-cr
+  namespace: ember-csi
 rules:
   - apiGroups: ['ember-csi.io']
     resources: ['*']
@@ -145,13 +148,14 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: ember-csi-controller-rb
+  namespace: ember-csi
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
   name: ember-csi-controller-cr
 subjects:
 - kind: ServiceAccount
-  name: ember-csi-controller-sa
+  name: csi-controller-sa
   namespace: ember-csi
 
 ---
@@ -159,6 +163,7 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: ember-csi-node-cr
+  namespace: ember-csi
 rules:
   - apiGroups: ['ember-csi.io']
     resources: ['*']
@@ -180,13 +185,14 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: ember-csi-node-rb
+  namespace: ember-csi
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
   name: ember-csi-node-cr
 subjects:
 - kind: ServiceAccount
-  name: ember-csi-node-sa
+  name: csi-node-sa
   namespace: ember-csi
 
 ---
@@ -194,6 +200,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: embercsis.ember-csi.io
+  namespace: ember-csi
 spec:
   group: ember-csi.io
   names:
@@ -220,9 +227,10 @@ spec:
       labels:
         name: ember-csi-operator
     spec:
+      serviceAccount: csi-controller-sa
       containers:
         - name: ember-csi-operator
-          image: quay.io/kirankt/ember-csi-operator:v0.0.1
+          image: quay.io/kirankt/ember-csi-operator:v0.0.2
           ports:
           - containerPort: 60000
             name: metrics

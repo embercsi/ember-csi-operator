@@ -1,0 +1,11 @@
+---
+cluster: ocp
+images:
+  csi-attacher:         quay.io/k8scsi/csi-attacher:v0.3.0
+  csi-provisioner:      quay.io/k8scsi/csi-provisioner:v0.3.0
+  driver-registrar:     quay.io/k8scsi/driver-registrar:v0.3.0
+  ember-csi-driver:
+    rbd:        akrog/ember-csi:master
+    xtremio:    akrog/ember-csi:master
+    lvm:        akrog/ember-csi:master
+
