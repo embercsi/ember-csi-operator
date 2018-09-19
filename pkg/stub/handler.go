@@ -95,7 +95,6 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	//secretName := ecsi.Spec.Secret
 	backendConfig 		:= ecsi.Spec.Config.BackendConfig
 	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
-	systemFiles		:= ecsi.Spec.Config.SystemFiles
 	trueVar 		:= true
 
 	ss := &appsv1.StatefulSet{
@@ -183,125 +182,9 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 								Value: "/tmp/ember-csi-system-files.tar",
 							},
 						},
-						VolumeMounts: []v1.VolumeMount{
-							{
-								MountPath: "/csi-data", 
-								Name: "socket-dir",
-							},{
-								MountPath: "/etc/iscsi", 
-								Name: "iscsi-dir",
-							},{
-								MountPath: "/etc/lvm", 
-								Name: "lvm-dir",
-							},{
-								MountPath: "/var/lock/lvm", 
-								Name: "lvm-lock",
-							},{
-								MountPath: "/etc/multipath", 
-								Name: "multipath-dir",
-							},{
-								MountPath: "/etc/multipath.conf", 
-								Name: "multipath-conf",
-							},{
-								MountPath: "/lib/modules", 
-								Name: "modules-dir",
-							},{
-								MountPath: "/dev", 
-								Name: "dev-dir",
-							},{
-								MountPath: "/run/udev", 
-								Name: "run-dir",
-							},{
-								MountPath: "/etc/localtime",
-								Name: "localtime",
-							},{
-								MountPath: "/tmp/ember-csi-system-files.tar",
-								Name: "system-files",
-							},
-						},
+						VolumeMounts: getVolumeMounts(),
 					}},
-					Volumes: []v1.Volume{
-						{
-							Name: "socket-dir",
-							VolumeSource: v1.VolumeSource{
-								EmptyDir: &v1.EmptyDirVolumeSource{},
-							},
-                                                },{
-                                                        Name: "iscsi-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/etc/iscsi",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "lvm-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/etc/lvm",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "lvm-lock",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/var/lock/lvm",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "multipath-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/etc/multipath",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "multipath-conf",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/etc/multipath.conf",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "modules-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/lib/modules",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "dev-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/dev",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "run-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/run/udev",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "localtime",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-                                                                        Path: "/etc/localtime",
-                                                                },
-                                                        },
-                                                },{
-                                                        Name: "system-files",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                Secret: &v1.SecretVolumeSource{
-                                                                        SecretName: systemFiles,
-                                                                        Items: []v1.KeyToPath{{
-                                                                                Key: "X_CSI_SYSTEM_FILES",
-                                                                                Path: "/tmp/ember-csi-system-files.tar",},
-                                                                        },
-                                                                },
-                                                        },
-                                                },
-					},
+					Volumes: getVolumes(ecsi, "controller"),
 				},
 			},
 		},
@@ -356,12 +239,9 @@ func getPodNames(pods []v1.Pod) []string {
 func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 	ls := labelsForEmberCSI(ecsi.Name)
 
-	var dirOrCreate v1.HostPathType 		= v1.HostPathDirectoryOrCreate
-	var bidirectional v1.MountPropagationMode 	= v1.MountPropagationBidirectional
-	var hostToContainer v1.MountPropagationMode 	= v1.MountPropagationHostToContainer
+	var hostToContainer v1.MountPropagationMode     = v1.MountPropagationHostToContainer
 	backendConfig 		:= ecsi.Spec.Config.BackendConfig
 	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
-	systemFiles		:= ecsi.Spec.Config.SystemFiles
 	trueVar 		:= true
 
 	ds := &appsv1.DaemonSet{
@@ -456,165 +336,236 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 									},
 								},
 							},
-							VolumeMounts: []v1.VolumeMount{
-								{
-									MountPath: "/csi-data", 
-									Name: "socket-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/etc/iscsi", 
-									Name: "iscsi-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/etc/lvm", 
-									Name: "lvm-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/var/lock/lvm", 
-									Name: "lvm-lock",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/etc/multipath", 
-									Name: "multipath-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/etc/multipath.conf", 
-									Name: "multipath-conf",
-									MountPropagation: &hostToContainer,
-								},{
-									MountPath: "/lib/modules", 
-									Name: "modules-dir",
-									MountPropagation: &hostToContainer,
-								},{
-									MountPath: "/run/udev", 
-									Name: "run-dir",
-									MountPropagation: &hostToContainer,
-								},{
-									MountPath: "/dev", 
-									Name: "dev-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/etc/localtime", 
-									Name: "localtime",
-									MountPropagation: &hostToContainer,
-								},{
-									MountPath: "/var/lib/origin/openshift.local.volumes", 
-									Name: "mountpoint-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/var/lib/kubelet/device-plugins", 
-									Name: "kubelet-socket-dir",
-									MountPropagation: &bidirectional,
-								},{
-									MountPath: "/tmp/ember-csi-system-files.tar", 
-									Name: "system-files",
-								},
-							},
+							VolumeMounts: getVolumeMounts(),
 						},
 					},
-                                        Volumes: []v1.Volume{
-						{
-                                                        Name: "socket-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/var/lib/kubelet/plugins/io.ember-csi",
-									Type: &dirOrCreate,
-								},
-                                                        },
-						},{
-                                                        Name: "mountpoint-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/var/lib/origin/openshift.local.volumes",
-								},
-                                                        },
-                                                },{
-                                                        Name: "kubelet-socket-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/var/lib/kubelet/device-plugins",
-								},
-                                                        },
-                                                },{
-                                                        Name: "run-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/run/udev",
-								},
-                                                        },
-                                                },{
-                                                        Name: "dev-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/dev",
-								},
-                                                        },
-                                                },{
-                                                        Name: "iscsi-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/etc/iscsi",
-								},
-                                                        },
-                                                },{
-                                                        Name: "lvm-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/etc/lvm",
-								},
-                                                        },
-                                                },{
-                                                        Name: "lvm-lock",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/var/lock/lvm",
-								},
-                                                        },
-                                                },{
-                                                        Name: "multipath-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/etc/multipath",
-								},
-                                                        },
-                                                },{
-                                                        Name: "multipath-conf",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/etc/multipath.conf",
-								},
-                                                        },
-                                                },{
-                                                        Name: "modules-dir",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/lib/modules",
-								},
-                                                        },
-                                                },{
-                                                        Name: "localtime",
-                                                        VolumeSource: v1.VolumeSource{
-                                                                HostPath: &v1.HostPathVolumeSource{
-									Path: "/etc/localtime",
-								},
-                                                        },
-                                                },{
-							Name: "system-files",
-							VolumeSource: v1.VolumeSource{
-                                                                Secret: &v1.SecretVolumeSource{
-                                                                        SecretName: systemFiles,
-									Items: []v1.KeyToPath{{
-										Key: "X_CSI_SYSTEM_FILES",
-										Path: "/tmp/ember-csi-sysstem-files.tar",},
-									},
-								},
-							},
-						},
-					},
+                                        Volumes: getVolumes(ecsi, "node"),
 				},
 			},
 		},
 	}
         addOwnerRefToObject(ds, asOwner(ecsi))
 	return ds
+}
+
+// Construct a VolumeMount based on cluster type, secrets, etc
+func getVolumeMounts() []v1.VolumeMount {
+	var bidirectional v1.MountPropagationMode       = v1.MountPropagationBidirectional
+	var hostToContainer v1.MountPropagationMode     = v1.MountPropagationHostToContainer
+
+	vm := []v1.VolumeMount {
+		{
+			MountPath: "/csi-data",
+			Name: "socket-dir",
+			MountPropagation: &bidirectional,
+		},{
+			MountPath: "/etc/iscsi",
+			Name: "iscsi-dir",
+			MountPropagation: &bidirectional,
+		},{
+			MountPath: "/etc/lvm",
+			Name: "lvm-dir",
+			MountPropagation: &bidirectional,
+		},{
+			MountPath: "/var/lock/lvm",
+			Name: "lvm-lock",
+			MountPropagation: &bidirectional,
+		},{
+			MountPath: "/etc/multipath",
+			Name: "multipath-dir",
+			MountPropagation: &bidirectional,
+		},{
+			MountPath: "/etc/multipath.conf",
+			Name: "multipath-conf",
+			MountPropagation: &hostToContainer,
+		},{
+			MountPath: "/lib/modules",
+			Name: "modules-dir",
+			MountPropagation: &hostToContainer,
+		},{
+			MountPath: "/run/udev",
+			Name: "run-dir",
+			MountPropagation: &hostToContainer,
+		},{
+			MountPath: "/dev",
+			Name: "dev-dir",
+			MountPropagation: &bidirectional,
+		},{
+			MountPath: "/etc/localtime",
+			Name: "localtime",
+			MountPropagation: &hostToContainer,
+		},{
+			MountPath: "/tmp/ember-csi-system-files.tar",
+			Name: "system-files",
+		},
+	}
+
+	// ocp
+	if Conf.Cluster == "ocp" {
+		vm = append(vm, v1.VolumeMount{
+				Name:      "mountpoint-dir",
+				MountPropagation: &bidirectional,
+				MountPath: "/var/lib/origin/openshift.local.volumes",
+			},v1.VolumeMount{
+				MountPath: "/var/lib/kubelet/device-plugins",
+				Name: "kubelet-socket-dir",
+				MountPropagation: &bidirectional,
+			},
+		)
+	} else {	// k8s
+		vm = append(vm, v1.VolumeMount{
+				Name:      "mountpoint-dir",
+				MountPropagation: &bidirectional,
+				MountPath: "/var/lib/kubelet",
+			},
+		)
+	}
+
+	return vm
+}
+
+func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
+	systemFiles		:= ecsi.Spec.Config.SystemFiles
+        var dirOrCreate v1.HostPathType                 = v1.HostPathDirectoryOrCreate
+
+
+	vol := []v1.Volume {
+		{
+			Name: "run-dir",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/run/udev",
+				},
+			},
+		},{
+			Name: "dev-dir",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/dev",
+				},
+			},
+		},{
+			Name: "iscsi-dir",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/etc/iscsi",
+				},
+			},
+		},{
+			Name: "lvm-dir",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/etc/lvm",
+				},
+			},
+		},{
+			Name: "lvm-lock",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/var/lock/lvm",
+				},
+			},
+		},{
+			Name: "multipath-dir",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/etc/multipath",
+				},
+			},
+		},{
+			Name: "multipath-conf",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/etc/multipath.conf",
+				},
+			},
+		},{
+			Name: "modules-dir",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/lib/modules",
+				},
+			},
+		},{
+			Name: "localtime",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "/etc/localtime",
+				},
+			},
+		},{
+			Name: "system-files",
+			VolumeSource: v1.VolumeSource{
+				Secret: &v1.SecretVolumeSource{
+					SecretName: systemFiles,
+					Items: []v1.KeyToPath{{
+						Key: "X_CSI_SYSTEM_FILES",
+						Path: "/tmp/ember-csi-sysstem-files.tar",},
+					},
+				},
+			},
+		},
+	}
+
+	// The "node" mode of the CSI driver requires mount in /var/lib/kubelet to
+	// communicate with the kubelet
+	if csiDriverMode == "node" {
+		vol = append(vol, v1.Volume{
+				Name: "socket-dir",
+				VolumeSource: v1.VolumeSource{
+						HostPath: &v1.HostPathVolumeSource{
+						Path: "/var/lib/kubelet/device-plugins",
+					},
+				},
+			},
+		)
+	} else {	// "controller" or "all" mode
+		vol = append(vol, v1.Volume{
+				Name: "socket-dir",
+				VolumeSource: v1.VolumeSource{
+					EmptyDir: &v1.EmptyDirVolumeSource{},
+				},
+			},
+		)
+	}
+
+	// ocp
+	if Conf.Cluster == "ocp" {
+		vol = append(vol, v1.Volume{
+				Name: "socket-dir",
+				VolumeSource: v1.VolumeSource{
+						HostPath: &v1.HostPathVolumeSource{
+						Path: "/var/lib/kubelet/device-plugins",
+					},
+				},
+			},v1.Volume{
+				Name: "mountpoint-dir",
+				VolumeSource: v1.VolumeSource{
+						HostPath: &v1.HostPathVolumeSource{
+						Path: "/var/lib/origin/openshift.local.volumes",
+					},
+				},
+			},v1.Volume{
+				Name: "kubelet-socket-dir",
+				VolumeSource: v1.VolumeSource{
+						HostPath: &v1.HostPathVolumeSource{
+						Path: "/var/lib/kubelet/plugins/io.ember-csi",
+						Type: &dirOrCreate,
+					},
+				},
+			},
+		)
+	} else {	// k8s
+		vol = append(vol, v1.Volume{
+				Name: "mountpoint-dir",
+				VolumeSource: v1.VolumeSource{
+						HostPath: &v1.HostPathVolumeSource{
+						Path: "/var/lib/kubelet/device-plugins",
+					},
+				},
+			},
+		)
+	}
+
+	return vol
 }
