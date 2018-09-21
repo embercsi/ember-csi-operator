@@ -58,7 +58,6 @@ const (
 	gopkgtoml          = "Gopkg.toml"
 	gopkglock          = "Gopkg.lock"
 	config             = "config.yaml"
-	operatorYaml       = deployDir + "/operator.yaml"
 	rbacYaml           = "rbac.yaml"
 	crYaml             = "cr.yaml"
 	catalogPackageYaml = "package.yaml"
@@ -233,19 +232,18 @@ func renderDeployFiles(deployDir, projectName, apiVersion, kind string) error {
 		APIVersion: apiVersion,
 		Kind:       kind,
 	}
-	return renderWriteFile(filepath.Join(deployDir, crYaml), crTmplName, crYamlTmpl, crTd)
-}
+	if err := renderWriteFile(filepath.Join(deployDir, crYaml), crTmplName, crYamlTmpl, crTd); err != nil {
+		return err
+	}
 
-// RenderOperatorYaml generates "deploy/operator.yaml"
-func RenderOperatorYaml(c *Config, image string) error {
-	td := tmplData{
-		ProjectName:     c.ProjectName,
-		Image:           image,
+	opTd := tmplData{
+		ProjectName:     projectName,
+		Image:           "REPLACE_IMAGE",
 		MetricsPort:     k8sutil.PrometheusMetricsPort,
 		MetricsPortName: k8sutil.PrometheusMetricsPortName,
 		OperatorNameEnv: k8sutil.OperatorNameEnvVar,
 	}
-	return renderWriteFile(operatorYaml, operatorTmplName, operatorYamlTmpl, td)
+	return renderWriteFile(filepath.Join(deployDir, "operator.yaml"), operatorTmplName, operatorYamlTmpl, opTd)
 }
 
 // RenderOlmCatalog generates catalog manifests "deploy/olm-catalog/*"
@@ -520,6 +518,9 @@ func apiDirName(apiVersion string) string {
 
 // Writes file to a given path and data buffer, as well as prints out a message confirming creation of a file
 func writeFileAndPrint(filePath string, data []byte, fileMode os.FileMode) error {
+	if err := os.MkdirAll(filepath.Dir(filePath), defaultDirFileMode); err != nil {
+		return err
+	}
 	if err := ioutil.WriteFile(filePath, data, fileMode); err != nil {
 		return err
 	}

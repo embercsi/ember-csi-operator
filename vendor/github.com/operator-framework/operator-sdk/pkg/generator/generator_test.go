@@ -16,6 +16,8 @@ package generator
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -104,7 +106,7 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	case *v1alpha1.AppService:
 		err := sdk.Create(newbusyBoxPod(o))
 		if err != nil && !errors.IsAlreadyExists(err) {
-			logrus.Errorf("Failed to create busybox pod : %v", err)
+			logrus.Errorf("failed to create busybox pod : %v", err)
 			return err
 		}
 	}
@@ -418,6 +420,7 @@ const mainExp = `package main
 import (
 	"context"
 	"runtime"
+	"time"
 
 	stub "github.com/example-inc/app-operator/pkg/stub"
 	sdk "github.com/operator-framework/operator-sdk/pkg/sdk"
@@ -443,9 +446,9 @@ func main() {
 	kind := "AppService"
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
-		logrus.Fatalf("Failed to get watch namespace: %v", err)
+		logrus.Fatalf("failed to get watch namespace: %v", err)
 	}
-	resyncPeriod := 5
+	resyncPeriod := time.Duration(5) * time.Second
 	logrus.Infof("Watching %s, %s, %s, %d", resource, kind, namespace, resyncPeriod)
 	sdk.Watch(resource, kind, namespace, resyncPeriod)
 	sdk.Handle(stub.NewHandler())
@@ -542,5 +545,22 @@ func TestGenBuild(t *testing.T) {
 		dmp := diffmatchpatch.New()
 		diffs := dmp.DiffMain(dockerFileExp, buf.String(), false)
 		t.Errorf("\nTest failed. Below is the diff of the expected vs actual results.\nRed text is missing and green text is extra.\n\n" + dmp.DiffPrettyText(diffs))
+	}
+}
+
+func TestWriteFileAndPrint(t *testing.T) {
+	deployDir, err := ioutil.TempDir("", "test-write-file-and-print")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer os.RemoveAll(deployDir)
+
+	olmCatalogPackagePath := filepath.Join(deployDir, olmCatalogDir, catalogPackageYaml)
+	if err = writeFileAndPrint(olmCatalogPackagePath, []byte("sometext"), defaultFileMode); err != nil {
+		t.Fatalf("\nTest failed. Failed to write file and print: %v", err)
+	}
+	if _, err := os.Stat(olmCatalogPackagePath); os.IsNotExist(err) {
+		t.Errorf("\nTest failed. Failed to create %s", olmCatalogPackagePath)
 	}
 }

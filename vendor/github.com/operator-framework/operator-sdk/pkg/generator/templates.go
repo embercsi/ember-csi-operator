@@ -42,8 +42,8 @@ spec:
   version: {{.Version}}
 `
 
-const catalogCSVTmpl = `apiVersion: app.coreos.com/v1alpha1
-kind: ClusterServiceVersion-v1
+const catalogCSVTmpl = `apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
 metadata:
   name: {{.CSVName}}
   namespace: placeholder
@@ -132,6 +132,7 @@ const mainTmpl = `package main
 import (
 	"context"
 	"runtime"
+	"time"
 
 	stub "{{.StubImport}}"
 	sdk "{{.OperatorSDKImport}}"
@@ -157,9 +158,9 @@ func main() {
 	kind := "{{.Kind}}"
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
-		logrus.Fatalf("Failed to get watch namespace: %v", err)
+		logrus.Fatalf("failed to get watch namespace: %v", err)
 	}
-	resyncPeriod := 5
+	resyncPeriod := time.Duration(5) * time.Second
 	logrus.Infof("Watching %s, %s, %s, %d", resource, kind, namespace, resyncPeriod)
 	sdk.Watch(resource, kind, namespace, resyncPeriod)
 	sdk.Handle(stub.NewHandler())
@@ -196,7 +197,7 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	case *{{.Version}}.{{.Kind}}:
 		err := sdk.Create(newbusyBoxPod(o))
 		if err != nil && !errors.IsAlreadyExists(err) {
-			logrus.Errorf("Failed to create busybox pod : %v", err)
+			logrus.Errorf("failed to create busybox pod : %v", err)
 			return err
 		}
 	}
@@ -263,6 +264,11 @@ required = [
   revision = "73d903622b7391f3312dcbac6483fed484e185f8"
 
 [[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  # revision for tag "kubernetes-1.10.1"
+  revision = "4347b330d0ff094db860f2f75fa725b4f4b53618"
+
+[[override]]
   name = "k8s.io/apimachinery"
   # revision for tag "kubernetes-1.10.1"
   revision = "302974c03f7e50f16561ba237db776ab93594ef6"
@@ -272,11 +278,25 @@ required = [
   # revision for tag "kubernetes-1.10.1"
   revision = "989be4278f353e42f26c416c53757d16fcff77db"
 
+[[override]]
+  name = "sigs.k8s.io/controller-runtime"
+  revision = "60bb251ad86f9b313653618aad0c2c53f41a6625"
+
+[prune]
+  go-tests = true
+  non-go = true
+  unused-packages = true
+
+  [[prune.project]]
+    name = "k8s.io/code-generator"
+    non-go = false
+    unused-packages = false
+
 [[constraint]]
   name = "github.com/operator-framework/operator-sdk"
   # The version rule is used for a specific release and the master branch for in between releases.
   branch = "master"
-  # version = "=v0.0.5"
+  # version = "=v0.0.6"
 `
 
 const projectGitignoreTmpl = `

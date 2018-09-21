@@ -1,10 +1,13 @@
 apiVersion: "ember-csi.io/v1alpha1"
 kind: "EmberCSI"
 metadata:
-  name: "ember-csi-external-ceph"
+  name: "external-ceph"
 spec:
   size: 1
   config:
-    persistenceConfig: '{"storage":"crd"}'
-    backendConfig: backend-secret       # secret
-    systemFiles: sysfiles-secret        # Secret
+    envVars:
+      X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
+      X_CSI_BACKEND_CONFIG :          '{"volume_backend_name": "rbd", "volume_driver": "cinder.volume.drivers.rbd.RBDDriver", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
+    sysfiles:
+      name: sysfiles-secret
+      key: "system-files.tar"

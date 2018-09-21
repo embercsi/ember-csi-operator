@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"runtime"
+	"time"
 	"flag"
 
 	stub "github.com/kirankt/ember-csi-operator/pkg/stub"
@@ -37,7 +38,7 @@ func main() {
 	// Config File
 	stub.ReadConfig(configFile)
 
-	resyncPeriod := 5
+	resyncPeriod := time.Duration(5) * time.Second
 	logrus.Infof("Watching %s, %s, %s, %d", resource, kind, namespace, resyncPeriod)
 	sdk.Watch(resource, kind, namespace, resyncPeriod)
 	sdk.Handle(stub.NewHandler())

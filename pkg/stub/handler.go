@@ -92,9 +92,6 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	// There *must* only be one replica
 	var replicas int32 	= 1
 
-	//secretName := ecsi.Spec.Secret
-	backendConfig 		:= ecsi.Spec.Config.BackendConfig
-	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
 	trueVar 		:= true
 
 	ss := &appsv1.StatefulSet{
@@ -156,33 +153,9 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
 						},
-						Env: []v1.EnvVar{
-							{
-								Name: "PYTHONUNBUFFERED",
-								Value: "0",
-							},{
-								Name: "CSI_ENDPOINT",
-								Value: "unix:///csi-data/csi.sock",
-							},{
-								Name: "CSI_MODE",
-								Value: "controller",
-							},{
-								Name: "X_CSI_PERSISTENCE_CONFIG",
-								Value: persistenceConfig,
-							},{
-								Name: "X_CSI_BACKEND_CONFIG",
-								ValueFrom: &v1.EnvVarSource{
-									SecretKeyRef: &v1.SecretKeySelector{
-										LocalObjectReference: v1.LocalObjectReference{Name: backendConfig},
-										Key:  "X_CSI_BACKEND_CONFIG",
-									},
-								},
-							},{
-								Name: "X_CSI_SYSTEM_FILES",
-								Value: "/tmp/ember-csi-system-files.tar",
-							},
-						},
-						VolumeMounts: getVolumeMounts(),
+						TerminationMessagePath: "/tmp/termination-log",
+						Env: getEnvVars(ecsi, "controller"),
+						VolumeMounts: getVolumeMounts(ecsi),
 					}},
 					Volumes: getVolumes(ecsi, "controller"),
 				},
@@ -191,6 +164,127 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 	}
 	addOwnerRefToObject(ss, asOwner(ecsi))
 	return ss
+}
+
+// construct EnvVars for the Driver Pod
+func getEnvVars(ecsi *v1alpha1.EmberCSI, driverMode string) []v1.EnvVar {
+	envVars := []v1.EnvVar{
+		{
+			Name: "PYTHONUNBUFFERED",
+			Value: "0",
+		},{
+			Name: "CSI_ENDPOINT",
+			Value: "unix:///csi-data/csi.sock",
+		},
+	}
+
+	if driverMode == "controller" {
+		envVars = append(envVars, v1.EnvVar{
+					Name: "KUBE_NODE_NAME",
+					ValueFrom:  &v1.EnvVarSource{
+						FieldRef: &v1.ObjectFieldSelector{
+							FieldPath: "spec.nodeName",
+						},
+					},
+				}, v1.EnvVar{
+					Name: "CSI_MODE",
+					Value: "controller",
+				},
+			)
+	} else {
+		envVars = append(envVars, v1.EnvVar{
+					Name: "X_CSI_NODE_ID",
+					ValueFrom:  &v1.EnvVarSource{
+						FieldRef: &v1.ObjectFieldSelector{
+							FieldPath: "status.podIP",
+						},
+					},
+				}, v1.EnvVar{
+					Name: "CSI_MODE",
+					Value: "node",
+				},
+			)
+	}
+
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_BACKEND_CONFIG",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_EMBER_CONFIG",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_PERSISTENCE_CONFIG",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_DEBUG_MODE",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_ABORT_DUPLICATES) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_ABORT_DUPLICATES",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_ABORT_DUPLICATES,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEFAULT_MOUNT_FS) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_DEFAULT_MOUNT_FS",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_DEFAULT_MOUNT_FS,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_NODE_ID) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_NODE_ID",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_NODE_ID,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_STORAGE_NW_IP) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_STORAGE_NW_IP",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_STORAGE_NW_IP,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.CSI_ENDPOINT) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "CSI_ENDPOINT",
+                        Value: ecsi.Spec.Config.EnvVars.CSI_ENDPOINT,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.EnvVars.CSI_MODE) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "CSI_MODE",
+                        Value: ecsi.Spec.Config.EnvVars.CSI_MODE,
+			},
+		)
+	}
+	if len(ecsi.Spec.Config.SysFiles.Name) > 0 {
+		envVars = append(envVars, v1.EnvVar{
+                        Name: "X_CSI_SYSTEM_FILES",
+                        Value: fmt.Sprintf("/tmp/ember-csi/%s", ecsi.Spec.Config.SysFiles.Key),
+			},
+		)
+	}
+
+	return envVars
 }
 
 // labelsForEmberCSI returns the labels for selecting the resources
@@ -240,8 +334,6 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 	ls := labelsForEmberCSI(ecsi.Name)
 
 	var hostToContainer v1.MountPropagationMode     = v1.MountPropagationHostToContainer
-	backendConfig 		:= ecsi.Spec.Config.BackendConfig
-	persistenceConfig 	:= ecsi.Spec.Config.PersistenceConfig
 	trueVar 		:= true
 
 	ds := &appsv1.DaemonSet{
@@ -303,40 +395,8 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 								AllowPrivilegeEscalation: &trueVar,
 							},
 							TerminationMessagePath: "/tmp/termination-log",
-							Env:	[]v1.EnvVar{
-								{
-									Name: "PYTHONUNBUFFERED",
-									Value: "0",
-								},{
-									Name: "CSI_ENDPOINT",
-									Value: "unix:///csi-data/csi.sock",
-								},{
-									Name: "CSI_MODE",
-									Value: "node",
-								},{
-									Name: "X_CSI_PERSISTENCE_CONFIG",
-									Value: persistenceConfig,
-								},{
-									Name: "X_CSI_BACKEND_CONFIG",
-									ValueFrom: &v1.EnvVarSource{
-										SecretKeyRef: &v1.SecretKeySelector{
-											LocalObjectReference: v1.LocalObjectReference{Name: backendConfig},
-											Key:  "X_CSI_BACKEND_CONFIG",
-										},
-									},
-								},{
-									Name: "X_CSI_SYSTEM_FILES",
-									Value: "/tmp/ember-csi-system-files.tar",
-								},{
-									Name: "X_CSI_NODE_ID",
-									ValueFrom:  &v1.EnvVarSource{
-										FieldRef: &v1.ObjectFieldSelector{
-											FieldPath: "status.podIP",
-										},
-									},
-								},
-							},
-							VolumeMounts: getVolumeMounts(),
+							Env:	getEnvVars(ecsi, "node"),
+							VolumeMounts: getVolumeMounts(ecsi),
 						},
 					},
                                         Volumes: getVolumes(ecsi, "node"),
@@ -349,7 +409,7 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 }
 
 // Construct a VolumeMount based on cluster type, secrets, etc
-func getVolumeMounts() []v1.VolumeMount {
+func getVolumeMounts(ecsi *v1alpha1.EmberCSI) []v1.VolumeMount {
 	var bidirectional v1.MountPropagationMode       = v1.MountPropagationBidirectional
 	var hostToContainer v1.MountPropagationMode     = v1.MountPropagationHostToContainer
 
@@ -394,11 +454,17 @@ func getVolumeMounts() []v1.VolumeMount {
 			MountPath: "/etc/localtime",
 			Name: "localtime",
 			MountPropagation: &hostToContainer,
-		},{
-			MountPath: "/tmp/ember-csi-system-files.tar",
-			Name: "system-files",
 		},
 	}
+
+        // Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
+        if len(ecsi.Spec.Config.SysFiles.Name) > 0  {
+		vm = append(vm, v1.VolumeMount{
+			Name: "system-files",
+			MountPath: "/tmp/ember-csi",
+		},
+		)
+        }
 
 	// ocp
 	if Conf.Cluster == "ocp" {
@@ -425,9 +491,7 @@ func getVolumeMounts() []v1.VolumeMount {
 }
 
 func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
-	systemFiles		:= ecsi.Spec.Config.SystemFiles
         var dirOrCreate v1.HostPathType                 = v1.HostPathDirectoryOrCreate
-
 
 	vol := []v1.Volume {
 		{
@@ -493,18 +557,26 @@ func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
 					Path: "/etc/localtime",
 				},
 			},
-		},{
+		},
+	}
+
+	// Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
+	if len(ecsi.Spec.Config.SysFiles.Name) > 0 {
+		vol = append(vol, v1.Volume{
 			Name: "system-files",
 			VolumeSource: v1.VolumeSource{
 				Secret: &v1.SecretVolumeSource{
-					SecretName: systemFiles,
-					Items: []v1.KeyToPath{{
-						Key: "X_CSI_SYSTEM_FILES",
-						Path: "/tmp/ember-csi-sysstem-files.tar",},
-					},
+					SecretName: ecsi.Spec.Config.SysFiles.Name,
+					Items: []v1.KeyToPath{
+						{
+							Key: ecsi.Spec.Config.SysFiles.Key,
+							Path: ecsi.Spec.Config.SysFiles.Key,
+						},
+					},      
 				},
 			},
 		},
+		)
 	}
 
 	// The "node" mode of the CSI driver requires mount in /var/lib/kubelet to
@@ -532,13 +604,6 @@ func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
 	// ocp
 	if Conf.Cluster == "ocp" {
 		vol = append(vol, v1.Volume{
-				Name: "socket-dir",
-				VolumeSource: v1.VolumeSource{
-						HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/lib/kubelet/device-plugins",
-					},
-				},
-			},v1.Volume{
 				Name: "mountpoint-dir",
 				VolumeSource: v1.VolumeSource{
 						HostPath: &v1.HostPathVolumeSource{
@@ -560,7 +625,7 @@ func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
 				Name: "mountpoint-dir",
 				VolumeSource: v1.VolumeSource{
 						HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/lib/kubelet/device-plugins",
+						Path: "/var/lib/kubelet",
 					},
 				},
 			},

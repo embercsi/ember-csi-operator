@@ -49,7 +49,7 @@ roleRef:
   name: ember-csi-controller-cr
 subjects:
 - kind: ServiceAccount
-  name: ember-csi-controller-sa
+  name: csi-controller-sa
   namespace: ember-csi
 
 ---
@@ -69,21 +69,21 @@ roleRef:
   name: ember-csi-node-cr
 subjects:
 - kind: ServiceAccount
-  name: ember-csi-node-sa
+  name: csi-node-sa
   namespace: ember-csi
 
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ember-csi-controller-sa
+  name: csi-controller-sa
   namespace: ember-csi
 
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ember-csi-node-sa
+  name: csi-node-sa
   namespace: ember-csi
 
 ---
