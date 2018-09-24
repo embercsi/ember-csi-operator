@@ -9,11 +9,10 @@ import (
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
-//	rbacv1 "k8s.io/api/rbac/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-// 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func NewHandler() sdk.Handler {
@@ -80,6 +79,12 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 			return fmt.Errorf("failed to create node daemonset: %v", err)
 		}
 
+		logrus.Infof("Creating StorageClass for Ember CSI")
+		sc := storageClassForEmberCSI(ecsi)
+		err = sdk.Create(sc)
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create storageclass: %v", err)
+		}
 
 	}
 	return nil
@@ -134,7 +139,7 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 					},{
 						Name:    "external-provisioner",
 						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner", ProvisionerVersion),
-						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", "--provisioner=io.ember-csi"},
+						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name)},
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
 						},
@@ -633,4 +638,23 @@ func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
 	}
 
 	return vol
+}
+
+// storageClassForEmberCSI returns a EmberCSI StorageClass object
+func storageClassForEmberCSI(ecsi *v1alpha1.EmberCSI) *storagev1.StorageClass {
+	ls := labelsForEmberCSI(ecsi.Name)
+
+	sc := &storagev1.StorageClass{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "storage.k8s.io/v1",
+			Kind:       "StorageClass",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fmt.Sprintf("io.ember-csi.%s-sc", ecsi.Name),
+			Namespace: ecsi.Namespace,
+			Labels:	   ls,
+		},
+		Provisioner: fmt.Sprintf("%s.%s", "io.ember-csi", ecsi.Name),
+	}
+	return sc
 }
