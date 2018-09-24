@@ -11,8 +11,8 @@ The provided deploy/install.yaml file will construct all the necessary RBAC, SCC
 $ oc create -f deploy/install.yaml
 ```
 
-
-## The Custom Resource File is a yaml file that configures the Ember CSI driver. Details such as unique name, driver backend-specific information and files are specified here. 
+## Create a Custom Resource File
+The Custom Resource File is a yaml file that configures the Ember CSI driver. Details such as unique name, driver backend-specific information and files are specified here. 
 ### Example CR file.
 ```
 apiVersion: "ember-csi.io/v1alpha1"
@@ -53,9 +53,9 @@ The CSI driver is configured via environmental variables, any value that doesn't
 oc create secret generic sysfiles-secret --from-file=sysfiles.tar
 
 ## Deploy the Custom Resource
-
-$ kubectl create -f deploy/cr.yaml
-
+```
+$ oc create -f deploy/cr.yaml
+```
 ## Verify that the pods are created and the Storageclass exists
 ```
 $ oc get pods -n enber-csi
