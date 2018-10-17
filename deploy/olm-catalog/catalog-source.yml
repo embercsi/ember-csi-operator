@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: ember-csi-operator
+  namespace: openshift-operator-lifecycle-manager
+spec:
+  sourceType: internal
+  configMap: ember-csi-operator
+  displayName: Ember CSI Operator
+  publisher: Red Hat

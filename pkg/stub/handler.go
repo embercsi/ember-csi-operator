@@ -26,9 +26,9 @@ type Handler struct {
 
 const (
 	// Node DaemonSet's ServiceAccount
-	NodeSA string 		= "csi-node-sa"
+	NodeSA string 		= "ember-csi-operator"
 	// Controller StatefulSet's ServiceAccount
-	ControllerSA string 	= "csi-controller-sa"
+	ControllerSA string 	= "ember-csi-operator"
 
 	// Image Versions
 	RegistrarVersion string   = "v0.3.0"
@@ -122,7 +122,8 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 					ServiceAccountName: ControllerSA,
 					Containers: []v1.Container{{
 						Name:    "external-attacher",
-						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher", AttacherVersion),
+						Image: Conf.Images.Attacher,
+						//Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher", AttacherVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
@@ -138,7 +139,8 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 						},
 					},{
 						Name:    "external-provisioner",
-						Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner", ProvisionerVersion),
+						Image:   Conf.Images.Provisioner,
+						//Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner", ProvisionerVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name)},
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
@@ -154,13 +156,14 @@ func statefulSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.StatefulSet {
 						},
 					},{
 						Name:    "ember-csi-driver",
-						Image:   fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
+						Image:   Conf.getDriverImage(ecsi.Spec.Backend),
+						//Image:   fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
 						SecurityContext: &v1.SecurityContext{
 							Privileged: &trueVar,
 						},
 						TerminationMessagePath: "/tmp/termination-log",
 						Env: getEnvVars(ecsi, "controller"),
-						VolumeMounts: getVolumeMounts(ecsi),
+						VolumeMounts: getVolumeMounts(ecsi, "controller"),
 					}},
 					Volumes: getVolumes(ecsi, "controller"),
 				},
@@ -180,7 +183,10 @@ func getEnvVars(ecsi *v1alpha1.EmberCSI, driverMode string) []v1.EnvVar {
 		},{
 			Name: "CSI_ENDPOINT",
 			Value: "unix:///csi-data/csi.sock",
-		},
+		},{
+                        Name: "X_CSI_EMBER_CONFIG",
+                        Value: fmt.Sprintf("%s.%s%s", "{\"plugin_name\": \"io.ember-csi", ecsi.Name, "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
+                },
 	}
 
 	if driverMode == "controller" {
@@ -215,13 +221,6 @@ func getEnvVars(ecsi *v1alpha1.EmberCSI, driverMode string) []v1.EnvVar {
 		envVars = append(envVars, v1.EnvVar{
                         Name: "X_CSI_BACKEND_CONFIG",
                         Value: ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG,
-			},
-		)
-	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 {
-		envVars = append(envVars, v1.EnvVar{
-                        Name: "X_CSI_EMBER_CONFIG",
-                        Value: ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG,
 			},
 		)
 	}
@@ -365,7 +364,8 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
                                         Containers: []v1.Container{
 						{
 							Name:		"driver-registrar",
-							Image:		fmt.Sprintf("%s:%s","quay.io/k8scsi/driver-registrar",RegistrarVersion),
+							Image:		Conf.Images.Registrar,
+							//Image:		fmt.Sprintf("%s:%s","quay.io/k8scsi/driver-registrar",RegistrarVersion),
 							ImagePullPolicy: v1.PullAlways,
 							Args: 		 []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
 							SecurityContext: &v1.SecurityContext{
@@ -393,7 +393,8 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 							},
 						},{
 							Name:		"ember-csi-driver",
-							Image:		fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
+							Image:		Conf.getDriverImage(ecsi.Spec.Backend),
+							//Image:		fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
 							ImagePullPolicy: v1.PullAlways,
 							SecurityContext: &v1.SecurityContext{
 								Privileged: 		  &trueVar,
@@ -401,7 +402,7 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 							},
 							TerminationMessagePath: "/tmp/termination-log",
 							Env:	getEnvVars(ecsi, "node"),
-							VolumeMounts: getVolumeMounts(ecsi),
+							VolumeMounts: getVolumeMounts(ecsi, "node"),
 						},
 					},
                                         Volumes: getVolumes(ecsi, "node"),
@@ -414,7 +415,7 @@ func daemonSetForEmberCSI(ecsi *v1alpha1.EmberCSI) *appsv1.DaemonSet {
 }
 
 // Construct a VolumeMount based on cluster type, secrets, etc
-func getVolumeMounts(ecsi *v1alpha1.EmberCSI) []v1.VolumeMount {
+func getVolumeMounts(ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.VolumeMount {
 	var bidirectional v1.MountPropagationMode       = v1.MountPropagationBidirectional
 	var hostToContainer v1.MountPropagationMode     = v1.MountPropagationHostToContainer
 
@@ -471,25 +472,27 @@ func getVolumeMounts(ecsi *v1alpha1.EmberCSI) []v1.VolumeMount {
 		)
         }
 
-	// ocp
-	if Conf.Cluster == "ocp" {
-		vm = append(vm, v1.VolumeMount{
-				Name:      "mountpoint-dir",
-				MountPropagation: &bidirectional,
-				MountPath: "/var/lib/origin/openshift.local.volumes",
-			},v1.VolumeMount{
-				MountPath: "/var/lib/kubelet/device-plugins",
-				Name: "kubelet-socket-dir",
-				MountPropagation: &bidirectional,
-			},
-		)
-	} else {	// k8s
-		vm = append(vm, v1.VolumeMount{
-				Name:      "mountpoint-dir",
-				MountPropagation: &bidirectional,
-				MountPath: "/var/lib/kubelet",
-			},
-		)
+	if csiDriverMode == "node" {
+		// ocp
+		if Conf.Cluster == "ocp" {
+			vm = append(vm, v1.VolumeMount{
+					Name:      "mountpoint-dir",
+					MountPropagation: &bidirectional,
+					MountPath: "/var/lib/origin/openshift.local.volumes",
+				},v1.VolumeMount{
+					MountPath: "/var/lib/kubelet/device-plugins",
+					Name: "kubelet-socket-dir",
+					MountPropagation: &bidirectional,
+				},
+			)
+		} else {	// k8s
+			vm = append(vm, v1.VolumeMount{
+					Name:      "mountpoint-dir",
+					MountPropagation: &bidirectional,
+					MountPath: "/var/lib/kubelet",
+				},
+			)
+		}
 	}
 
 	return vm
@@ -591,11 +594,41 @@ func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
 				Name: "socket-dir",
 				VolumeSource: v1.VolumeSource{
 						HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/lib/kubelet/device-plugins",
+						Path: fmt.Sprintf("%s.%s", "/var/lib/kubelet/plugins/io.ember-csi", ecsi.Name),
 					},
 				},
 			},
-		)
+			)
+		// ocp
+		if Conf.Cluster == "ocp" {
+			vol = append(vol, v1.Volume{
+					Name: "mountpoint-dir",
+					VolumeSource: v1.VolumeSource{
+							HostPath: &v1.HostPathVolumeSource{
+							Path: "/var/lib/origin/openshift.local.volumes",
+						},
+					},
+				},v1.Volume{
+					Name: "kubelet-socket-dir",
+					VolumeSource: v1.VolumeSource{
+							HostPath: &v1.HostPathVolumeSource{
+							Path: "/var/lib/kubelet/device-plugins",
+							Type: &dirOrCreate,
+						},
+					},
+				},
+			)
+		} else {	// k8s
+			vol = append(vol, v1.Volume{
+					Name: "mountpoint-dir",
+					VolumeSource: v1.VolumeSource{
+							HostPath: &v1.HostPathVolumeSource{
+							Path: "/var/lib/kubelet",
+						},
+					},
+				},
+			)
+		}
 	} else {	// "controller" or "all" mode
 		vol = append(vol, v1.Volume{
 				Name: "socket-dir",
@@ -606,36 +639,6 @@ func getVolumes (ecsi *v1alpha1.EmberCSI, csiDriverMode string) []v1.Volume {
 		)
 	}
 
-	// ocp
-	if Conf.Cluster == "ocp" {
-		vol = append(vol, v1.Volume{
-				Name: "mountpoint-dir",
-				VolumeSource: v1.VolumeSource{
-						HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/lib/origin/openshift.local.volumes",
-					},
-				},
-			},v1.Volume{
-				Name: "kubelet-socket-dir",
-				VolumeSource: v1.VolumeSource{
-						HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/lib/kubelet/plugins/io.ember-csi",
-						Type: &dirOrCreate,
-					},
-				},
-			},
-		)
-	} else {	// k8s
-		vol = append(vol, v1.Volume{
-				Name: "mountpoint-dir",
-				VolumeSource: v1.VolumeSource{
-						HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/lib/kubelet",
-					},
-				},
-			},
-		)
-	}
 
 	return vol
 }

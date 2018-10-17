@@ -20,6 +20,15 @@ type Config struct {
         } `yaml:"images"`
 }
 
+func (config *Config) getDriverImage( backend string ) string {
+	if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
+		return config.Images.Driver[backend]
+	} else {
+		// Return default driver image
+		return "akrog/ember-csi:master"
+	}
+}
+
 func (config *Config) getCluster() string {
         return config.Cluster
 }

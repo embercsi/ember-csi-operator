@@ -4,6 +4,7 @@ metadata:
   name: "external-ceph"
 spec:
   size: 1
+  backend: rbd
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
