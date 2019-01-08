@@ -11,6 +11,7 @@ import (
 type EmberCSISpec struct {
         Backend         string          `json:"backend",omitempty`
         Config          EmberCSIConfig  `json:"config"`
+        Image           string          `json:"image",omitempty`
 }
 
 // EmberCSIStatus defines the observed state of EmberCSI
