@@ -15,17 +15,8 @@ type Config struct {
                 Attacher        string `yaml:"csi-attacher"`
                 Provisioner     string `yaml:"csi-provisioner"`
                 Registrar       string `yaml:"driver-registrar"`
-                Driver          map[string]string `yaml:"ember-csi-driver"`
+                Driver          string `yaml:"ember-csi-driver"`
         } `yaml:"images"`
-}
-
-func (config *Config) getDriverImage( backend string ) string {
-	if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
-		return config.Images.Driver[backend]
-	} else {
-		// Return default driver image
-		return "akrog/ember-csi:master"
-	}
 }
 
 func (config *Config) getCluster() string {
@@ -59,13 +50,10 @@ func NewConfig ( configFile *string ) *Config {
 
 // Populate the Config Stuct with some default values and Return it
 func DefaultConfig () *Config {
-	driver := map[string]string {
-		"default":"akrog/ember-csi:master",
-	}
 	Conf.Cluster = "ocp"
 	Conf.Images.Attacher = "registry.redhat.io/openshift3/csi-attacher:v3.11"
 	Conf.Images.Provisioner = "registry.redhat.io/openshift3/csi-provisioner:v3.11"
 	Conf.Images.Registrar = "registry.redhat.io/openshift3/csi-driver-registrar:v3.11"
-	Conf.Images.Driver = driver
+	Conf.Images.Driver = "akrog/ember-csi:master"
 	return Conf
 }
