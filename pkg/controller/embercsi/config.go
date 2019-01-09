@@ -4,6 +4,7 @@ import (
 	"strings"
         "gopkg.in/yaml.v2"
         "io/ioutil"
+        "encoding/json"
 )
 
 // Global Var to Store Config
@@ -19,8 +20,14 @@ type Config struct {
         } `yaml:"images"`
 }
 
-func (config *Config) getDriverImage( backend string ) string {
-	if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
+func (config *Config) getDriverImage( backend_config string, image string ) string {
+	var backend_config_map map[string]string
+	json.Unmarshal([]byte(backend_config), &backend_config_map)
+	backend := backend_config_map["volume_backend_name"]
+
+	if len(image) > 0 {
+		return image
+	} else if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
 		return config.Images.Driver[backend]
 	} else {
 		// Return default driver image

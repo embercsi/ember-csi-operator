@@ -236,8 +236,7 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 						},
 					},{
 						Name:    "ember-csi-driver",
-						Image:   Conf.getDriverImage(ecsi.Spec.Backend),
-						//Image:   fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
+						Image:	 Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG, ecsi.Spec.Image),
 						SecurityContext: &corev1.SecurityContext{
 							Privileged: &trueVar,
 						},
@@ -456,8 +455,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 							},
 						},{
 							Name:		"ember-csi-driver",
-							Image:		Conf.getDriverImage(ecsi.Spec.Backend),
-							//Image:		fmt.Sprintf("%s:%s", "akrog/ember-csi", DriverVersion),
+							Image:		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG, ecsi.Spec.Image),
 							ImagePullPolicy: corev1.PullAlways,
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: 		  &trueVar,
