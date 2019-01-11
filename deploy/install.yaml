@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -7,14 +8,7 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-controller-sa
-  namespace: ember-csi
-
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: csi-node-sa
+  name: ember-csi-operator
   namespace: ember-csi
 
 ---
@@ -39,8 +33,7 @@ fsGroup:
 supplementalGroups:
   type: RunAsAny
 users:
-- system:serviceaccount:ember-csi:csi-node-sa
-- system:serviceaccount:ember-csi:csi-controller-sa
+- system:serviceaccount:ember-csi:ember-csi-operator
 groups: []
 volumes:
 - configMap
@@ -53,18 +46,13 @@ volumes:
 - secret
 
 ---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
+  creationTimestamp: null
   name: ember-csi-operator
   namespace: ember-csi
 rules:
-- apiGroups:
-  - ember-csi.io
-  resources:
-  - "*"
-  verbs:
-  - "*"
 - apiGroups:
   - ""
   resources:
@@ -76,7 +64,13 @@ rules:
   - configmaps
   - secrets
   verbs:
-  - "*"
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
 - apiGroups:
   - apps
   resources:
@@ -85,24 +79,29 @@ rules:
   - replicasets
   - statefulsets
   verbs:
-  - "*"
+  - '*'
 - apiGroups:
-  - rbac
+  - monitoring.coreos.com
   resources:
-  - clusterrole
-  - clusterrolebinding
+  - servicemonitors
   verbs:
-  - "*"
-
+  - get
+  - create
+- apiGroups:
+  - ember-csi.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
 ---
 kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: ember-csi-operator-rb
+  name: ember-csi-operator
   namespace: ember-csi
 subjects:
 - kind: ServiceAccount
-  name: csi-controller-sa
+  name: ember-csi-operator
 roleRef:
   kind: Role
   name: ember-csi-operator
@@ -112,86 +111,114 @@ roleRef:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: ember-csi-controller-cr
+  name: ember-csi-operator
+  namespace: ember-csi
 rules:
-  - apiGroups: ['ember-csi.io']
-    resources: ['*']
-    verbs: ['*']
-  - apiGroups: ['apiextensions.k8s.io']
-    resources: ['customresourcedefinitions']
-    verbs: ['list', 'create']
-  - apiGroups: ['']
-    resources: ['persistentvolumes']
-    verbs: ['create', 'delete', 'get', 'list', 'watch', 'update']
-  - apiGroups: ['']
-    resources: ['secrets']
-    verbs: ['get', 'list']
-  - apiGroups: ['']
-    resources: ['persistentvolumeclaims']
-    verbs: ['get', 'list', 'watch', 'update']
-  - apiGroups: ['']
-    resources: ['nodes']
-    verbs: ['get', 'list', 'watch']
-  - apiGroups: ['storage.k8s.io']
-    resources: ['volumeattachments']
-    verbs: ['get', 'list', 'watch', 'update']
-  - apiGroups: ['storage.k8s.io']
-    resources: ['storageclasses']
-    verbs: ['create', 'delete', 'update', 'get', 'list', 'watch']
-  - apiGroups: ['']
-    resources: ['events']
-    verbs: ['list', 'watch', 'create', 'update', 'patch']
+- apiGroups:
+  - ember-csi.io
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrole
+  - clusterrolebindings
+  - role
+  - rolebindings
+  - serviceaccounts
+  verbs:
+  - get
+  - create
+  - delete
+  - patch
+  - update
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - list
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - "*"
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - create
+  - delete
+  - list
+  - get
+  - watch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get 
+  - list 
+  - watch 
+  - update
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - volumeattachments
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - delete
+  - create
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - delete
+- apiGroups: 
+  - "*"
+  resources:
+  - events
+  verbs: 
+  - create
+  - list
+  - watch
+  - update
+  - delete
 
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: ember-csi-controller-rb
-  namespace: ember-csi
+  name: ember-csi-operator
 roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
-  name: ember-csi-controller-cr
+  name: ember-csi-operator
 subjects:
 - kind: ServiceAccount
-  name: csi-controller-sa
-  namespace: ember-csi
-
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: ember-csi-node-cr
-  namespace: ember-csi
-rules:
-  - apiGroups: ['ember-csi.io']
-    resources: ['*']
-    verbs: ['*']
-  - apiGroups: ['apiextensions.k8s.io']
-    resources: ['customresourcedefinitions']
-    verbs: ['list', 'create']
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: ember-csi-node-rb
-  namespace: ember-csi
-roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: ember-csi-node-cr
-subjects:
-- kind: ServiceAccount
-  name: csi-node-sa
+  name: ember-csi-operator
   namespace: ember-csi
 
 ---
@@ -226,20 +253,32 @@ spec:
       labels:
         name: ember-csi-operator
     spec:
-      serviceAccount: csi-controller-sa
+      serviceAccountName: ember-csi-operator
       containers:
         - name: ember-csi-operator
-          image: quay.io/kirankt/ember-csi-operator:v0.0.2
+          image: quay.io/kirankt/ember-csi-operator:v0.0.3
           ports:
           - containerPort: 60000
             name: metrics
           command:
           - ember-csi-operator
           imagePullPolicy: Always
+          readinessProbe:
+            exec:
+              command:
+                - stat
+                - /tmp/operator-sdk-ready
+            initialDelaySeconds: 4
+            periodSeconds: 10
+            failureThreshold: 1
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "ember-csi-operator"

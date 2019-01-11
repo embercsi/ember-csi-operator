@@ -1,0 +1,11 @@
+---
+cluster: ocp
+images:
+  csi-attacher:         registry.redhat.io/openshift3/csi-attacher:v3.11
+  csi-provisioner:      registry.redhat.io/openshift3/csi-provisioner:v3.11
+  driver-registrar:     registry.redhat.io/openshift3/csi-driver-registrar:v3.11
+  ember-csi-driver:
+    rbd:        akrog/ember-csi:master
+    xtremio:    akrog/ember-csi:master
+    lvm:        akrog/ember-csi:master
+

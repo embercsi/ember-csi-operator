@@ -4,11 +4,20 @@ The project is currently pre-alpha and it is expected that breaking changes to t
 # ember-csi-operator
 Operator to create/configure/manage Ember CSI Driver atop Kubernetes/OpenShift
 
+## Build
+To build the operator, clone this repo into your GOPATH and run make. NOTE: Please ensure that the container image repo and tag are customized.
+```
+$ mkdir -p ${GOPATH}/src/github.com/embercsi
+$ git clone -b devel https://github.com/embercsi/ember-csi-operator
+$ cd ember-csi-operator
+$ make
+```
+
 ## Quick Start
-The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator.
+The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the install.yaml file if you wish to use your container image. By default it uses quay.io/kirankt/ember-csi-operator:0.0.3
 
 ```
-$ oc create -f deploy/install.yaml
+$ make deploy
 ```
 
 ## Create a Custom Resource File
@@ -54,7 +63,7 @@ oc create secret generic sysfiles-secret --from-file=sysfiles.tar
 
 ## Deploy the Custom Resource
 ```
-$ oc create -f deploy/cr.yaml
+$ oc create -f deploy/examples/external-ceph-cr.yaml
 ```
 ## Verify that the pods are created and the Storageclass exists
 ```
@@ -66,4 +75,14 @@ ember-csi-test-node-2mf5b             2/2       Running   0          11m
 $ oc get storageclass -n ember-csi
 NAME                            PROVISIONER                  AGE
 io.ember-csi.external-ceph-sc   io.ember-csi.external-ceph   5s
+```
+
+## Uninstallation
+Before uninstalling the operator, make sure all the pods and PVCs using Ember CSI is cleaned up. After these are cleaned up, run make undeploy
+
+```
+$ oc delete -f deploy/examples/app.yaml
+$ oc delete -f deploy/examples/pvc.yaml
+$ oc delete -f deploy/examples/external-ceph-cr.yaml
+$ make undeploy
 ```
