@@ -1,6 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
-REPO?=quay.io/kirankt/ember-csi-operator
+REPO?=embercsi/ember-csi-operator
 TAG?="0.0.3"
 
 GOLANG_FILES:=$(shell find . -name \*.go -print)
