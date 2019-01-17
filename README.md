@@ -67,7 +67,7 @@ $ oc create -f deploy/examples/external-ceph-cr.yaml
 ```
 ## Verify that the pods are created and the Storageclass exists
 ```
-$ oc get pods -n enber-csi
+$ oc get pods -n ember-csi
 NAME            READY     STATUS    RESTARTS   AGE
 ember-csi-operator-786769bdc7-dfl4l   1/1       Running   0          11m
 ember-csi-test-controller-0           3/3       Running   0          11m
