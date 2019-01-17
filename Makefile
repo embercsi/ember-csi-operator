@@ -21,8 +21,8 @@ ember-csi-operator: $(GOLANG_FILES)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
 	-o build/$@ cmd/manager/main.go
 
-build: compile
-	docker build -t $(REPO):$(TAG) -f build/Dockerfile build
+build:
+	docker build -t $(REPO):$(TAG) -f build/Dockerfile .
 
 push:
 	docker push $(REPO):$(TAG)
