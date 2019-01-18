@@ -591,7 +591,6 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 					Path: "/var/lib/iscsi",
 				},
 			},
-			},
 		},{
 			Name: "multipath-dir",
 			VolumeSource: corev1.VolumeSource{
