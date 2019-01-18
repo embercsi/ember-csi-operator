@@ -263,6 +263,9 @@ func getEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev1.Env
 			Name: "CSI_ENDPOINT",
 			Value: "unix:///csi-data/csi.sock",
 		},{
+			Name: "X_CSI_PERSISTENCE_CONFIG",
+			Value: "{\"storage\":\"crd\",\"namespace\": ecsi.Namespace}",
+		},{
                         Name: "X_CSI_EMBER_CONFIG",
                         Value: fmt.Sprintf("%s.%s%s", "{\"plugin_name\": \"io.ember-csi", ecsi.Name, "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
                 },
@@ -300,13 +303,6 @@ func getEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev1.Env
 		envVars = append(envVars, corev1.EnvVar{
                         Name: "X_CSI_BACKEND_CONFIG",
                         Value: ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG,
-			},
-		)
-	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG) > 0 {
-		envVars = append(envVars, corev1.EnvVar{
-                        Name: "X_CSI_PERSISTENCE_CONFIG",
-                        Value: ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG,
 			},
 		)
 	}
@@ -423,11 +419,11 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
                                 Spec: corev1.PodSpec{
 					ServiceAccountName: NodeSA,
 					HostNetwork: true,
+					HostIPC: true,
                                         Containers: []corev1.Container{
 						{
 							Name:		"driver-registrar",
 							Image:		Conf.Images.Registrar,
-							//Image:		fmt.Sprintf("%s:%s","quay.io/k8scsi/driver-registrar",RegistrarVersion),
 							ImagePullPolicy: corev1.PullAlways,
 							Args: 		 []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
 							SecurityContext: &corev1.SecurityContext{
@@ -491,12 +487,8 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 			Name: "iscsi-dir",
 			MountPropagation: &bidirectional,
 		},{
-			MountPath: "/etc/lvm",
-			Name: "lvm-dir",
-			MountPropagation: &bidirectional,
-		},{
-			MountPath: "/var/lock/lvm",
-			Name: "lvm-lock",
+			MountPath: "/var/lib/iscsi",
+			Name: "var-lib-iscsi",
 			MountPropagation: &bidirectional,
 		},{
 			MountPath: "/etc/multipath",
@@ -535,6 +527,13 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
         }
 
 	if csiDriverMode == "node" {
+		// Ember CSI shared lock directory to survive restarts
+		vm = append(vm, corev1.VolumeMount{
+			Name: "shared-lock-dir",
+			MountPath: "/var/lib/ember-csi",
+			MountPropagation: &bidirectional,
+		},
+		)
 		// ocp
 		if Conf.Cluster == "ocp" {
 			vm = append(vm, corev1.VolumeMount{
@@ -586,18 +585,12 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 				},
 			},
 		},{
-			Name: "lvm-dir",
+			Name: "var-lib-iscsi",
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/etc/lvm",
+					Path: "/var/lib/iscsi",
 				},
 			},
-		},{
-			Name: "lvm-lock",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/var/lock/lvm",
-				},
 			},
 		},{
 			Name: "multipath-dir",
