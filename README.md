@@ -14,7 +14,7 @@ $ make
 ```
 
 ## Quick Start
-The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the install.yaml file if you wish to use your container image. By default it uses quay.io/kirankt/ember-csi-operator:0.0.3
+The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the install.yaml file if you wish to use your container image. By default it uses quay.io/kirankt/ember-csi-operator:latest
 
 ```
 $ make deploy
