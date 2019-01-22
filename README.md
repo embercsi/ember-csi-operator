@@ -61,6 +61,11 @@ The CSI driver is configured via environmental variables, any value that doesn't
 ### Create required secrets which the EmberCSI resource will use
 oc create secret generic sysfiles-secret --from-file=sysfiles.tar
 
+## Switch to ember-csi project
+```
+$ oc project ember-csi
+```
+
 ## Deploy the Custom Resource
 ```
 $ oc create -f deploy/examples/external-ceph-cr.yaml
