@@ -59,7 +59,7 @@ The CSI driver is configured via environmental variables, any value that doesn't
 | `X_CSI_DEBUG_MODE`         | all        | Debug mode (rpdb, pdb) to use. Disabled by default.           |                                                                                                              | rpdb                                                                                                                                                                                                                                    |
 | `X_CSI_ABORT_DUPLICATES`   | all        | If we want to abort or queue (default) duplicated requests.   | false                                                                                                        | true                                                                                                                                                                                                                                    |
 ### Create required secrets which the EmberCSI resource will use
-oc create secret generic sysfiles-secret --from-file=sysfiles.tar
+oc create secret generic sysfiles-secret --from-file=system-files.tar
 
 ## Deploy the Custom Resource
 ```
