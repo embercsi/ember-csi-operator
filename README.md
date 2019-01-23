@@ -58,8 +58,34 @@ The CSI driver is configured via environmental variables, any value that doesn't
 | `X_CSI_SYSTEM_FILES`       | all        | All required storage driver-specific files archived in tar, tar.gz or tar.bz2 format|                                                                                        | /path/to/etc-ceph.tar.gz                                                                                                                                                                                                                |
 | `X_CSI_DEBUG_MODE`         | all        | Debug mode (rpdb, pdb) to use. Disabled by default.           |                                                                                                              | rpdb                                                                                                                                                                                                                                    |
 | `X_CSI_ABORT_DUPLICATES`   | all        | If we want to abort or queue (default) duplicated requests.   | false                                                                                                        | true                                                                                                                                                                                                                                    |
+
 ### Create required secrets which the EmberCSI resource will use
+
+#### Create the tar file
+
+##### Example for ceph backend
+
+- Prepare the following tree structure:
+    - etc/ceph/ceph.conf
+    - etc/ceph/keyring
+
+- Create the archive:
+    ```
+    $ tar -cvf system-files.tar etc
+    ```
+    
+Notes:
+
+- The keyring file is renamed for brevity purposes. 
+  It depends on the specified client user. E.g. ceph.client.cinder.keyring
+
+- Add 'rbd default features = 3' to ceph.conf file in order to enable only layering.
+  Otherwise, volume creation might fail due to unsupported features (fast-diff/deep-flatten) on old kernels. 
+
+#### Deploy the sysfiles-secret
+```
 oc create secret generic sysfiles-secret --from-file=system-files.tar
+```
 
 ## Switch to ember-csi project
 ```
@@ -70,6 +96,7 @@ $ oc project ember-csi
 ```
 $ oc create -f deploy/examples/external-ceph-cr.yaml
 ```
+
 ## Verify that the pods are created and the Storageclass exists
 ```
 $ oc get pods -n ember-csi
