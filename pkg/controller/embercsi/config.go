@@ -31,7 +31,7 @@ func (config *Config) getDriverImage( backend_config string, image string ) stri
 		return config.Images.Driver[backend]
 	} else {
 		// Return default driver image
-		return "akrog/ember-csi:master"
+		return "embercsi/ember-csi:master"
 	}
 }
 
@@ -67,12 +67,12 @@ func NewConfig ( configFile *string ) *Config {
 // Populate the Config Stuct with some default values and Return it
 func DefaultConfig () *Config {
 	driver := map[string]string {
-		"default":"akrog/ember-csi:master",
+		"default":"embercsi/ember-csi:master",
 	}
 	Conf.Cluster = "ocp"
-	Conf.Images.Attacher = "registry.redhat.io/openshift3/csi-attacher:v3.11"
-	Conf.Images.Provisioner = "registry.redhat.io/openshift3/csi-provisioner:v3.11"
-	Conf.Images.Registrar = "registry.redhat.io/openshift3/csi-driver-registrar:v3.11"
+	Conf.Images.Attacher = "quay.io/k8scsi/csi-attacher:v0.3.0"
+	Conf.Images.Provisioner = "quay.io/k8scsi/csi-provisioner:v0.3.0"
+	Conf.Images.Registrar = "quay.io/k8scsi/driver-registrar:v0.3.0"
 	Conf.Images.Driver = driver
 	return Conf
 }

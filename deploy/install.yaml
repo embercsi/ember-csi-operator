@@ -256,7 +256,7 @@ spec:
       serviceAccountName: ember-csi-operator
       containers:
         - name: ember-csi-operator
-          image: quay.io/kirankt/ember-csi-operator:latest
+          image: quay.io/embercsi/ember-csi-operator:latest
           ports:
           - containerPort: 60000
             name: metrics

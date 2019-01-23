@@ -309,6 +309,12 @@ func getEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev1.Env
                         Value: ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG,
 			},
 		)
+	} else { // Use CRD as the default persistence
+		envVars = append(envVars, corev1.EnvVar{
+                        Name: "X_CSI_PERSISTENCE_CONFIG",
+                        Value: fmt.Sprintf("{\"storage\":\"crd\",\"namespace\":%s}", ecsi.Namespace),
+			},
+		)
 	}
 	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
 		envVars = append(envVars, corev1.EnvVar{

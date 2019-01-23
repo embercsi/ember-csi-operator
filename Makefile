@@ -1,6 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
-REPO?=quay.io/kirankt/ember-csi-operator
+REPO?=embercsi/ember-csi-operator
 TAG?="0.0.3"
 
 GOLANG_FILES:=$(shell find . -name \*.go -print)
@@ -21,8 +21,8 @@ ember-csi-operator: $(GOLANG_FILES)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
 	-o build/$@ cmd/manager/main.go
 
-build: compile
-	docker build -t $(REPO):$(TAG) -f build/Dockerfile build
+build:
+	docker build -t $(REPO):$(TAG) -f build/Dockerfile .
 
 push:
 	docker push $(REPO):$(TAG)
