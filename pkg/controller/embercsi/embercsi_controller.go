@@ -429,6 +429,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
                                 Spec: corev1.PodSpec{
 					ServiceAccountName: NodeSA,
 					HostNetwork: true,
+					HostIPC: true,
                                         Containers: []corev1.Container{
 						{
 							Name:		"driver-registrar",
