@@ -10,7 +10,11 @@ To build the operator, clone this repo into your GOPATH and run make. NOTE: Plea
 $ mkdir -p ${GOPATH}/src/github.com/embercsi
 $ git clone -b devel https://github.com/embercsi/ember-csi-operator
 $ cd ember-csi-operator
-$ make
+$ make build
+```
+If the used Docker release supports multistage builds, you can enable this by setting the MULTISTAGE_BUILD env var:
+```
+$ MULTISTAGE_BUILD=1 make build
 ```
 
 ## Quick Start
