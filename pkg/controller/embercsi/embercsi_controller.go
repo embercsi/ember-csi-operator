@@ -498,6 +498,10 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 			Name: "iscsi-dir",
 			MountPropagation: &bidirectional,
 		},{
+			MountPath: "/var/lib/iscsi",
+			Name: "var-lib-iscsi",
+			MountPropagation: &bidirectional,
+		},{
 			MountPath: "/etc/lvm",
 			Name: "lvm-dir",
 			MountPropagation: &bidirectional,
@@ -598,6 +602,13 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
 					Path: "/etc/iscsi",
+				},
+			},
+		},{
+			Name: "var-lib-iscsi",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/var/lib/iscsi",
 				},
 			},
 		},{
