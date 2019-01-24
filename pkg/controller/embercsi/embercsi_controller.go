@@ -429,6 +429,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
                                 Spec: corev1.PodSpec{
 					ServiceAccountName: NodeSA,
 					HostNetwork: true,
+					HostIPC: true,
                                         Containers: []corev1.Container{
 						{
 							Name:		"driver-registrar",
@@ -541,6 +542,14 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
         }
 
 	if csiDriverMode == "node" {
+		// Ember CSI shared lock directory to survive restarts
+		vm = append(vm, corev1.VolumeMount{
+				Name: "shared-lock-dir",
+				MountPath: "/var/lib/ember-csi",
+				MountPropagation: &bidirectional,
+			},
+		)
+
 		// ocp
 		if Conf.Cluster == "ocp" {
 			vm = append(vm, corev1.VolumeMount{
@@ -662,10 +671,18 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 				Name: "socket-dir",
 				VolumeSource: corev1.VolumeSource{
 						HostPath: &corev1.HostPathVolumeSource{
-						Path: fmt.Sprintf("%s.%s", "/var/lib/kubelet/plugins/io.ember-csi", ecsi.Name),
+							Path: fmt.Sprintf("%s.%s", "/var/lib/kubelet/plugins/io.ember-csi", ecsi.Name),
+						},
 					},
-				},
-			},
+				},corev1.Volume{
+					Name: "shared-lock-dir",
+					VolumeSource: corev1.VolumeSource{
+						HostPath: &corev1.HostPathVolumeSource{
+							Path: "/var/lib/ember-csi",
+							Type: &dirOrCreate,
+                                                },
+                                        },
+                                },
 			)
 		// ocp
 		if Conf.Cluster == "ocp" {
