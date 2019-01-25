@@ -20,7 +20,7 @@ metadata:
 allowPrivilegedContainer: true
 allowPrivilegeEscalation: true
 allowHostDirVolumePlugin: true
-allowHostIPC: false
+allowHostIPC: true
 allowHostNetwork: true
 allowHostPID: false
 allowHostPorts: false
