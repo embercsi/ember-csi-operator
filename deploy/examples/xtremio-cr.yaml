@@ -4,9 +4,8 @@ metadata:
   name: "xtremio"
 spec:
   size: 1
-  backend: xtremio
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
-      X_CSI_BACKEND_CONFIG :          '{"volume_backend_name":"xtremio","volume_driver":"cinder.volume.drivers.dell_emc.xtremio.XtremIOISCSIDriver","san_ip":"1.2.3.4","xtremio_cluster_name":"exampleclustername","san_login":"someusername","san_password":"somesecretpassword"}'
+      X_CSI_BACKEND_CONFIG :          '{"name":"xtremio","driver":"XtremIOISCSI","san_ip":"1.2.3.4","xtremio_cluster_name":"exampleclustername","san_login":"someusername","san_password":"somesecretpassword"}'
 
