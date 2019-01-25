@@ -23,7 +23,7 @@ type Config struct {
 func (config *Config) getDriverImage( backend_config string, image string ) string {
 	var backend_config_map map[string]string
 	json.Unmarshal([]byte(backend_config), &backend_config_map)
-	backend := backend_config_map["volume_backend_name"]
+	backend := backend_config_map["driver"]
 
 	if len(image) > 0 {
 		return image
