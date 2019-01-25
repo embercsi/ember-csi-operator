@@ -5,6 +5,8 @@ import (
         "gopkg.in/yaml.v2"
         "io/ioutil"
         "encoding/json"
+        logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+        "fmt"
 )
 
 // Global Var to Store Config
@@ -24,15 +26,19 @@ func (config *Config) getDriverImage( backend_config string, image string ) stri
 	var backend_config_map map[string]string
 	json.Unmarshal([]byte(backend_config), &backend_config_map)
 	backend := backend_config_map["driver"]
+	log := logf.Log.WithName("config")
 
-	if len(image) > 0 {
-		return image
-	} else if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
-		return config.Images.Driver[backend]
-	} else {
-		// Return default driver image
-		return "embercsi/ember-csi:master"
+	if len(image) == 0 {
+		if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
+			image = config.Images.Driver[backend]
+		} else if len(config.Images.Driver["default"]) > 0 {
+			image = config.Images.Driver["default"]
+		} else {
+			image = "embercsi/ember-csi:master"
+		}
 	}
+	log.Info(fmt.Sprintf("Using driver image %s", image))
+	return image
 }
 
 func (config *Config) getCluster() string {
