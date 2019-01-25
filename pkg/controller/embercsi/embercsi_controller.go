@@ -2,6 +2,7 @@ package embercsi
 
 import (
 	"context"
+	"strings"
 
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -502,14 +503,6 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 			Name: "var-lib-iscsi",
 			MountPropagation: &bidirectional,
 		},{
-			MountPath: "/etc/lvm",
-			Name: "lvm-dir",
-			MountPropagation: &bidirectional,
-		},{
-			MountPath: "/var/lock/lvm",
-			Name: "lvm-lock",
-			MountPropagation: &bidirectional,
-		},{
 			MountPath: "/etc/multipath",
 			Name: "multipath-dir",
 			MountPropagation: &bidirectional,
@@ -534,6 +527,20 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 			Name: "localtime",
 			MountPropagation: &hostToContainer,
 		},
+	}
+
+	// Check to see if the volume driver is LVM
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG), "lvmvolume") {
+		vm = append(vm, corev1.VolumeMount{
+			Name: "etc-lvm",
+			MountPath: "/etc/lvm",
+			MountPropagation: &bidirectional,
+		}, corev1.VolumeMount{
+			Name: "var-lock-lvm",
+			MountPath: "/var/lock/lvm",
+			MountPropagation: &bidirectional,
+		},
+		)
 	}
 
         // Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
@@ -612,20 +619,6 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 				},
 			},
 		},{
-			Name: "lvm-dir",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/etc/lvm",
-				},
-			},
-		},{
-			Name: "lvm-lock",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/var/lock/lvm",
-				},
-			},
-		},{
 			Name: "multipath-dir",
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
@@ -654,6 +647,26 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 				},
 			},
 		},
+	}
+
+	// Check to see if the volume driver is LVM
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG), "lvmvolume")  {
+		vol = append(vol, corev1.Volume{
+			Name: "etc-lvm",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/etc/lvm",
+				},
+			},
+		}, corev1.Volume{
+			Name: "var-lock-lvm",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/var/lock/lvm",
+				},
+			},
+		},
+		)
 	}
 
 	// Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
