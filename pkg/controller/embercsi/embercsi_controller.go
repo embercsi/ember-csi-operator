@@ -530,17 +530,17 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 	}
 
         // Check to see if the volume driver is LVM
-        if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG, "cinder.volume.drivers.lvm.LVMVolumeDriver")  {
-		vm = append(vm, corev1.VolumeMount{
-			Name: "etc-lvm",
-			MountPath: "/etc/lvm",
-			MountPropagation: &bidirectional,
-		},{
-			Name: "var-lock-lvm",
-			MountPath: "/var/lock/lvm",
-			MountPropagation: &bidirectional,
-		},
-		)
+        if strings.Contains(strings.ToLower(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG), "lvmvolume") {
+                vm = append(vm, corev1.VolumeMount{
+                        Name: "etc-lvm",
+                        MountPath: "/etc/lvm",
+                        MountPropagation: &bidirectional,
+                }, corev1.VolumeMount{
+                        Name: "var-lock-lvm",
+                        MountPath: "/var/lock/lvm",
+                        MountPropagation: &bidirectional,
+                },
+                )
         }
 
         // Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
@@ -650,24 +650,24 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 	}
 
         // Check to see if the volume driver is LVM
-        if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG, "cinder.volume.drivers.lvm.LVMVolumeDriver")  {
-		vol = append(vol, corev1.Volume{
-			Name: "etc-lvm",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/etc/lvm",
-				},
-			},
-		},{
-			Name: "var-lock-lvm",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/var/lock/lvm",
-				},
-			},
-		},
-		)
-	}
+        if strings.Contains(strings.ToLower(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG), "lvmvolume") {
+                vol = append(vol, corev1.Volume{
+                        Name: "etc-lvm",
+                        VolumeSource: corev1.VolumeSource{
+                                HostPath: &corev1.HostPathVolumeSource{
+                                        Path: "/etc/lvm",
+                                },
+                        },
+                },corev1.Volume{
+                        Name: "var-lock-lvm",
+                        VolumeSource: corev1.VolumeSource{
+                                HostPath: &corev1.HostPathVolumeSource{
+                                        Path: "/var/lock/lvm",
+                                },
+                        },
+                },
+                )
+        }
 
 	// Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
 	if len(ecsi.Spec.Config.SysFiles.Name) > 0 {
