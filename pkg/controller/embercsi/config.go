@@ -5,6 +5,8 @@ import (
         "gopkg.in/yaml.v2"
         "io/ioutil"
         "encoding/json"
+        logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+        "fmt"
 )
 
 // Global Var to Store Config
@@ -23,16 +25,20 @@ type Config struct {
 func (config *Config) getDriverImage( backend_config string, image string ) string {
 	var backend_config_map map[string]string
 	json.Unmarshal([]byte(backend_config), &backend_config_map)
-	backend := backend_config_map["volume_backend_name"]
+	backend := backend_config_map["driver"]
+	log := logf.Log.WithName("config")
 
-	if len(image) > 0 {
-		return image
-	} else if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
-		return config.Images.Driver[backend]
-	} else {
-		// Return default driver image
-		return "akrog/ember-csi:master"
+	if len(image) == 0 {
+		if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
+			image = config.Images.Driver[backend]
+		} else if len(config.Images.Driver["default"]) > 0 {
+			image = config.Images.Driver["default"]
+		} else {
+			image = "embercsi/ember-csi:master"
+		}
 	}
+	log.Info(fmt.Sprintf("Using driver image %s", image))
+	return image
 }
 
 func (config *Config) getCluster() string {
@@ -67,12 +73,12 @@ func NewConfig ( configFile *string ) *Config {
 // Populate the Config Stuct with some default values and Return it
 func DefaultConfig () *Config {
 	driver := map[string]string {
-		"default":"akrog/ember-csi:master",
+		"default":"embercsi/ember-csi:master",
 	}
 	Conf.Cluster = "ocp"
-	Conf.Images.Attacher = "registry.redhat.io/openshift3/csi-attacher:v3.11"
-	Conf.Images.Provisioner = "registry.redhat.io/openshift3/csi-provisioner:v3.11"
-	Conf.Images.Registrar = "registry.redhat.io/openshift3/csi-driver-registrar:v3.11"
+	Conf.Images.Attacher = "quay.io/k8scsi/csi-attacher:v0.3.0"
+	Conf.Images.Provisioner = "quay.io/k8scsi/csi-provisioner:v0.3.0"
+	Conf.Images.Registrar = "quay.io/k8scsi/driver-registrar:v0.3.0"
 	Conf.Images.Driver = driver
 	return Conf
 }

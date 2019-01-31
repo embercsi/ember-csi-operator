@@ -1,0 +1,10 @@
+FROM openshift/origin-release:golang-1.10
+
+RUN mkdir -p /go/src/github.com/embercsi/ember-csi-operator/
+RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
+COPY . /go/src/github.com/embercsi/ember-csi-operator/
+WORKDIR /go/src/github.com/embercsi/ember-csi-operator/
+
+RUN make dep
+RUN make compile

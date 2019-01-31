@@ -1,6 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
-REPO?=quay.io/kirankt/ember-csi-operator
+REPO?=embercsi/ember-csi-operator
 TAG?="0.0.3"
 
 GOLANG_FILES:=$(shell find . -name \*.go -print)
@@ -21,8 +21,17 @@ ember-csi-operator: $(GOLANG_FILES)
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
 	-o build/$@ cmd/manager/main.go
 
-build: compile
-	docker build -t $(REPO):$(TAG) -f build/Dockerfile build
+build:
+ifndef MULTISTAGE_BUILD
+	docker build -t $(REPO):build . -f build/Dockerfile.build
+	docker container create --name extract $(REPO):build
+	docker container cp extract:/go/src/github.com/embercsi/ember-csi-operator/build/ember-csi-operator ./ember-csi-operator
+	docker container rm -f extract
+	docker build --no-cache -t $(REPO):$(TAG) -f build/Dockerfile .
+	rm ./ember-csi-operator
+else
+	docker build -t $(REPO):$(TAG) -f build/Dockerfile.multistage .
+endif
 
 push:
 	docker push $(REPO):$(TAG)
