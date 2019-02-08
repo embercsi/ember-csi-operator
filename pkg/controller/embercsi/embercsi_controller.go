@@ -200,10 +200,9 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 					Labels: ls,
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: ControllerSA,
 					Containers: []corev1.Container{{
 						Name:    "external-attacher",
-						Image: Conf.Images.Attacher,
+						Image: Conf.Sidecars[Cluster].Attacher,
 						//Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher", AttacherVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
 						SecurityContext: &corev1.SecurityContext{
@@ -220,7 +219,7 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 						},
 					},{
 						Name:    "external-provisioner",
-						Image:   Conf.Images.Provisioner,
+						Image:   Conf.Sidecars[Cluster].Provisioner,
 						//Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner", ProvisionerVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name)},
 						SecurityContext: &corev1.SecurityContext{
@@ -237,7 +236,7 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 						},
 					},{
 						Name:    "ember-csi-driver",
-						Image:	 Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG, ecsi.Spec.Image),
+						Image:	 Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
 						SecurityContext: &corev1.SecurityContext{
 							Privileged: &trueVar,
 						},
@@ -245,7 +244,10 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 						Env: getEnvVars(ecsi, "controller"),
 						VolumeMounts: getVolumeMounts(ecsi, "controller"),
 					}},
-					Volumes: getVolumes(ecsi, "controller"),
+					Volumes: 	    getVolumes(ecsi, "controller"),
+					ServiceAccountName: ControllerSA,
+					NodeSelector: 	    ecsi.Spec.NodeSelector,
+					Tolerations: 	    ecsi.Spec.Tolerations,
 				},
 			},
 		},
@@ -434,7 +436,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
                                         Containers: []corev1.Container{
 						{
 							Name:		"driver-registrar",
-							Image:		Conf.Images.Registrar,
+							Image:		Conf.Sidecars[Cluster].Registrar,
 							//Image:		fmt.Sprintf("%s:%s","quay.io/k8scsi/driver-registrar",RegistrarVersion),
 							ImagePullPolicy: corev1.PullAlways,
 							Args: 		 []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
@@ -463,7 +465,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 							},
 						},{
 							Name:		"ember-csi-driver",
-							Image:		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG, ecsi.Spec.Image),
+							Image:		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
 							ImagePullPolicy: corev1.PullAlways,
 							SecurityContext: &corev1.SecurityContext{
 								Privileged: 		  &trueVar,
@@ -562,7 +564,7 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 		)
 
 		// ocp
-		if Conf.Cluster == "ocp" {
+		if strings.Contains(Cluster, "ocp") || Cluster == "default" {
 			vm = append(vm, corev1.VolumeMount{
 					Name:      "mountpoint-dir",
 					MountPropagation: &bidirectional,
@@ -709,7 +711,7 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
                                 },
 			)
 		// ocp
-		if Conf.Cluster == "ocp" {
+		if strings.Contains(Cluster, "ocp") || Cluster == "default" {
 			vol = append(vol, corev1.Volume{
 					Name: "mountpoint-dir",
 					VolumeSource: corev1.VolumeSource{
