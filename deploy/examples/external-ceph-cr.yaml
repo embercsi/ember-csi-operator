@@ -3,12 +3,16 @@ kind: "EmberCSI"
 metadata:
   name: "external-ceph"
 spec:
-  size: 1
+# Optional. Use nodeSelector for placing CSI controller pod
+# nodeSelector:
+#   # Any arbitrary key: value pair that must match nodeLabels set by the admin
+#   # kubectl get nodes --show-labels
+#   ember-csi-controller: true
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
       X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
-    sysfiles:
+    sysFiles:
       name: sysfiles-secret
       key: "system-files.tar"
 

@@ -3,7 +3,6 @@ kind: "EmberCSI"
 metadata:
   name: "xtremio"
 spec:
-  size: 1
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
