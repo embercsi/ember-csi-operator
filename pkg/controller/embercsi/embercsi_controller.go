@@ -24,19 +24,6 @@ import (
         "fmt"
 )
 
-const (
-        // Node DaemonSet's ServiceAccount
-        NodeSA string           = "ember-csi-operator"
-        // Controller StatefulSet's ServiceAccount
-        ControllerSA string     = "ember-csi-operator"
-
-        // Image Versions
-        RegistrarVersion string   = "v0.3.0"
-        AttacherVersion string    = "v0.3.0"
-        ProvisionerVersion string = "v0.3.0"
-        DriverVersion string      = "master"
-)
-
 var log = logf.Log.WithName("controller_embercsi")
 
 // Add creates a new EmberCSI Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -200,10 +187,11 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 					Labels: ls,
 				},
 				Spec: corev1.PodSpec{
+					Containers:	getControllerContainers(),
+/*
 					Containers: []corev1.Container{{
 						Name:    "external-attacher",
 						Image: Conf.Sidecars[Cluster].Attacher,
-						//Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-attacher", AttacherVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
 						SecurityContext: &corev1.SecurityContext{
 							Privileged: &trueVar,
@@ -220,7 +208,6 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 					},{
 						Name:    "external-provisioner",
 						Image:   Conf.Sidecars[Cluster].Provisioner,
-						//Image:   fmt.Sprintf("%s:%s", "quay.io/k8scsi/csi-provisioner", ProvisionerVersion),
 						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name)},
 						SecurityContext: &corev1.SecurityContext{
 							Privileged: &trueVar,
@@ -244,6 +231,7 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 						Env: getEnvVars(ecsi, "controller"),
 						VolumeMounts: getVolumeMounts(ecsi, "controller"),
 					}},
+*/
 					Volumes: 	    getVolumes(ecsi, "controller"),
 					ServiceAccountName: ControllerSA,
 					NodeSelector: 	    ecsi.Spec.NodeSelector,
@@ -265,6 +253,9 @@ func getEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev1.Env
 		},{
 			Name: "CSI_ENDPOINT",
 			Value: "unix:///csi-data/csi.sock",
+		},{
+			Name: "X_CSI_SPEC_VERSION",
+			Value: Conf.Sidecars[Cluster].CSISpecVersion,
 		},{
                         Name: "X_CSI_EMBER_CONFIG",
                         Value: fmt.Sprintf("%s.%s%s", "{\"plugin_name\": \"io.ember-csi", ecsi.Name, "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
@@ -484,6 +475,168 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 	controllerutil.SetControllerReference(ecsi, ds, r.scheme)
 
 	return ds
+}
+
+// Construct a Containers PodSpec for Nodes
+func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
+	trueVar 		:= true
+	containers := []corev1.Container {
+				{
+					Name:    		"ember-csi-driver",
+					Image:   		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
+					ImagePullPolicy: 	corev1.PullAlways,
+					SecurityContext: 	&corev1.SecurityContext{
+									Privileged: &trueVar,
+									AllowPrivilegeEscalation: &trueVar,
+								},
+					TerminationMessagePath: "/tmp/termination-log",
+					Env: 			getEnvVars(ecsi, "node"),
+					VolumeMounts: 		getVolumeMounts(ecsi, "node"),
+				},
+			}
+
+	// Add NodeRegistrar sidecar
+	if len(Conf.Sidecars[Cluster].NodeRegistrar) > 0 {
+		containers = append(containers, corev1.Container {
+				Name:    "node-driver-registrar",
+				Image:   Conf.Sidecars[Cluster].NodeRegistrar,
+				Args: []string{ 
+						"--v=5", 
+						"--csi-address=/csi-data/csi.sock",
+						fmt.Sprintf("%s.%s/%s", "--kubelet-registration-path=/var/lib/kubelet/plugins/io.ember-csi", ecsi.Name, "csi.sock"),
+					},
+				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						MountPath: "/csi-data",
+						Name: "socket-dir",
+					},
+				},
+			},
+		)
+	}
+
+	// On older CSI specs, use driver registrar
+	if len(Conf.Sidecars[Cluster].Registrar) > 0 {
+		containers = append(containers, corev1.Container {
+				Name:    "driver-registrar",
+				Image:   Conf.Sidecars[Cluster].Registrar,
+				Args: []string{ 
+						"--v=5",
+						"--csi-address=/csi-data/csi.sock",
+					},
+				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						MountPath: "/csi-data",
+						Name: "socket-dir",
+					},
+				},
+			},
+		)
+	}
+		
+	return containers
+}
+
+// Construct a Containers PodSpec for Controller
+func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
+	trueVar 		:= true
+	containers := []corev1.Container {
+				{
+					Name:    		"ember-csi-driver",
+					Image:   		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
+					ImagePullPolicy: 	corev1.PullAlways,
+					SecurityContext: 	&corev1.SecurityContext{
+									Privileged: &trueVar,
+									AllowPrivilegeEscalation: &trueVar,
+								},
+					TerminationMessagePath: "/tmp/termination-log",
+					Env: 			getEnvVars(ecsi, "controller"),
+					VolumeMounts: 		getVolumeMounts(ecsi, "controller"),
+				},
+			}
+
+	// Add External Attacher sidecar
+	if len(Conf.Sidecars[Cluster].Attacher) > 0 {
+		containers = append(containers, corev1.Container {
+				Name:    "external-attacher",
+				Image: Conf.Sidecars[Cluster].Attacher,
+				Args: []string{ "--v=5",
+						"--csi-address=/csi-data/csi.sock",
+						"--timeout=120s",
+					},
+				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						MountPath: "/csi-data",
+						Name: "socket-dir",
+					},
+				},
+			},
+		)
+	}
+
+	// Add External Provisioner sidecar
+	if len(Conf.Sidecars[Cluster].Provisioner) > 0 {
+		containers = append(containers, corev1.Container {
+				Name:    "external-provisioner",
+				Image:   Conf.Sidecars[Cluster].Provisioner,
+				Args: []string{ "--v=5", 
+						"--csi-address=/csi-data/csi.sock",
+						fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name),
+						"--feature-gates=Topology=true",
+					},
+				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						MountPath: "/csi-data",
+						Name: "socket-dir",
+					},
+				},
+			},
+		)
+	}
+		
+	// Add ClusterRegistrar sidecar
+	if len(Conf.Sidecars[Cluster].ClusterRegistrar) > 0 {
+		containers = append(containers, corev1.Container {
+				Name:    "cluster-driver-registrar",
+				Image:   Conf.Sidecars[Cluster].ClusterRegistrar,
+				Args: []string{ 
+						"--csi-address=/csi-data/csi.sock",
+					},
+				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						MountPath: "/csi-data",
+						Name: "socket-dir",
+					},
+				},
+			},
+		)
+	}
+		
+	// Add Snapshotter sidecar
+	if len(Conf.Sidecars[Cluster].Snapshotter) > 0 {
+		containers = append(containers, corev1.Container {
+				Name:    "external-snapshotter",
+				Image:   Conf.Sidecars[Cluster].Snapshotter,
+				Args: []string{ "--v=5", 
+						"--csi-address=/csi-data/csi.sock",
+					},
+				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				VolumeMounts: []corev1.VolumeMount{
+					{
+						MountPath: "/csi-data",
+						Name: "socket-dir",
+					},
+				},
+			},
+		)
+	}
+
+	return containers
 }
 
 // Construct a VolumeMount based on cluster type, secrets, etc

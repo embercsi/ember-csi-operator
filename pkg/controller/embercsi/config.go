@@ -21,8 +21,8 @@ type Versions  struct {
         Attacher                string `yaml:"external-attacher,omitempty"`
         Provisioner             string `yaml:"external-provisioner,omitempty"`
         Registrar               string `yaml:"driver-registrar,omitempty"`	// For use in older CSI specs
-        NodeRegistrar           string `yaml:"node-registrar,omitempty"`
-        ClusterRegistrar        string `yaml:"cluster-registrar,omitempty"`
+        NodeRegistrar           string `yaml:"node-driver-registrar,omitempty"`
+        ClusterRegistrar        string `yaml:"cluster-driver-registrar,omitempty"`
         Resizer                 string `yaml:"external-resizer,omitempty"`
         Snapshotter             string `yaml:"external-snapshotter,omitempty"`
         LivenessProbe		string `yaml:"livenessprobe,omitempty"`
