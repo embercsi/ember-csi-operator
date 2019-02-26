@@ -30,8 +30,6 @@ func printVersion() {
 }
 
 func main() {
-	flag.Parse()
-
 	// The logger instantiated here can be changed to any logger
 	// implementing the logr.Logger interface. This logger will
 	// be propagated through the whole operator, generating
@@ -46,6 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Read Config File if provided
 	configFile := flag.String("config", "", "Config file. (Optional)")
 	flag.Parse()
 

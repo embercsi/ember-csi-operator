@@ -1,16 +1,23 @@
 package v1alpha1
 
 import (
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // EmberCSISpec defines the desired state of EmberCSI
 type EmberCSISpec struct {
-        Config          EmberCSIConfig  `json:"config"`
-        Image           string          `json:"image",omitempty`
+        Config          EmberCSIConfig    `json:"config"`
+        Image           string            `json:"image",omitempty`
+        NodeSelector	map[string]string `json:"nodeSelector",omitempty`
+        Tolerations	[]v1.Toleration   `json:"tolerations",omitempty`
+}
+
+type Tolerations struct {
+        Key        	string `json:"key,omitempty"`
+        Operator	string `json:"operator,omitempty"`
+        Value		string `json:"value,omitempty"`
+        Effect		string `json:"effect,omitempty"`
 }
 
 // EmberCSIStatus defines the observed state of EmberCSI
@@ -33,7 +40,7 @@ type EmberCSI struct {
 
 type EmberCSIConfig struct {
         EnvVars         EnvVars `json:"envVars"`
-        SysFiles        Secrets `json:"sysfiles"`
+        SysFiles        Secrets `json:"sysFiles"`
 }
 
 type EnvVars struct {

@@ -20,6 +20,8 @@ $ MULTISTAGE_BUILD=1 make build
 ## Quick Start
 The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the install.yaml file if you wish to use your container image. By default it uses quay.io/embercsi/ember-csi-operator:latest
 
+An optional environmental variable of X_EMBER_OPERATOR_CLUSTER can be passed to the operator to enable/disable CSI spec versions as well as selecting the appropriate sidecar and driver images. The default value of X_EMBER_OPERATOR_CLUSTER is "default" which enables CSI spec v0.3. 
+
 ```
 $ make deploy
 ```
@@ -33,17 +35,21 @@ kind: "EmberCSI"
 metadata:
   name: "external-ceph"
 spec:
-  size: 1
+# Optional. Use nodeSelector for placing CSI controller pod
+# nodeSelector:
+#   # Any arbitrary key: value pair that must match nodeLabels set by the admin
+#   # kubectl get nodes --show-labels
+#   ember-csi-controller: true
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
       X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
-    sysfiles:
+    sysFiles:
       name: sysfiles-secret
       key: "system-files.tar"
 ```
 
-The name entry will ensure a unique deployment of Ember CSI instance. In the config.envvars section, environment variables specified here are passed to the Ember CSI driver pod. The config.sysfiles entry, specifies the name of the secret, which contains any backend-specific files tar'ed and optionally compressed via gzip or bzip2.
+The name entry will ensure a unique deployment of Ember CSI instance. In the config.envvars section, environment variables specified here are passed to the Ember CSI driver pod. The config.sysFiles entry, specifies the name of the secret, which contains any backend-specific files tar'ed and optionally compressed via gzip or bzip2.
 
 ### Enviroment Variables
 

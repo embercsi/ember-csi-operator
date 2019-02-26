@@ -1,6 +1,7 @@
 package embercsi
 
 import (
+	"os"
 	"strings"
         "gopkg.in/yaml.v2"
         "io/ioutil"
@@ -12,45 +13,51 @@ import (
 // Global Var to Store Config
 var Conf *Config
 
-type Config struct {
-        Cluster string `yaml:"cluster"`
-        Images  struct {
-                Attacher        string `yaml:"csi-attacher"`
-                Provisioner     string `yaml:"csi-provisioner"`
-                Registrar       string `yaml:"driver-registrar"`
-                Driver          map[string]string `yaml:"ember-csi-driver"`
-        } `yaml:"images"`
+// Global Var to retain cluster-version
+var Cluster string
+
+type Versions  struct {
+        CSISpecVersion          string `yaml:"X_CSI_SPEC_VERSION,omitempty"`
+        Attacher                string `yaml:"external-attacher,omitempty"`
+        Provisioner             string `yaml:"external-provisioner,omitempty"`
+        Registrar               string `yaml:"driver-registrar,omitempty"`	// For use in older CSI specs
+        NodeRegistrar           string `yaml:"node-registrar,omitempty"`
+        ClusterRegistrar        string `yaml:"cluster-registrar,omitempty"`
+        Resizer                 string `yaml:"external-resizer,omitempty"`
+        Snapshotter             string `yaml:"external-snapshotter,omitempty"`
+        LivenessProbe		string `yaml:"livenessprobe,omitempty"`
 }
 
-func (config *Config) getDriverImage( backend_config string, image string ) string {
+type Config struct {
+        ConfigVersion   string `yaml:"version,omitempty"`
+        Sidecars        map[string]Versions `yaml:"sidecars,omitempty"`
+        Drivers         map[string]string `yaml:"drivers"`
+}
+
+func (config *Config) getDriverImage( backend_config string ) string {
 	var backend_config_map map[string]string
 	json.Unmarshal([]byte(backend_config), &backend_config_map)
 	backend := backend_config_map["driver"]
 	log := logf.Log.WithName("config")
+	var image string
 
-	if len(image) == 0 {
-		if len(backend) > 0 && len(config.Images.Driver[backend]) > 0 {
-			image = config.Images.Driver[backend]
-		} else if len(config.Images.Driver["default"]) > 0 {
-			image = config.Images.Driver["default"]
-		} else {
-			image = "embercsi/ember-csi:master"
-		}
+	if len(backend) > 0 && len(config.Drivers[backend]) > 0 {
+		image = config.Drivers[backend]
+	} else if len(config.Drivers["default"]) > 0 {
+		image = config.Drivers["default"]
+	} else {
+		image = "embercsi/ember-csi:master"
 	}
 	log.Info(fmt.Sprintf("Using driver image %s", image))
 	return image
 }
 
 func (config *Config) getCluster() string {
-        return config.Cluster
+        return Cluster
 }
 
-func ReadConfig(configFile *string) {
-	Conf = NewConfig(configFile)
-}
-
-// Config factory
-func NewConfig ( configFile *string ) *Config {
+// Read Config and store values from Config File or Use DefaultConfig
+func ReadConfig ( configFile *string ) {
 	// If configFile is not specified. Lets use our default
 	if len(strings.TrimSpace(*configFile)) == 0 {
 		*configFile = "/etc/ember-csi-operator/config.yml"
@@ -59,26 +66,42 @@ func NewConfig ( configFile *string ) *Config {
         source, err := ioutil.ReadFile(*configFile)
         if err != nil {
 		//logrus.Infof("Cannot Open Config File. Will use defaults.\n")
-                return DefaultConfig()
+                DefaultConfig()
         }
         err = yaml.Unmarshal(source, &Conf)
         if err != nil {
 		//logrus.Infof("Cannot Open Config File. Will use defaults.\n")
-		return DefaultConfig()
+		DefaultConfig()
         }
 
-        return Conf 
+	// Read X_EMBER_OPERATOR_CLUSTER e.g ocp-3.11, k8s-1.13, k8s-1.14, etc
+	if len(os.Getenv("X_EMBER_OPERATOR_CLUSTER")) > 0 {
+		Cluster = os.Getenv("X_EMBER_OPERATOR_CLUSTER")
+	} else {
+		// Use "default" as the cluster name which is used in DefaultConfig
+		Cluster = "default"
+	}
 }
 
 // Populate the Config Stuct with some default values and Return it
-func DefaultConfig () *Config {
-	driver := map[string]string {
-		"default":"embercsi/ember-csi:master",
+func DefaultConfig () {
+	log := logf.Log.WithName("config")
+
+	var defaultConfig = `
+---
+version: 1.0
+sidecars:
+  default:
+    X_CSI_SPEC_VERSION: v0.3
+    external-attacher: quay.io/k8scsi/csi-attacher:v0.3.0
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v0.3.0
+    driver-registrar: quay.io/k8scsi/driver-registrar:v0.3.0
+drivers:
+  default: embercsi/ember-csi:master
+	`
+        err := yaml.Unmarshal([]byte(defaultConfig), &Conf)
+	if err != nil {
+		log.Info(fmt.Sprintf("Cannot Open Default Config: %d"), err.Error())
+		os.Exit(3)
 	}
-	Conf.Cluster = "ocp"
-	Conf.Images.Attacher = "quay.io/k8scsi/csi-attacher:v0.3.0"
-	Conf.Images.Provisioner = "quay.io/k8scsi/csi-provisioner:v0.3.0"
-	Conf.Images.Registrar = "quay.io/k8scsi/driver-registrar:v0.3.0"
-	Conf.Images.Driver = driver
-	return Conf
 }
