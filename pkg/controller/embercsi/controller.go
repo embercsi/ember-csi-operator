@@ -37,7 +37,7 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 				},
 				Spec: corev1.PodSpec{
 					Containers:	getControllerContainers(ecsi),
-					Volumes: 	    getVolumes(ecsi, "controller"),
+					Volumes: 	    generateVolumes(ecsi, "controller"),
 					ServiceAccountName: ControllerSA,
 					NodeSelector: 	    ecsi.Spec.NodeSelector,
 					Tolerations: 	    ecsi.Spec.Tolerations,
@@ -62,8 +62,8 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 									AllowPrivilegeEscalation: &trueVar,
 								},
 					TerminationMessagePath: "/tmp/termination-log",
-					Env: 			getEnvVars(ecsi, "controller"),
-					VolumeMounts: 		getVolumeMounts(ecsi, "controller"),
+					Env: 			generateEnvVars(ecsi, "controller"),
+					VolumeMounts: 		generateVolumeMounts(ecsi, "controller"),
 				},
 			}
 
@@ -89,14 +89,20 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 
 	// Add External Provisioner sidecar
 	if len(Conf.Sidecars[Cluster].Provisioner) > 0 {
+		// Customize the arguments for the container
+		args := []string{
+					"--v=5",
+					"--csi-address=/csi-data/csi.sock",
+					fmt.Sprintf("%s.%s", "--provisioner=", PluginDomainName),
+				}
+
+		if CSI_SPEC > 1.0 {
+			args = append(args, "--feature-gates=Topology=true")
+		}
 		containers = append(containers, corev1.Container {
 				Name:    "external-provisioner",
 				Image:   Conf.Sidecars[Cluster].Provisioner,
-				Args: []string{ "--v=5", 
-						"--csi-address=/csi-data/csi.sock",
-						fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name),
-						"--feature-gates=Topology=true",
-					},
+				Args:	 args,
 				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
 				VolumeMounts: []corev1.VolumeMount{
 					{

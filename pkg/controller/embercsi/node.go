@@ -36,7 +36,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 					HostNetwork: true,
 					HostIPC: true,
                                         Containers: getNodeContainers(ecsi),
-                                        Volumes: getVolumes(ecsi, "node"),
+                                        Volumes: generateVolumes(ecsi, "node"),
 				},
 			},
 		},
@@ -59,8 +59,8 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 									AllowPrivilegeEscalation: &trueVar,
 								},
 					TerminationMessagePath: "/tmp/termination-log",
-					Env: 			getEnvVars(ecsi, "node"),
-					VolumeMounts: 		getVolumeMounts(ecsi, "node"),
+					Env: 			generateEnvVars(ecsi, "node"),
+					VolumeMounts: 		generateVolumeMounts(ecsi, "node"),
 				},
 			}
 
@@ -72,7 +72,7 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 				Args: []string{ 
 						"--v=5", 
 						"--csi-address=/csi-data/csi.sock",
-						fmt.Sprintf("%s.%s/%s", "--kubelet-registration-path=/var/lib/kubelet/plugins/io.ember-csi", ecsi.Name, "csi.sock"),
+						fmt.Sprintf("%s/%s/%s", "--kubelet-registration-path=/var/lib/kubelet/plugins", PluginDomainName, "csi.sock"),
 					},
 				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
 				VolumeMounts: []corev1.VolumeMount{

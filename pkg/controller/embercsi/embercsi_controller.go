@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
+	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
         appsv1 "k8s.io/api/apps/v1"
@@ -14,17 +15,14 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"github.com/golang/glog"
 
         "fmt"
 )
-
-var log = logf.Log.WithName("controller_embercsi")
 
 // Add creates a new EmberCSI Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -34,7 +32,10 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileEmberCSI{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileEmberCSI{
+		client: mgr.GetClient(),
+		scheme: mgr.GetScheme(),
+	}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -51,15 +52,31 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner EmberCSI
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Watch owned objects
+	watchOwnedObjects := []runtime.Object{
+		&appsv1.StatefulSet{},
+		&appsv1.DaemonSet{},
+		&storagev1.StorageClass{},
+	}
+	// Enable objects based on CSI Spec
+	if CSI_SPEC > 1.0 {
+		watchOwnedObjects = append(watchOwnedObjects, &snapv1a1.VolumeSnapshotClass{})
+	}
+
+	ownerHandler := &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &embercsiv1alpha1.EmberCSI{},
-	})
-	if err != nil {
-		return err
 	}
+	for _, watchObject := range watchOwnedObjects {
+		glog.V(3).Infof("Watching Owned Object: %s/%s\n", "", "")
+		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
+		if err != nil {
+			return err
+		}
+	}
+        if err != nil {
+                return err
+        }
 
 	return nil
 }
@@ -76,45 +93,42 @@ type ReconcileEmberCSI struct {
 
 // Reconcile reads that state of the cluster for a EmberCSI object and makes changes based on the state read
 // and what is in the EmberCSI.Spec
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling EmberCSI")
+	glog.V(3).Infof("Reconciling EmberCSI %s/%s\n", request.Namespace, request.Name)
 
 	// Fetch the EmberCSI instance
 	instance := &embercsiv1alpha1.EmberCSI{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
-		reqLogger.Error(err, "failed to get EmberCSI instance")
+		glog.Warningf("Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
 	}
 
+	// Manage objects created by the operator
+	return reconcile.Result{}, r.handleEmberCSIDeployment(instance)
+}
+
+// Manage the Objects created by the Operator. 
+func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.EmberCSI) error {
 	// Check if the statefuleSet already exists, if not create a new one
 	ss := &appsv1.StatefulSet{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, ss)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, ss)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new statefulset
-		ss := r.statefulSetForEmberCSI(instance)
-		reqLogger.Info("Creating a new StatefulSet", "StatefulSet.Namespace", ss.Namespace, "StatefulSet.Name", ss.Name)
+		ss = r.statefulSetForEmberCSI(instance)
+		glog.Info("Creating a new StatefulSet %s in %s", ss.Name, ss.Namespace)
 		err = r.client.Create(context.TODO(), ss)
 		if err != nil {
-			reqLogger.Error(err, "Failed to create a new StatefulSet", "StatefulSet.Namespace", ss.Namespace, "StatefulSet.Name", ss.Name)
-			return reconcile.Result{}, err
+			glog.Error("Failed to create a new StatefulSet %s in %s", ss.Name, ss.Namespace)
+			return err
 		}
-		// StatefulSet created successfully - return and requeue
-		//return reconcile.Result{Requeue: true}, nil
+		glog.Info("Successfully Created a new StatefulSet %s in %s", ss.Name, ss.Namespace)
 	} else if err != nil {
-		reqLogger.Error(err, "failed to get StatefulSet")
-		return reconcile.Result{}, err
+		glog.Error("failed to get StatefulSet", err)
+		return err
 	}
 
 	// Check if the daemonSet already exists, if not create a new one
@@ -122,18 +136,17 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, ds)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new DaemonSet
-		ds := r.daemonSetForEmberCSI(instance)
-		reqLogger.Info("Creating a new DaemonSet", "DaemonSet.Namespace", ds.Namespace, "DaemonSet.Name", ds.Name)
+		ds = r.daemonSetForEmberCSI(instance)
+		glog.Info("Creating a new Daemonset %s in %s", ds.Name, ds.Namespace)
 		err = r.client.Create(context.TODO(), ds)
 		if err != nil {
-			reqLogger.Error(err, "Failed to create a new DaemonSet", "DaemonSet.Namespace", ds.Namespace, "DaemonSet.Name", ds.Name)
-			return reconcile.Result{}, err
+			glog.Error("Failed to create a new Daemonset %s in %s", ds.Name, ds.Namespace)
+			return err
 		}
-		// DaemonSet created successfully - return and requeue
-		//return reconcile.Result{Requeue: true}, nil
+		glog.Info("Successfully Created a new Daemonset %s in %s", ds.Name, ds.Namespace)
 	} else if err != nil {
-		reqLogger.Error(err, "failed to get DaemonSet")
-		return reconcile.Result{}, err
+                glog.Error("failed to get DaemonSet", err)
+		return err
 	}
 
 	// Check if the storageclass already exists, if not create a new one
@@ -141,111 +154,24 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, sc)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new StorageClass
-		sc := r.storageClassForEmberCSI(instance)
-		reqLogger.Info("Creating a new StorageClass", "StorageClass.Namespace", sc.Namespace, "StorageClass.Name", sc.Name)
+		sc = r.storageClassForEmberCSI(instance)
+		glog.Info("Creating a new StorageClass %s in %s", sc.Name, sc.Namespace)
 		err = r.client.Create(context.TODO(), sc)
 		if err != nil {
-			reqLogger.Error(err, "Failed to create a new StorageClass", "StorageClass.Namespace", sc.Namespace, "StorageClass.Name", sc.Name)
-			return reconcile.Result{}, err
+			glog.Error("Failed to create a new StorageClass %s in %s", sc.Name, sc.Namespace)
+			return err
 		}
-		// StorageClass created successfully - return and requeue
-		//return reconcile.Result{Requeue: true}, nil
+		glog.Info("Successfully Created a new StorageClass %s in %s", sc.Name, sc.Namespace)
 	} else if err != nil {
-		reqLogger.Error(err, "failed to get StorageClass")
-		return reconcile.Result{}, err
+		glog.Error("failed to get StorageClass", err)
+		return err
 	}
 
-	return reconcile.Result{}, nil
-}
-
-// statefulSetForEmberCSI returns a EmberCSI StatefulSet object
-func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *appsv1.StatefulSet {
-	ls := labelsForEmberCSI(ecsi.Name)
-
-	// There *must* only be one replica
-	var replicas int32 	= 1
-
-	trueVar 		:= true
-
-	ss := &appsv1.StatefulSet{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "apps/v1",
-			Kind:       "StatefulSet",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-controller", ecsi.Name),
-			Namespace: ecsi.Namespace,
-			Labels:	   ls,
-		},
-		Spec: appsv1.StatefulSetSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: ls,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: ls,
-				},
-				Spec: corev1.PodSpec{
-					Containers:	getControllerContainers(),
-/*
-					Containers: []corev1.Container{{
-						Name:    "external-attacher",
-						Image: Conf.Sidecars[Cluster].Attacher,
-						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
-						SecurityContext: &corev1.SecurityContext{
-							Privileged: &trueVar,
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/csi-data", 
-								Name: "socket-dir",
-							},{
-								MountPath: "/etc/localtime",
-								Name: "localtime",
-							},
-						},
-					},{
-						Name:    "external-provisioner",
-						Image:   Conf.Sidecars[Cluster].Provisioner,
-						Args: []string{"--v=5", "--csi-address=/csi-data/csi.sock", fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name)},
-						SecurityContext: &corev1.SecurityContext{
-							Privileged: &trueVar,
-						},
-						VolumeMounts: []corev1.VolumeMount{
-							{
-								MountPath: "/csi-data", 
-								Name: "socket-dir",
-							},{
-								MountPath: "/etc/localtime",
-								Name: "localtime",
-							},
-						},
-					},{
-						Name:    "ember-csi-driver",
-						Image:	 Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
-						SecurityContext: &corev1.SecurityContext{
-							Privileged: &trueVar,
-						},
-						TerminationMessagePath: "/tmp/termination-log",
-						Env: getEnvVars(ecsi, "controller"),
-						VolumeMounts: getVolumeMounts(ecsi, "controller"),
-					}},
-*/
-					Volumes: 	    getVolumes(ecsi, "controller"),
-					ServiceAccountName: ControllerSA,
-					NodeSelector: 	    ecsi.Spec.NodeSelector,
-					Tolerations: 	    ecsi.Spec.Tolerations,
-				},
-			},
-		},
-	}
-	controllerutil.SetControllerReference(ecsi, ss, r.scheme)
-	return ss
+	return nil
 }
 
 // construct EnvVars for the Driver Pod
-func getEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev1.EnvVar {
+func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{
 			Name: "PYTHONUNBUFFERED",
@@ -395,252 +321,8 @@ func getPodNames(pods []corev1.Pod) []string {
 	return podNames
 }
 
-// daemonSetForEmberCSI returns a EmberCSI DaemonSet object
-func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *appsv1.DaemonSet {
-	ls := labelsForEmberCSI(ecsi.Name)
-
-	var hostToContainer corev1.MountPropagationMode     = corev1.MountPropagationHostToContainer
-	trueVar 		:= true
-
-	ds := &appsv1.DaemonSet{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "apps/v1",
-			Kind:       "DaemonSet",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-                        Name:      fmt.Sprintf("%s-node", ecsi.Name),
-                        Namespace: ecsi.Namespace,
-			Labels:    ls,
-		},
-		Spec: appsv1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: ls,
-			},
-                        Template: corev1.PodTemplateSpec{
-                                ObjectMeta: metav1.ObjectMeta{
-                                        Labels: ls,
-                                },
-                                Spec: corev1.PodSpec{
-					ServiceAccountName: NodeSA,
-					HostNetwork: true,
-					HostIPC: true,
-                                        Containers: []corev1.Container{
-						{
-							Name:		"driver-registrar",
-							Image:		Conf.Sidecars[Cluster].Registrar,
-							//Image:		fmt.Sprintf("%s:%s","quay.io/k8scsi/driver-registrar",RegistrarVersion),
-							ImagePullPolicy: corev1.PullAlways,
-							Args: 		 []string{"--v=5", "--csi-address=/csi-data/csi.sock"},
-							SecurityContext: &corev1.SecurityContext{
-								Privileged: &trueVar,
-							},
-							Env:	[]corev1.EnvVar{
-								{
-									Name: "KUBE_NODE_NAME",
-									ValueFrom:  &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "spec.nodeName",
-										},
-									},
-								},
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									MountPath: "/csi-data", 
-									Name: 	   "socket-dir",
-								},{
-									MountPath: 	  "/etc/localtime", 
-									Name: 		  "localtime",
-									MountPropagation: &hostToContainer,
-								},
-							},
-						},{
-							Name:		"ember-csi-driver",
-							Image:		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
-							ImagePullPolicy: corev1.PullAlways,
-							SecurityContext: &corev1.SecurityContext{
-								Privileged: 		  &trueVar,
-								AllowPrivilegeEscalation: &trueVar,
-							},
-							TerminationMessagePath: "/tmp/termination-log",
-							Env:	getEnvVars(ecsi, "node"),
-							VolumeMounts: getVolumeMounts(ecsi, "node"),
-						},
-					},
-                                        Volumes: getVolumes(ecsi, "node"),
-				},
-			},
-		},
-	}
-	controllerutil.SetControllerReference(ecsi, ds, r.scheme)
-
-	return ds
-}
-
-// Construct a Containers PodSpec for Nodes
-func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
-	trueVar 		:= true
-	containers := []corev1.Container {
-				{
-					Name:    		"ember-csi-driver",
-					Image:   		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
-					ImagePullPolicy: 	corev1.PullAlways,
-					SecurityContext: 	&corev1.SecurityContext{
-									Privileged: &trueVar,
-									AllowPrivilegeEscalation: &trueVar,
-								},
-					TerminationMessagePath: "/tmp/termination-log",
-					Env: 			getEnvVars(ecsi, "node"),
-					VolumeMounts: 		getVolumeMounts(ecsi, "node"),
-				},
-			}
-
-	// Add NodeRegistrar sidecar
-	if len(Conf.Sidecars[Cluster].NodeRegistrar) > 0 {
-		containers = append(containers, corev1.Container {
-				Name:    "node-driver-registrar",
-				Image:   Conf.Sidecars[Cluster].NodeRegistrar,
-				Args: []string{ 
-						"--v=5", 
-						"--csi-address=/csi-data/csi.sock",
-						fmt.Sprintf("%s.%s/%s", "--kubelet-registration-path=/var/lib/kubelet/plugins/io.ember-csi", ecsi.Name, "csi.sock"),
-					},
-				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						MountPath: "/csi-data",
-						Name: "socket-dir",
-					},
-				},
-			},
-		)
-	}
-
-	// On older CSI specs, use driver registrar
-	if len(Conf.Sidecars[Cluster].Registrar) > 0 {
-		containers = append(containers, corev1.Container {
-				Name:    "driver-registrar",
-				Image:   Conf.Sidecars[Cluster].Registrar,
-				Args: []string{ 
-						"--v=5",
-						"--csi-address=/csi-data/csi.sock",
-					},
-				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						MountPath: "/csi-data",
-						Name: "socket-dir",
-					},
-				},
-			},
-		)
-	}
-		
-	return containers
-}
-
-// Construct a Containers PodSpec for Controller
-func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
-	trueVar 		:= true
-	containers := []corev1.Container {
-				{
-					Name:    		"ember-csi-driver",
-					Image:   		Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
-					ImagePullPolicy: 	corev1.PullAlways,
-					SecurityContext: 	&corev1.SecurityContext{
-									Privileged: &trueVar,
-									AllowPrivilegeEscalation: &trueVar,
-								},
-					TerminationMessagePath: "/tmp/termination-log",
-					Env: 			getEnvVars(ecsi, "controller"),
-					VolumeMounts: 		getVolumeMounts(ecsi, "controller"),
-				},
-			}
-
-	// Add External Attacher sidecar
-	if len(Conf.Sidecars[Cluster].Attacher) > 0 {
-		containers = append(containers, corev1.Container {
-				Name:    "external-attacher",
-				Image: Conf.Sidecars[Cluster].Attacher,
-				Args: []string{ "--v=5",
-						"--csi-address=/csi-data/csi.sock",
-						"--timeout=120s",
-					},
-				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						MountPath: "/csi-data",
-						Name: "socket-dir",
-					},
-				},
-			},
-		)
-	}
-
-	// Add External Provisioner sidecar
-	if len(Conf.Sidecars[Cluster].Provisioner) > 0 {
-		containers = append(containers, corev1.Container {
-				Name:    "external-provisioner",
-				Image:   Conf.Sidecars[Cluster].Provisioner,
-				Args: []string{ "--v=5", 
-						"--csi-address=/csi-data/csi.sock",
-						fmt.Sprintf("%s.%s", "--provisioner=io.ember-csi", ecsi.Name),
-						"--feature-gates=Topology=true",
-					},
-				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						MountPath: "/csi-data",
-						Name: "socket-dir",
-					},
-				},
-			},
-		)
-	}
-		
-	// Add ClusterRegistrar sidecar
-	if len(Conf.Sidecars[Cluster].ClusterRegistrar) > 0 {
-		containers = append(containers, corev1.Container {
-				Name:    "cluster-driver-registrar",
-				Image:   Conf.Sidecars[Cluster].ClusterRegistrar,
-				Args: []string{ 
-						"--csi-address=/csi-data/csi.sock",
-					},
-				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						MountPath: "/csi-data",
-						Name: "socket-dir",
-					},
-				},
-			},
-		)
-	}
-		
-	// Add Snapshotter sidecar
-	if len(Conf.Sidecars[Cluster].Snapshotter) > 0 {
-		containers = append(containers, corev1.Container {
-				Name:    "external-snapshotter",
-				Image:   Conf.Sidecars[Cluster].Snapshotter,
-				Args: []string{ "--v=5", 
-						"--csi-address=/csi-data/csi.sock",
-					},
-				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
-				VolumeMounts: []corev1.VolumeMount{
-					{
-						MountPath: "/csi-data",
-						Name: "socket-dir",
-					},
-				},
-			},
-		)
-	}
-
-	return containers
-}
-
 // Construct a VolumeMount based on cluster type, secrets, etc
-func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1.VolumeMount {
+func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1.VolumeMount {
 	var bidirectional corev1.MountPropagationMode       = corev1.MountPropagationBidirectional
 	var hostToContainer corev1.MountPropagationMode     = corev1.MountPropagationHostToContainer
 
@@ -741,7 +423,7 @@ func getVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 	return vm
 }
 
-func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1.Volume {
+func generateVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1.Volume {
         var dirOrCreate corev1.HostPathType                 = corev1.HostPathDirectoryOrCreate
 
 	vol := []corev1.Volume {
@@ -905,23 +587,4 @@ func getVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1
 
 
 	return vol
-}
-
-// storageClassForEmberCSI returns a EmberCSI StorageClass object
-func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *storagev1.StorageClass {
-	ls := labelsForEmberCSI(ecsi.Name)
-
-	sc := &storagev1.StorageClass{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "storage.k8s.io/v1",
-			Kind:       "StorageClass",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("io.ember-csi.%s-sc", ecsi.Name),
-			Namespace: ecsi.Namespace,
-			Labels:	   ls,
-		},
-		Provisioner: fmt.Sprintf("%s.%s", "io.ember-csi", ecsi.Name),
-	}
-	return sc
 }

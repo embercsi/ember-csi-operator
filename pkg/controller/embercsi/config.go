@@ -10,12 +10,6 @@ import (
         "fmt"
 )
 
-// Global Var to Store Config
-var Conf *Config
-
-// Global Var to retain cluster-version
-var Cluster string
-
 type Versions  struct {
         CSISpecVersion          string `yaml:"X_CSI_SPEC_VERSION,omitempty"`
         Attacher                string `yaml:"external-attacher,omitempty"`

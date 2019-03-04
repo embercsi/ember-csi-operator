@@ -2,12 +2,12 @@
 version: 1.0
 sidecars:
   default:
-    X_CSI_SPEC_VERSION: v0.3
+    X_CSI_SPEC_VERSION: 0.3
     external-attacher: quay.io/k8scsi/csi-attacher:v0.3.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v0.3.0
     driver-registrar: quay.io/k8scsi/driver-registrar:v0.3.0
   k8s-v1.13:
-    X_CSI_SPEC_VERSION: v1.0
+    X_CSI_SPEC_VERSION: 1.0
     external-attacher: quay.io/k8scsi/csi-attacher:v1.0.1
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.0.1
     cluster-driver-registrar: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
