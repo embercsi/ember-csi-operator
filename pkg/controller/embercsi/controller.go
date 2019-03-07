@@ -74,7 +74,7 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 				Image: Conf.Sidecars[Cluster].Attacher,
 				Args: []string{ "--v=5",
 						"--csi-address=/csi-data/csi.sock",
-						"--timeout=120s",
+						"--connection-timeout=120s",
 					},
 				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
 				VolumeMounts: []corev1.VolumeMount{
@@ -93,10 +93,10 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 		args := []string{
 					"--v=5",
 					"--csi-address=/csi-data/csi.sock",
-					fmt.Sprintf("%s.%s", "--provisioner=", PluginDomainName),
+					fmt.Sprintf("%s%s", "--provisioner=", GetDomainName(ecsi.Name)),
 				}
 
-		if CSI_SPEC > 1.0 {
+		if CSI_SPEC > 0.3 {
 			args = append(args, "--feature-gates=Topology=true")
 		}
 		containers = append(containers, corev1.Container {

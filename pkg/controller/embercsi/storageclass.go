@@ -17,10 +17,10 @@ func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.Ember
 			Kind:       "StorageClass",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-sc", PluginDomainName),
+			Name:	   fmt.Sprintf("%s-sc", GetDomainName(ecsi.Name)),
 			Namespace: ecsi.Namespace,
 			Labels:	   ls,
 		},
-		Provisioner: PluginDomainName,
+		Provisioner: GetDomainName(ecsi.Name),
 	}
 }

@@ -17,10 +17,10 @@ func (r *ReconcileEmberCSI) volumeSnapshotClassForEmberCSI(ecsi *embercsiv1alpha
 			Kind:       "VolumeSnapshotClass",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-vsc", PluginDomainName),
+			Name:      fmt.Sprintf("%s-vsc", GetDomainName(ecsi.Name)),
 			Namespace: ecsi.Namespace,
 			Labels:	   ls,
 		},
-		Snapshotter: PluginDomainName,
+		Snapshotter: GetDomainName(ecsi.Name),
 	}
 }

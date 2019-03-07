@@ -6,7 +6,7 @@ import (
         "gopkg.in/yaml.v2"
         "io/ioutil"
         "encoding/json"
-        logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"github.com/golang/glog"
         "fmt"
 )
 
@@ -32,7 +32,6 @@ func (config *Config) getDriverImage( backend_config string ) string {
 	var backend_config_map map[string]string
 	json.Unmarshal([]byte(backend_config), &backend_config_map)
 	backend := backend_config_map["driver"]
-	log := logf.Log.WithName("config")
 	var image string
 
 	if len(backend) > 0 && len(config.Drivers[backend]) > 0 {
@@ -42,7 +41,7 @@ func (config *Config) getDriverImage( backend_config string ) string {
 	} else {
 		image = "embercsi/ember-csi:master"
 	}
-	log.Info(fmt.Sprintf("Using driver image %s", image))
+	glog.Infof(fmt.Sprintf("Using driver image %s", image))
 	return image
 }
 
@@ -59,12 +58,12 @@ func ReadConfig ( configFile *string ) {
 
         source, err := ioutil.ReadFile(*configFile)
         if err != nil {
-		//logrus.Infof("Cannot Open Config File. Will use defaults.\n")
+		glog.Info("Cannot Open Config File. Will use defaults.\n")
                 DefaultConfig()
         }
         err = yaml.Unmarshal(source, &Conf)
         if err != nil {
-		//logrus.Infof("Cannot Open Config File. Will use defaults.\n")
+		glog.Info("Cannot Open Config File. Will use defaults.\n")
 		DefaultConfig()
         }
 
@@ -75,18 +74,20 @@ func ReadConfig ( configFile *string ) {
 		// Use "default" as the cluster name which is used in DefaultConfig
 		Cluster = "default"
 	}
+
+	// Sanitize the input
+	Sanitize()
 }
 
 // Populate the Config Stuct with some default values and Return it
 func DefaultConfig () {
-	log := logf.Log.WithName("config")
 
 	var defaultConfig = `
 ---
 version: 1.0
 sidecars:
   default:
-    X_CSI_SPEC_VERSION: v0.3
+    X_CSI_SPEC_VERSION: v0.2.0
     external-attacher: quay.io/k8scsi/csi-attacher:v0.3.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v0.3.0
     driver-registrar: quay.io/k8scsi/driver-registrar:v0.3.0
@@ -95,7 +96,6 @@ drivers:
 	`
         err := yaml.Unmarshal([]byte(defaultConfig), &Conf)
 	if err != nil {
-		log.Info(fmt.Sprintf("Cannot Open Default Config: %d"), err.Error())
-		os.Exit(3)
+		glog.Fatalf("Cannot Open Default Config: %s", err)
 	}
 }

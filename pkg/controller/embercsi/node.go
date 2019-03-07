@@ -72,9 +72,19 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 				Args: []string{ 
 						"--v=5", 
 						"--csi-address=/csi-data/csi.sock",
-						fmt.Sprintf("%s/%s/%s", "--kubelet-registration-path=/var/lib/kubelet/plugins", PluginDomainName, "csi.sock"),
+						fmt.Sprintf("%s/%s/%s", "--kubelet-registration-path=/var/lib/kubelet/plugins", GetDomainName(ecsi.Name), "csi.sock"),
 					},
 				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				Env:	[]corev1.EnvVar{
+					{
+						Name: "KUBE_NODE_NAME",
+						ValueFrom:  &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "spec.nodeName",
+							},
+						},
+					},
+				},
 				VolumeMounts: []corev1.VolumeMount{
 					{
 						MountPath: "/csi-data",
@@ -95,6 +105,16 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 						"--csi-address=/csi-data/csi.sock",
 					},
 				SecurityContext: &corev1.SecurityContext{ Privileged: &trueVar, },
+				Env:	[]corev1.EnvVar{
+					{
+						Name: "KUBE_NODE_NAME",
+						ValueFrom:  &corev1.EnvVarSource{
+							FieldRef: &corev1.ObjectFieldSelector{
+								FieldPath: "spec.nodeName",
+							},
+						},
+					},
+				},
 				VolumeMounts: []corev1.VolumeMount{
 					{
 						MountPath: "/csi-data",

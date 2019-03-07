@@ -901,6 +901,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/golang/glog",
     "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
