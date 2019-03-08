@@ -52,6 +52,7 @@ type EnvVars struct {
         X_CSI_DEFAULT_MOUNT_FS   string `json:"X_CSI_DEFAULT_MOUNT_FS",omitempty`
         X_CSI_NODE_ID            string `json:"X_CSI_NODE_ID",omitempty`
         X_CSI_STORAGE_NW_IP      string `json:"X_CSI_STORAGE_NW_IP",omitempty`
+        X_CSI_SPEC_VERSION	 string `json:"X_CSI_SPEC_VERSION",omitempty`
         CSI_ENDPOINT             string `json:"CSI_ENDPOINT",omitempty`
         CSI_MODE                 string `json:"CSI_MODE",omitempty`
         EnvSecrets               []Secrets `json:"secret",omitempty`

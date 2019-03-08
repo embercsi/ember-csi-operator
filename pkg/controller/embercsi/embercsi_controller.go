@@ -102,6 +102,9 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
+	// Validate EmberCSI CR input. Exit if errors found after logging
+	//r.validateEmberCSIDeployment(instance)
+
 	// Manage objects created by the operator
 	return reconcile.Result{}, r.handleEmberCSIDeployment(instance)
 }

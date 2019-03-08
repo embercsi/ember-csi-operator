@@ -63,9 +63,6 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 			Name: "CSI_ENDPOINT",
 			Value: "unix:///csi-data/csi.sock",
 		},{
-			Name: "X_CSI_SPEC_VERSION",
-			Value: Conf.Sidecars[Cluster].CSISpecVersion,
-		},{
                         Name: "X_CSI_EMBER_CONFIG",
                         Value: fmt.Sprintf("%s.%s%s", "{\"plugin_name\": \"io.ember-csi", ecsi.Name, "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
                 },
@@ -84,6 +81,15 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 					Value: "controller",
 				},
 			)
+/*
+		if CSI_SPEC >= 0.3 {	// Supports Topology
+			envVars = append(envVars, corev1.EnvVar{
+					Name: "X_CSI_NODE_TOPOLOGY",
+					Value: ecsi.Spec.Config.EnvVars.X_CSI_NODE_TOPOLOGY,
+				},
+			)
+		}
+*/
 	} else {
 		envVars = append(envVars, corev1.EnvVar{
 					Name: "X_CSI_NODE_ID",
@@ -97,8 +103,30 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 					Value: "node",
 				},
 			)
+/*
+		if CSI_SPEC >= 0.3 {	// Supports Topology
+			envVars = append(envVars, corev1.EnvVar{
+					Name: "X_CSI_NODE_TOPOLOGY",
+					Value: ecsi.Spec.Config.EnvVars.X_CSI_NODE_TOPOLOGY,
+				},
+			)
+		}
+*/
 	}
 
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_SPEC_VERSION) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+                        Name: "X_CSI_SPEC_VERSION",
+                        Value: ecsi.Spec.Config.EnvVars.X_CSI_SPEC_VERSION,
+			},
+		)
+	} else {
+		envVars = append(envVars, corev1.EnvVar{
+                        Name: "X_CSI_SPEC_VERSION",
+                        Value: Conf.Sidecars[Cluster].CSISpecVersion,
+			},
+		)
+	}
 	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
                         Name: "X_CSI_BACKEND_CONFIG",
