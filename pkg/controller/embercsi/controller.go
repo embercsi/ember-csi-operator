@@ -36,7 +36,7 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 					Labels: ls,
 				},
 				Spec: corev1.PodSpec{
-					Containers:	getControllerContainers(ecsi),
+					Containers:	    getControllerContainers(ecsi),
 					Volumes: 	    generateVolumes(ecsi, "controller"),
 					ServiceAccountName: ControllerSA,
 					NodeSelector: 	    ecsi.Spec.NodeSelector,
@@ -52,6 +52,16 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 // Construct a Containers PodSpec for Controller
 func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 	trueVar 		:= true
+	probeHandler := corev1.Handler{
+		Exec: &corev1.ExecAction{
+			Command: []string{ "ember-liveness", },
+		},
+	}
+
+	livenessProbe := &corev1.Probe{
+		Handler:          probeHandler,
+	}
+
 	containers := []corev1.Container {
 				{
 					Name:    		"ember-csi-driver",
@@ -64,6 +74,7 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 					TerminationMessagePath: "/tmp/termination-log",
 					Env: 			generateEnvVars(ecsi, "controller"),
 					VolumeMounts: 		generateVolumeMounts(ecsi, "controller"),
+					LivenessProbe:		livenessProbe,
 				},
 			}
 
