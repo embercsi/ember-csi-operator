@@ -248,6 +248,14 @@
   version = "v1.1.5"
 
 [[projects]]
+  digest = "1:5dc9f2cdcfbf655108cf4cd8c5baa2d2fa961fa7b54503b9683ff75aa7008e1b"
+  name = "github.com/kubernetes-csi/external-snapshotter"
+  packages = ["pkg/apis/volumesnapshot/v1alpha1"]
+  pruneopts = "NT"
+  revision = "0d2cdd7bde5ea9d41ae47ef4184ca20ebe0435e1"
+  version = "v1.0.1"
+
+[[projects]]
   branch = "master"
   digest = "1:7d9fcac7f1228470c4ea0ee31cdfb662a758c44df691e39b3e76c11d3e12ba8f"
   name = "github.com/mailru/easyjson"
@@ -885,6 +893,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/ready",
