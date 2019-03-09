@@ -3,6 +3,7 @@ package embercsi
 import (
 	"os"
 	"strings"
+        "strconv"
         "gopkg.in/yaml.v2"
         "io/ioutil"
         "encoding/json"
@@ -10,19 +11,13 @@ import (
         "fmt"
 )
 
-// Global Var to Store Config
-var Conf *Config
-
-// Global Var to retain cluster-version
-var Cluster string
-
 type Versions  struct {
         CSISpecVersion          string `yaml:"X_CSI_SPEC_VERSION,omitempty"`
         Attacher                string `yaml:"external-attacher,omitempty"`
         Provisioner             string `yaml:"external-provisioner,omitempty"`
         Registrar               string `yaml:"driver-registrar,omitempty"`	// For use in older CSI specs
-        NodeRegistrar           string `yaml:"node-registrar,omitempty"`
-        ClusterRegistrar        string `yaml:"cluster-registrar,omitempty"`
+        NodeRegistrar           string `yaml:"node-driver-registrar,omitempty"`
+        ClusterRegistrar        string `yaml:"cluster-driver-registrar,omitempty"`
         Resizer                 string `yaml:"external-resizer,omitempty"`
         Snapshotter             string `yaml:"external-snapshotter,omitempty"`
         LivenessProbe		string `yaml:"livenessprobe,omitempty"`
@@ -54,6 +49,26 @@ func (config *Config) getDriverImage( backend_config string ) string {
 
 func (config *Config) getCluster() string {
         return Cluster
+}
+
+// Returns a float value of CSI_SPEC
+func (config *Config) getCSISpecVersion() float64 {
+
+	// Remove 'v' prefix if it exists
+	if strings.HasPrefix(Conf.Sidecars[Cluster].CSISpecVersion, "v") {	// starts with 'v' e.g. v0.3
+		var tmpConf = Conf.Sidecars[Cluster]
+		tmpConf.CSISpecVersion = strings.Replace(Conf.Sidecars[Cluster].CSISpecVersion, "v", "", -1)
+		Conf.Sidecars[Cluster] = tmpConf
+	}
+
+	spec, err := strconv.ParseFloat(Conf.Sidecars[Cluster].CSISpecVersion, 64)
+	if err != nil {
+		log.Info(fmt.Sprintf("Could't convert X_CSI_SPEC_VERSION to float: %d"), err.Error())
+		log.Info(fmt.Sprintf("Using default: %f", DEFAULT_CSI_SPEC))
+		// Use our sane default
+		spec = DEFAULT_CSI_SPEC
+	} 
+	return spec
 }
 
 // Read Config and store values from Config File or Use DefaultConfig
