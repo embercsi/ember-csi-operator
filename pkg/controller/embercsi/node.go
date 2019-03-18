@@ -49,6 +49,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 // Construct a Containers PodSpec for Nodes
 func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 	trueVar 		:= true
+/*
 	probeHandler := corev1.Handler{
 		Exec: &corev1.ExecAction{
 			Command: []string{ "ember-liveness", },
@@ -58,7 +59,7 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
         livenessProbe := &corev1.Probe{
 		Handler:          probeHandler,
         }
-
+*/
 	containers := []corev1.Container {
 				{
 					Name:    		"ember-csi-driver",
@@ -71,7 +72,7 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 					TerminationMessagePath: "/tmp/termination-log",
 					Env: 			generateEnvVars(ecsi, "node"),
 					VolumeMounts: 		generateVolumeMounts(ecsi, "node"),
-					LivenessProbe:		livenessProbe,
+					//LivenessProbe:		livenessProbe,
 				},
 			}
 
@@ -100,6 +101,10 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 					{
 						MountPath: "/csi-data",
 						Name: "socket-dir",
+					},
+					{
+						MountPath: "/registration",
+						Name: "registration-dir",
 					},
 				},
 			},

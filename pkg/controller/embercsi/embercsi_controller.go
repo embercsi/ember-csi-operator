@@ -2,7 +2,7 @@ package embercsi
 
 import (
 	"context"
-
+	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
         appsv1 "k8s.io/api/apps/v1"
@@ -51,7 +51,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&storagev1.StorageClass{},
 	}
 	// Enable objects based on CSI Spec
-	if Conf.getCSISpecVersion() > 1.0 {
+	if Conf.getCSISpecVersion() >= 1.0 {
 		watchOwnedObjects = append(watchOwnedObjects, &snapv1a1.VolumeSnapshotClass{})
 	}
 
@@ -60,14 +60,10 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		OwnerType:    &embercsiv1alpha1.EmberCSI{},
 	}
 	for _, watchObject := range watchOwnedObjects {
-		glog.V(3).Infof("Watching Owned Object: %s/%s\n", "", "")
 		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
 		if err != nil {
 			return err
 		}
-	}
-	if err != nil {
-		return err
 	}
 
 	return nil
@@ -105,10 +101,10 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 
 // Manage the Objects created by the Operator.
 func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.EmberCSI) error {
-	glog.V(3).Infof("Entering handleEmberCSIDeployment")
+	glog.V(3).Infof("Reconciling EmberCSI Deployment Objects")
 	// Check if the statefuleSet already exists, if not create a new one
 	ss := &appsv1.StatefulSet{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, ss)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-controller", instance.Name), Namespace: instance.Namespace}, ss)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new statefulset
 		ss = r.statefulSetForEmberCSI(instance)
@@ -120,13 +116,13 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 		}
 		glog.V(3).Infof("Successfully Created a new StatefulSet %s in %s", ss.Name, ss.Namespace)
 	} else if err != nil {
-		glog.Error("failed to get StatefulSet", err)
+		glog.Error("Failed to get StatefulSet", err)
 		return err
 	}
 
 	// Check if the daemonSet already exists, if not create a new one
 	ds := &appsv1.DaemonSet{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, ds)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-node", instance.Name), Namespace: instance.Namespace}, ds)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new DaemonSet
 		ds = r.daemonSetForEmberCSI(instance)
@@ -144,7 +140,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 
 	// Check if the storageclass already exists, if not create a new one
 	sc := &storagev1.StorageClass{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, sc)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-sc", GetPluginDomainName(instance.Name)), Namespace: sc.Namespace}, sc)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new StorageClass
 		sc = r.storageClassForEmberCSI(instance)
@@ -161,7 +157,8 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	}
 
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
-	if Conf.getCSISpecVersion() > 1.0 {
+	if Conf.getCSISpecVersion() >= 1.0 {
+		glog.V(3).Info("Trying to create a new voluemSnapshotClass")
 		vsc := &snapv1a1.VolumeSnapshotClass{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, vsc)
 		if err != nil && errors.IsNotFound(err) {

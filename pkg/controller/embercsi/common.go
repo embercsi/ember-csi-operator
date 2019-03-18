@@ -6,6 +6,7 @@ import (
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/golang/glog"
 )
 
 // Default values
@@ -22,10 +23,12 @@ var Cluster 	string
 // Plugin's domain name to use. Prior to CSI spec 1.0, we used reverse
 // domain name, after 1.0 we use forward.
 func GetPluginDomainName(instanceName string) string {
-	if Conf.getCSISpecVersion() >= 1.0 {
-		return fmt.Sprintf("%s.%s", instanceName, "ember-csi.io")
+	if Conf.getCSISpecVersion() < 1.0 {
+		glog.Info("CSI Spec is < 1.0 using reverse domain plugin name")
+		return fmt.Sprintf("%s.%s", "io.ember-csi", instanceName)
 	}
-	return fmt.Sprintf("%s.%s", "io.ember-csi", instanceName)
+	glog.Info("CSI Spec is >= 1.0 using forward domain plugin name")
+	return fmt.Sprintf("%s.%s", instanceName, "ember-csi.io")
 }
 
 // construct EnvVars for the Driver Pod
@@ -42,7 +45,7 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 			Value: Conf.Sidecars[Cluster].CSISpecVersion,
 		},{
                         Name: "X_CSI_EMBER_CONFIG",
-                        Value: fmt.Sprintf("%s.%s%s", "{\"plugin_name\": \"io.ember-csi", ecsi.Name, "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
+                        Value: fmt.Sprintf("%s%s%s", "{\"plugin_name\": \"", GetPluginDomainName(ecsi.Name), "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
                 },
 	}
 
@@ -386,11 +389,25 @@ func generateVolumes (ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []c
 	// The "node" mode of the CSI driver requires mount in /var/lib/kubelet to
 	// communicate with the kubelet
 	if csiDriverMode == "node" {
+		// Add NodeRegistrar sidecar
+		if len(Conf.Sidecars[Cluster].NodeRegistrar) > 0 {
+			vol = append(vol, corev1.Volume{
+					Name: "registration-dir",
+					VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/var/lib/kubelet/plugins_registry",
+							},
+					},
+				},
+			)
+		}
+
 		vol = append(vol, corev1.Volume{
 				Name: "socket-dir",
 				VolumeSource: corev1.VolumeSource{
 						HostPath: &corev1.HostPathVolumeSource{
-							Path: fmt.Sprintf("%s.%s", "/var/lib/kubelet/plugins/io.ember-csi", ecsi.Name),
+							Path: fmt.Sprintf("%s/%s", "/var/lib/kubelet/plugins", GetPluginDomainName(ecsi.Name)),
+
 						},
 					},
 				},corev1.Volume{
