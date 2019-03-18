@@ -1,5 +1,4 @@
 package main
-
 import (
 	"context"
 	"flag"
@@ -28,6 +27,8 @@ func printVersion() {
 }
 
 func main() {
+	flag.Set("logtostderr", "true")
+	flag.Parse()
 	printVersion()
 
 	namespace, err := k8sutil.GetWatchNamespace()

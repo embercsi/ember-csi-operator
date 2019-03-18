@@ -109,7 +109,7 @@ sidecars:
     driver-registrar: quay.io/k8scsi/driver-registrar:v0.3.0
 drivers:
   default: embercsi/ember-csi:master
-	`
+`
         err := yaml.Unmarshal([]byte(defaultConfig), &Conf)
 	if err != nil {
 		glog.Fatal("Cannot Open Default Config", err)
