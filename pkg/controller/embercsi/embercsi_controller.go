@@ -122,17 +122,33 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 
 	// Check if the daemonSet already exists, if not create a new one
 	ds := &appsv1.DaemonSet{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-node", instance.Name), Namespace: instance.Namespace}, ds)
-	if err != nil && errors.IsNotFound(err) {
-		// Define a new DaemonSet
-		ds = r.daemonSetForEmberCSI(instance)
-		glog.V(3).Infof("Creating a new Daemonset %s in %s", ds.Name, ds.Namespace)
-		err = r.client.Create(context.TODO(), ds)
-		if err != nil {
-			glog.Errorf("Failed to create a new Daemonset %s in %s: %s", ds.Name, ds.Namespace, err)
-			return err
+	var dSNotFound []int
+	daemonSetIndex := 1
+
+	// Check whether topology is enabled. We add +1 because 
+	// of the default daemonset in addition to the topology ones
+	if len(instance.Spec.Topologies) > 0 {
+		daemonSetIndex = len(instance.Spec.Topologies) + 1
+	}
+
+	for i := 0; i < daemonSetIndex; i++ {
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-node-%d", instance.Name, i), Namespace: instance.Namespace}, ds)
+		if err != nil && errors.IsNotFound(err) {
+			dSNotFound = append(dSNotFound, i)
 		}
-		glog.V(3).Infof("Successfully Created a new Daemonset %s in %s", ds.Name, ds.Namespace)
+	}
+	if len(dSNotFound) > 0 {
+		// Define new DaemonSet(s)
+		for _, daemonSetIndex := range dSNotFound {
+			ds = r.daemonSetForEmberCSI(instance, daemonSetIndex)
+			glog.V(3).Infof("Creating a new Daemonset %s-%d in %s", ds.Name, daemonSetIndex, ds.Namespace)
+			err = r.client.Create(context.TODO(), ds)
+			if err != nil {
+				glog.Errorf("Failed to create a new Daemonset %s-%d in %s: %s", ds.Name, daemonSetIndex, ds.Namespace, err)
+				return err
+			}
+			glog.V(3).Infof("Successfully Created a new Daemonset %s-%d in %s", ds.Name, daemonSetIndex, ds.Namespace)
+		}
 	} else if err != nil {
 		glog.Error("failed to get DaemonSet", err)
 		return err

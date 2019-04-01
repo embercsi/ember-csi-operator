@@ -3,6 +3,7 @@ package embercsi
 import (
 	"fmt"
 	"strings" 
+	"bytes"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,6 +63,14 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 					Value: "controller",
 				},
 			)
+		// Topologies are enabled
+		if len(ecsi.Spec.Topologies) > 0 {
+			envVars = append(envVars, corev1.EnvVar{
+					Name: "X_CSI_TOPOLOGIES",
+					Value: getAllCSITopologies(ecsi),
+				},
+			)
+		}
 	} else {
 		envVars = append(envVars, corev1.EnvVar{
 					Name: "X_CSI_NODE_ID",
@@ -180,6 +189,28 @@ func getPodNames(pods []corev1.Pod) []string {
 		podNames = append(podNames, pod.Name)
 	}
 	return podNames
+}
+
+// Return all accessible topologies known to the CSI Driver
+// A json array of topologies is returned to be consumed by
+// X_CSI_TOPOLOGIES
+func getAllCSITopologies(ecsi *embercsiv1alpha1.EmberCSI) string {
+	glog.V(3).Info("Creating all known allowed_topologies array")
+
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "'[")
+	for _, topologyItem := range ecsi.Spec.Topologies {
+		fmt.Fprintf(&buf, "{")
+		for topology, value := range topologyItem.Topology {
+			fmt.Fprintf(&buf, "\"%s\":\"%s\",", topology, value)
+		}
+		buf.Truncate(buf.Len() - 1)     // Remove trailing ','
+		fmt.Fprintf(&buf, "},")
+	}
+	buf.Truncate(buf.Len() - 1)     // Remove trailing ','
+	fmt.Fprintf(&buf, "]'")
+
+	return buf.String()
 }
 
 // Construct a VolumeMount based on cluster type, secrets, etc
