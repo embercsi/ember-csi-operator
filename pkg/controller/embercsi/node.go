@@ -17,14 +17,35 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 
 	if len(ecsi.Spec.Topologies) > 0 {	// DaemonSet with specified topology
 
-		var nodeList []string
-		var nodeSelectorOperator corev1.NodeSelectorOperator
-		if daemonSetIndex > 1 {
-			nodeList = ecsi.Spec.Topologies[daemonSetIndex-1].Nodes
-			nodeSelectorOperator = corev1.NodeSelectorOpIn
+		var nodeSelectorRequirement []corev1.NodeSelectorRequirement
+		//var nodeSelectorOperator corev1.NodeSelectorOperator
+		if daemonSetIndex >= 1 {
+			nodeSelectorRequirement = ecsi.Spec.Topologies[daemonSetIndex-1].Nodes
 		} else {	// Index == 0
-			nodeList = getNodesWithTopologies(ecsi)
-			nodeSelectorOperator = corev1.NodeSelectorOpNotIn
+			nodeSelectorRequirement = getNodesWithTopologies(ecsi)
+
+			// Invert the Operator to create an antiaffinity
+			for _, key := range nodeSelectorRequirement {
+				if key.Operator == corev1.NodeSelectorOpDoesNotExist {
+					key.Operator = corev1.NodeSelectorOpExists
+				}
+				if key.Operator == corev1.NodeSelectorOpExists {
+					key.Operator = corev1.NodeSelectorOpDoesNotExist
+				}
+				if key.Operator == corev1.NodeSelectorOpIn {
+					key.Operator = corev1.NodeSelectorOpNotIn
+				}
+				if key.Operator == corev1.NodeSelectorOpNotIn {
+					key.Operator = corev1.NodeSelectorOpIn
+				}
+				if key.Operator == corev1.NodeSelectorOpGt {
+					key.Operator = corev1.NodeSelectorOpLt
+				}
+				if key.Operator == corev1.NodeSelectorOpLt {
+					key.Operator = corev1.NodeSelectorOpGt
+				}
+			}
+
 		}
 
 		ds := &appsv1.DaemonSet{
@@ -52,13 +73,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 								RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
 									NodeSelectorTerms: []corev1.NodeSelectorTerm{
 										{
-											MatchExpressions: []corev1.NodeSelectorRequirement{
-												{
-													Key:      "kubernetes.io/hostname",
-													Operator: nodeSelectorOperator,
-													Values:   nodeList,
-												},
-											},
+											MatchExpressions: nodeSelectorRequirement,
 										},
 									},
 								},
@@ -328,7 +343,7 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 func getTopology(ecsi *embercsiv1alpha1.EmberCSI, index int) string {
 	var buf bytes.Buffer
 	// Default topology
-	defaultTopology := "{\"default\": \"true\"}"
+	defaultTopology := fmt.Sprintf("{\"%s-%s\": \"%s\"}", GetPluginDomainName(ecsi.Name), "csi-topology",  "not-used")
 
 	// Topology is specified but we are default daemonSet
 	if index == 0 {
@@ -338,9 +353,11 @@ func getTopology(ecsi *embercsiv1alpha1.EmberCSI, index int) string {
 
 	topologyItem := ecsi.Spec.Topologies[index-1]
 	fmt.Fprintf(&buf, "{")
-	for topology, value := range topologyItem.Topology {
-		fmt.Fprintf(&buf, "\"%s\":\"%s\",", topology, value)
-	}
+        for _, key := range topologyItem.Topology {
+		for _, value := range key.Values {
+			fmt.Fprintf(&buf, "\"%s\":\"%s\",", key.Key, value)
+		}
+        }
 	buf.Truncate(buf.Len() - 1)     // Remove trailing ','
 	fmt.Fprintf(&buf, "},")
 	buf.Truncate(buf.Len() - 1)     // Remove trailing ','
@@ -350,8 +367,8 @@ func getTopology(ecsi *embercsiv1alpha1.EmberCSI, index int) string {
 }
 
 // Fetch all nodes with topologies
-func getNodesWithTopologies(ecsi *embercsiv1alpha1.EmberCSI) []string {
-	var nodesWithTopologies []string
+func getNodesWithTopologies(ecsi *embercsiv1alpha1.EmberCSI) []corev1.NodeSelectorRequirement {
+	var nodesWithTopologies []corev1.NodeSelectorRequirement
 
 	if len(ecsi.Spec.Topologies) > 0 {
 		// Create a daemonSet for each allowed topology
@@ -359,5 +376,6 @@ func getNodesWithTopologies(ecsi *embercsiv1alpha1.EmberCSI) []string {
 			nodesWithTopologies = append(nodesWithTopologies, topologyItem.Nodes...)
 		}
 	}
+
 	return nodesWithTopologies
 }

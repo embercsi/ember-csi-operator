@@ -33,7 +33,7 @@ func main() {
 
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
-		glog.Fatal("Failed to get watch namespace", err)
+		glog.Fatal("Failed to get watch namespace: ", err)
 	}
 
 	// Read Config File if provided
@@ -47,7 +47,7 @@ func main() {
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
-		glog.Fatal("Error while getting config.", err)
+		glog.Fatal("Error while getting config: ", err)
 	}
 
 	// Become the leader before proceeding
@@ -63,25 +63,25 @@ func main() {
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
 	if err != nil {
-		glog.Fatal("Error creating manager", err)
+		glog.Fatal("Error creating manager: ", err)
 	}
 
 	glog.Info("Registering Components.")
 
 	// Setup Scheme for all resources
 	if err := apis.AddToScheme(mgr.GetScheme()); err != nil {
-		glog.Fatal("Error at AddToScheme", err)
+		glog.Fatal("Error at AddToScheme: ", err)
 	}
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		glog.Fatal("Error at AddToManager", err) 
+		glog.Fatal("Error at AddToManager: ", err) 
 	}
 
 	glog.Info("Starting the Cmd.")
 
 	// Start the Cmd
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		glog.Fatal("Error starting Cmd", err)
+		glog.Fatal("Error starting Cmd: ", err)
 	}
 }

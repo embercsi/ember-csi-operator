@@ -1,0 +1,26 @@
+apiVersion: "ember-csi.io/v1alpha1"
+kind: "EmberCSI"
+metadata:
+  name: "external-ceph"
+spec:
+  topologies:
+    - topology:
+        - key: lab
+          values:
+            - madrid
+        - key: transport
+          values:
+            - iscsi
+      nodes:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+            - node3
+  config:
+    envVars:
+      X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
+      X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
+    sysFiles:
+      name: sysfiles-secret
+      key: "system-files.tar"
+

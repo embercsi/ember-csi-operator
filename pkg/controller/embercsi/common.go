@@ -198,17 +198,19 @@ func getAllCSITopologies(ecsi *embercsiv1alpha1.EmberCSI) string {
 	glog.V(3).Info("Creating all known allowed_topologies array")
 
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "'[")
+	fmt.Fprintf(&buf, "[")
 	for _, topologyItem := range ecsi.Spec.Topologies {
 		fmt.Fprintf(&buf, "{")
-		for topology, value := range topologyItem.Topology {
-			fmt.Fprintf(&buf, "\"%s\":\"%s\",", topology, value)
+		for _, key := range topologyItem.Topology {
+			for _, value := range key.Values {
+				fmt.Fprintf(&buf, "\"%s\":\"%s\",", key.Key, value)
+			}
 		}
 		buf.Truncate(buf.Len() - 1)     // Remove trailing ','
 		fmt.Fprintf(&buf, "},")
 	}
 	buf.Truncate(buf.Len() - 1)     // Remove trailing ','
-	fmt.Fprintf(&buf, "]'")
+	fmt.Fprintf(&buf, "]")
 
 	return buf.String()
 }

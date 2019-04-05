@@ -51,9 +51,9 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&storagev1.StorageClass{},
 	}
 	// Enable objects based on CSI Spec
-	if Conf.getCSISpecVersion() >= 1.0 {
-		watchOwnedObjects = append(watchOwnedObjects, &snapv1a1.VolumeSnapshotClass{})
-	}
+	//if Conf.getCSISpecVersion() >= 1.0 {
+	//	watchOwnedObjects = append(watchOwnedObjects, &snapv1a1.VolumeSnapshotClass{})
+	//}
 
 	ownerHandler := &handler.EnqueueRequestForOwner{
 		IsController: true,
@@ -140,14 +140,15 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	if len(dSNotFound) > 0 {
 		// Define new DaemonSet(s)
 		for _, daemonSetIndex := range dSNotFound {
+			glog.Infof("Trying to create Daemonset with index: %d", daemonSetIndex)
 			ds = r.daemonSetForEmberCSI(instance, daemonSetIndex)
-			glog.V(3).Infof("Creating a new Daemonset %s-%d in %s", ds.Name, daemonSetIndex, ds.Namespace)
+			glog.V(3).Infof("Creating a new Daemonset %s in %s", ds.Name, ds.Namespace)
 			err = r.client.Create(context.TODO(), ds)
 			if err != nil {
-				glog.Errorf("Failed to create a new Daemonset %s-%d in %s: %s", ds.Name, daemonSetIndex, ds.Namespace, err)
+				glog.Errorf("Failed to create a new Daemonset %s in %s: %s", ds.Name, ds.Namespace, err)
 				return err
 			}
-			glog.V(3).Infof("Successfully Created a new Daemonset %s-%d in %s", ds.Name, daemonSetIndex, ds.Namespace)
+			glog.V(3).Infof("Successfully Created a new Daemonset %s in %s", ds.Name, ds.Namespace)
 		}
 	} else if err != nil {
 		glog.Error("failed to get DaemonSet", err)
@@ -174,19 +175,19 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
 	if Conf.getCSISpecVersion() >= 1.0 {
-		glog.V(3).Info("Trying to create a new voluemSnapshotClass")
+		glog.V(3).Info("Trying to create a new volumeSnapshotClass")
 		vsc := &snapv1a1.VolumeSnapshotClass{}
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: instance.Name, Namespace: instance.Namespace}, vsc)
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), Namespace: vsc.Namespace}, vsc)
 		if err != nil && errors.IsNotFound(err) {
 			// Define a new VolumeSnapshotClass
 			vsc = r.volumeSnapshotClassForEmberCSI(instance)
-			glog.V(3).Infof("Creating a new VolumeSnapshotClass %s in %s", vsc.Name, vsc.Namespace)
+			glog.V(3).Infof("Creating a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
 			err = r.client.Create(context.TODO(), vsc)
 			if err != nil {
-				glog.Errorf("Failed to create a new VolumeSnapshotClass %s in %s: %s", vsc.Name, vsc.Namespace, err)
+				glog.Errorf("Failed to create a new VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace, err)
 				return err
 			}
-			glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", vsc.Name, vsc.Namespace)
+			glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
 		} else if err != nil {
 			glog.Error("failed to get VolumeSnapshotClass", err)
 			return err
