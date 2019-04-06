@@ -353,11 +353,9 @@ func getTopology(ecsi *embercsiv1alpha1.EmberCSI, index int) string {
 
 	topologyItem := ecsi.Spec.Topologies[index-1]
 	fmt.Fprintf(&buf, "{")
-        for _, key := range topologyItem.Topology {
-		for _, value := range key.Values {
-			fmt.Fprintf(&buf, "\"%s\":\"%s\",", key.Key, value)
-		}
-        }
+	for topology, value := range topologyItem.Topology {
+		fmt.Fprintf(&buf, "\"%s\":\"%s\",", topology, value)
+	}
 	buf.Truncate(buf.Len() - 1)     // Remove trailing ','
 	fmt.Fprintf(&buf, "},")
 	buf.Truncate(buf.Len() - 1)     // Remove trailing ','

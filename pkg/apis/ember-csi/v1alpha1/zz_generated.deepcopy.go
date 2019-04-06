@@ -184,9 +184,9 @@ func (in *Topologies) DeepCopyInto(out *Topologies) {
 	*out = *in
 	if in.Topology != nil {
 		in, out := &in.Topology, &out.Topology
-		*out = make([]v1.TopologySelectorLabelRequirement, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
 		}
 	}
 	if in.Nodes != nil {

@@ -5,12 +5,8 @@ metadata:
 spec:
   topologies:
     - topology:
-        - key: lab
-          values:
-            - madrid
-        - key: transport
-          values:
-            - iscsi
+        lab: madrid
+        transport: iscsi
       nodes:
         - key: kubernetes.io/hostname
           operator: In

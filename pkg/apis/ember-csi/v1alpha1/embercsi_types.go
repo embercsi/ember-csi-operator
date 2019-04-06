@@ -16,7 +16,7 @@ type EmberCSISpec struct {
 
 type Topologies struct {
 	// Key-value pairs corresponding to the NodeName
-	Topology	[]v1.TopologySelectorLabelRequirement `json:"topology,omitempty"`
+	Topology	map[string]string `json:"topology,omitempty"`
 	// Node Hostname with its allowed topology
 	Nodes		[]v1.NodeSelectorRequirement `json:"nodes,omitempty"`
 }
