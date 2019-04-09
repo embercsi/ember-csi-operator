@@ -13,6 +13,7 @@ import (
 
 // daemonSetForEmberCSI returns a EmberCSI DaemonSet object
 func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) *appsv1.DaemonSet {
+	newEcsi := ecsi.DeepCopy()
 	ls := labelsForEmberCSI(ecsi.Name)
 
 	if len(ecsi.Spec.Topologies) > 0 {	// DaemonSet with specified topology
@@ -22,27 +23,27 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 		if daemonSetIndex >= 1 {
 			nodeSelectorRequirement = ecsi.Spec.Topologies[daemonSetIndex-1].Nodes
 		} else {	// Index == 0
-			nodeSelectorRequirement = getNodesWithTopologies(ecsi)
+			nodeSelectorRequirement = getNodesWithTopologies(newEcsi)
 
 			// Invert the Operator to create an antiaffinity
-			for _, key := range nodeSelectorRequirement {
+			for index, key := range nodeSelectorRequirement {
 				if key.Operator == corev1.NodeSelectorOpDoesNotExist {
-					key.Operator = corev1.NodeSelectorOpExists
+					nodeSelectorRequirement[index].Operator = corev1.NodeSelectorOpExists
 				}
 				if key.Operator == corev1.NodeSelectorOpExists {
-					key.Operator = corev1.NodeSelectorOpDoesNotExist
+					nodeSelectorRequirement[index].Operator = corev1.NodeSelectorOpDoesNotExist
 				}
 				if key.Operator == corev1.NodeSelectorOpIn {
-					key.Operator = corev1.NodeSelectorOpNotIn
+					nodeSelectorRequirement[index].Operator = corev1.NodeSelectorOpNotIn
 				}
 				if key.Operator == corev1.NodeSelectorOpNotIn {
-					key.Operator = corev1.NodeSelectorOpIn
+					nodeSelectorRequirement[index].Operator = corev1.NodeSelectorOpIn
 				}
 				if key.Operator == corev1.NodeSelectorOpGt {
-					key.Operator = corev1.NodeSelectorOpLt
+					nodeSelectorRequirement[index].Operator = corev1.NodeSelectorOpLt
 				}
 				if key.Operator == corev1.NodeSelectorOpLt {
-					key.Operator = corev1.NodeSelectorOpGt
+					nodeSelectorRequirement[index].Operator = corev1.NodeSelectorOpGt
 				}
 			}
 
