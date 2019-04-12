@@ -5,18 +5,19 @@ metadata:
 spec:
   topologies:
     - topology:
-        lab: madrid
-        transport: iscsi
+        lab: "madrid"
+        transport: "iscsi"
       nodes:
         - key: kubernetes.io/hostname
           operator: In
           values:
-            - node3
+            - node2.example.com
+
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
-      X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
+      X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "admin", "rbd_pool": "cephfs_data", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/ceph.client.admin.keyring"}'
     sysFiles:
-      name: sysfiles-secret
+      name: system-files
       key: "system-files.tar"
 
