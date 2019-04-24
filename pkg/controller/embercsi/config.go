@@ -73,17 +73,17 @@ func (config *Config) getCSISpecVersion() float64 {
 func ReadConfig ( configFile *string ) {
 	// If configFile is not specified. Lets use our default
 	if len(strings.TrimSpace(*configFile)) == 0 {
-		*configFile = "/etc/ember-csi-operator/config.yml"
+		*configFile = "/etc/ember-csi-operator/config.yaml"
 	}
 
         source, err := ioutil.ReadFile(*configFile)
         if err != nil {
-		glog.Info("Cannot Open Config File. Will use defaults.\n")
+		glog.Infof("Cannot Open Config File: %s. Will use defaults.\n", *configFile)
                 DefaultConfig()
         }
         err = yaml.Unmarshal(source, &Conf)
         if err != nil {
-		glog.Info("Cannot Open Config File. Will use defaults.\n")
+		glog.Info("Cannot Unmarshal Config File. Will use defaults.\n")
 		DefaultConfig()
         }
 
