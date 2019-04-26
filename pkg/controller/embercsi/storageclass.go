@@ -11,6 +11,14 @@ import (
 func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *storagev1.StorageClass {
 	ls := labelsForEmberCSI(ecsi.Name)
 
+	// This binding mode is the default
+	volumeBindingMode := storagev1.VolumeBindingImmediate
+
+	// Check whether topology is enabled. If yes, set VolumeBindingMode appropriately
+	if len(ecsi.Spec.Topologies) > 0 {
+		volumeBindingMode = storagev1.VolumeBindingWaitForFirstConsumer
+	}
+
 	return &storagev1.StorageClass{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "storage.k8s.io/v1",
@@ -22,5 +30,6 @@ func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.Ember
 			Labels:	   ls,
 		},
 		Provisioner: GetPluginDomainName(ecsi.Name),
+		VolumeBindingMode: &volumeBindingMode,
 	}
 }

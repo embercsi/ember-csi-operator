@@ -1,0 +1,235 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ember-csi
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ember-csi-operator
+  namespace: ember-csi
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: ember-csi-operator
+  namespace: ember-csi
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - ember-csi.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ember-csi-operator
+  namespace: ember-csi
+subjects:
+- kind: ServiceAccount
+  name: ember-csi-operator
+roleRef:
+  kind: Role
+  name: ember-csi-operator
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ember-csi-operator
+  namespace: ember-csi
+rules:
+- apiGroups:
+  - ember-csi.io
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrole
+  - clusterrolebindings
+  - role
+  - rolebindings
+  - serviceaccounts
+  verbs:
+  - get
+  - create
+  - delete
+  - patch
+  - update
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - list
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - "*"
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - create
+  - delete
+  - list
+  - get
+  - watch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - get 
+  - list 
+  - watch 
+  - update
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - volumeattachments
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - delete
+  - create
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - delete
+- apiGroups: 
+  - "*"
+  resources:
+  - events
+  verbs: 
+  - create
+  - list
+  - watch
+  - update
+  - delete
+- apiGroups: 
+  - snapshot.storage.k8s.io
+  resources: 
+  - volumesnapshotclasses
+  verbs: 
+  - get
+  - list
+  - watch
+  - update
+  - create
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources: 
+  - volumesnapshotcontents
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - delete
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources: 
+  - volumesnapshots
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ember-csi-operator
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: ember-csi-operator
+subjects:
+- kind: ServiceAccount
+  name: ember-csi-operator
+  namespace: ember-csi
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: embercsis.ember-csi.io
+  namespace: ember-csi
+spec:
+  group: ember-csi.io
+  names:
+    kind: EmberCSI
+    listKind: EmberCSIList
+    plural: embercsis
+    singular: embercsi
+  scope: Namespaced
+  version: v1alpha1
+

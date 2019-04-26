@@ -11,13 +11,14 @@ type EmberCSISpec struct {
         Image           string            `json:"image",omitempty`
         NodeSelector	map[string]string `json:"nodeSelector",omitempty`
         Tolerations	[]v1.Toleration   `json:"tolerations",omitempty`
+	Topologies	[]Topologies 	  `json:"topologies",omitempty`
 }
 
-type Tolerations struct {
-        Key        	string `json:"key,omitempty"`
-        Operator	string `json:"operator,omitempty"`
-        Value		string `json:"value,omitempty"`
-        Effect		string `json:"effect,omitempty"`
+type Topologies struct {
+	// Key-value pairs corresponding to the NodeName
+	Topology	map[string]string `json:"topology,omitempty"`
+	// Node Hostname with its allowed topology
+	Nodes		[]v1.NodeSelectorRequirement `json:"nodes,omitempty"`
 }
 
 // EmberCSIStatus defines the observed state of EmberCSI
