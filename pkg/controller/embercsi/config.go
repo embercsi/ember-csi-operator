@@ -3,26 +3,21 @@ package embercsi
 import (
 	"os"
 	"strings"
+        "strconv"
         "gopkg.in/yaml.v2"
         "io/ioutil"
         "encoding/json"
-        logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"github.com/golang/glog"
         "fmt"
 )
-
-// Global Var to Store Config
-var Conf *Config
-
-// Global Var to retain cluster-version
-var Cluster string
 
 type Versions  struct {
         CSISpecVersion          string `yaml:"X_CSI_SPEC_VERSION,omitempty"`
         Attacher                string `yaml:"external-attacher,omitempty"`
         Provisioner             string `yaml:"external-provisioner,omitempty"`
         Registrar               string `yaml:"driver-registrar,omitempty"`	// For use in older CSI specs
-        NodeRegistrar           string `yaml:"node-registrar,omitempty"`
-        ClusterRegistrar        string `yaml:"cluster-registrar,omitempty"`
+        NodeRegistrar           string `yaml:"node-driver-registrar,omitempty"`
+        ClusterRegistrar        string `yaml:"cluster-driver-registrar,omitempty"`
         Resizer                 string `yaml:"external-resizer,omitempty"`
         Snapshotter             string `yaml:"external-snapshotter,omitempty"`
         LivenessProbe		string `yaml:"livenessprobe,omitempty"`
@@ -38,7 +33,6 @@ func (config *Config) getDriverImage( backend_config string ) string {
 	var backend_config_map map[string]string
 	json.Unmarshal([]byte(backend_config), &backend_config_map)
 	backend := backend_config_map["driver"]
-	log := logf.Log.WithName("config")
 	var image string
 
 	if len(backend) > 0 && len(config.Drivers[backend]) > 0 {
@@ -48,7 +42,7 @@ func (config *Config) getDriverImage( backend_config string ) string {
 	} else {
 		image = "embercsi/ember-csi:master"
 	}
-	log.Info(fmt.Sprintf("Using driver image %s", image))
+	glog.Infof(fmt.Sprintf("Using driver image %s", image))
 	return image
 }
 
@@ -56,21 +50,40 @@ func (config *Config) getCluster() string {
         return Cluster
 }
 
+// Returns a float value of CSI_SPEC
+func (config *Config) getCSISpecVersion() float64 {
+
+	// Remove 'v' prefix if it exists
+	if strings.HasPrefix(Conf.Sidecars[Cluster].CSISpecVersion, "v") {	// starts with 'v' e.g. v0.3
+		var tmpConf = Conf.Sidecars[Cluster]
+		tmpConf.CSISpecVersion = strings.Replace(Conf.Sidecars[Cluster].CSISpecVersion, "v", "", -1)
+		Conf.Sidecars[Cluster] = tmpConf
+	}
+
+	spec, err := strconv.ParseFloat(Conf.Sidecars[Cluster].CSISpecVersion, 64)
+	if err != nil {
+		glog.Info(fmt.Sprintf("Could't convert X_CSI_SPEC_VERSION to float. Using default: %f", DEFAULT_CSI_SPEC))
+		// Use our sane default
+		spec = DEFAULT_CSI_SPEC
+	} 
+	return spec
+}
+
 // Read Config and store values from Config File or Use DefaultConfig
 func ReadConfig ( configFile *string ) {
 	// If configFile is not specified. Lets use our default
 	if len(strings.TrimSpace(*configFile)) == 0 {
-		*configFile = "/etc/ember-csi-operator/config.yml"
+		*configFile = "/etc/ember-csi-operator/config.yaml"
 	}
 
         source, err := ioutil.ReadFile(*configFile)
         if err != nil {
-		//logrus.Infof("Cannot Open Config File. Will use defaults.\n")
+		glog.Infof("Cannot Open Config File: %s. Will use defaults.\n", *configFile)
                 DefaultConfig()
         }
         err = yaml.Unmarshal(source, &Conf)
         if err != nil {
-		//logrus.Infof("Cannot Open Config File. Will use defaults.\n")
+		glog.Info("Cannot Unmarshal Config File. Will use defaults.\n")
 		DefaultConfig()
         }
 
@@ -85,8 +98,6 @@ func ReadConfig ( configFile *string ) {
 
 // Populate the Config Stuct with some default values and Return it
 func DefaultConfig () {
-	log := logf.Log.WithName("config")
-
 	var defaultConfig = `
 ---
 version: 1.0
@@ -98,10 +109,9 @@ sidecars:
     driver-registrar: quay.io/k8scsi/driver-registrar:v0.3.0
 drivers:
   default: embercsi/ember-csi:master
-	`
+`
         err := yaml.Unmarshal([]byte(defaultConfig), &Conf)
 	if err != nil {
-		log.Info(fmt.Sprintf("Cannot Open Default Config: %d"), err.Error())
-		os.Exit(3)
+		glog.Fatal("Cannot Open Default Config", err)
 	}
 }
