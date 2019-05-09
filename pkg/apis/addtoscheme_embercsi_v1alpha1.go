@@ -8,7 +8,7 @@ import (
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
-				v1alpha1.SchemeBuilder.AddToScheme,
-				snapv1a1.SchemeBuilder.AddToScheme,
-			)
+		v1alpha1.SchemeBuilder.AddToScheme,
+		snapv1a1.SchemeBuilder.AddToScheme,
+	)
 }
