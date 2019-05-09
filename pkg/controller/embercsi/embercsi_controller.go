@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
+	"github.com/golang/glog"
 	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
-        appsv1 "k8s.io/api/apps/v1"
-        storagev1 "k8s.io/api/storage/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,7 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"github.com/golang/glog"
 )
 
 // Add creates a new EmberCSI Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -125,7 +125,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	var dSNotFound []int
 	daemonSetIndex := 1
 
-	// Check whether topology is enabled. We add +1 because 
+	// Check whether topology is enabled. We add +1 because
 	// of the default daemonset in addition to the topology ones
 	if len(instance.Spec.Topologies) > 0 {
 		daemonSetIndex = len(instance.Spec.Topologies) + 1
@@ -196,4 +196,3 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 
 	return nil
 }
-

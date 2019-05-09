@@ -1,4 +1,5 @@
 package main
+
 import (
 	"context"
 	"flag"
@@ -8,6 +9,7 @@ import (
 	"github.com/embercsi/ember-csi-operator/pkg/controller"
 	"github.com/embercsi/ember-csi-operator/pkg/controller/embercsi"
 	"github.com/embercsi/ember-csi-operator/version"
+	"github.com/golang/glog"
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	"github.com/operator-framework/operator-sdk/pkg/leader"
 	"github.com/operator-framework/operator-sdk/pkg/ready"
@@ -16,7 +18,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
-	"github.com/golang/glog" 
 )
 
 func printVersion() {
@@ -75,7 +76,7 @@ func main() {
 
 	// Setup all Controllers
 	if err := controller.AddToManager(mgr); err != nil {
-		glog.Fatal("Error at AddToManager: ", err) 
+		glog.Fatal("Error at AddToManager: ", err)
 	}
 
 	glog.Info("Starting the Cmd.")
