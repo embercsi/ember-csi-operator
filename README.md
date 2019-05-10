@@ -18,7 +18,7 @@ $ MULTISTAGE_BUILD=1 make build
 ```
 
 ## Quick Start
-The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the install.yaml file if you wish to use your container image. By default it uses quay.io/embercsi/ember-csi-operator:latest
+The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the install.yaml file if you wish to use your container image. By default it uses docker.io/embercsi/ember-csi-operator:latest
 
 An optional environmental variable of X_EMBER_OPERATOR_CLUSTER can be passed to the operator to enable/disable CSI spec versions as well as selecting the appropriate sidecar and driver images. The default value of X_EMBER_OPERATOR_CLUSTER is "default" which enables CSI spec v0.3. 
 
