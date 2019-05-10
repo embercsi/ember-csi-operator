@@ -1,10 +1,10 @@
 package embercsi
 
 import (
+	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
+	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-        storagev1 "k8s.io/api/storage/v1"
-        "fmt"
 )
 
 // storageClassForEmberCSI returns a EmberCSI StorageClass object
@@ -25,11 +25,11 @@ func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.Ember
 			Kind:       "StorageClass",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:	   fmt.Sprintf("%s-sc", GetPluginDomainName(ecsi.Name)),
+			Name:      fmt.Sprintf("%s-sc", GetPluginDomainName(ecsi.Name)),
 			Namespace: ecsi.Namespace,
-			Labels:	   ls,
+			Labels:    ls,
 		},
-		Provisioner: GetPluginDomainName(ecsi.Name),
+		Provisioner:       GetPluginDomainName(ecsi.Name),
 		VolumeBindingMode: &volumeBindingMode,
 	}
 }

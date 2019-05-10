@@ -1,10 +1,10 @@
 package embercsi
 
 import (
-        "fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // volumeSnapshotClassForEmberCSI returns a EmberCSI VolumeSnapshotClass object
@@ -19,7 +19,7 @@ func (r *ReconcileEmberCSI) volumeSnapshotClassForEmberCSI(ecsi *embercsiv1alpha
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-vsc", GetPluginDomainName(ecsi.Name)),
 			Namespace: ecsi.Namespace,
-			Labels:	   ls,
+			Labels:    ls,
 		},
 		Snapshotter: GetPluginDomainName(ecsi.Name),
 	}

@@ -7,18 +7,18 @@ import (
 
 // EmberCSISpec defines the desired state of EmberCSI
 type EmberCSISpec struct {
-        Config          EmberCSIConfig    `json:"config"`
-        Image           string            `json:"image",omitempty`
-        NodeSelector	map[string]string `json:"nodeSelector",omitempty`
-        Tolerations	[]v1.Toleration   `json:"tolerations",omitempty`
-	Topologies	[]Topologies 	  `json:"topologies",omitempty`
+	Config       EmberCSIConfig    `json:"config"`
+	Image        string            `json:"image",omitempty`
+	NodeSelector map[string]string `json:"nodeSelector",omitempty`
+	Tolerations  []v1.Toleration   `json:"tolerations",omitempty`
+	Topologies   []Topologies      `json:"topologies",omitempty`
 }
 
 type Topologies struct {
 	// Key-value pairs corresponding to the NodeName
-	Topology	map[string]string `json:"topology,omitempty"`
+	Topology map[string]string `json:"topology,omitempty"`
 	// Node Hostname with its allowed topology
-	Nodes		[]v1.NodeSelectorRequirement `json:"nodes,omitempty"`
+	Nodes []v1.NodeSelectorRequirement `json:"nodes,omitempty"`
 }
 
 // EmberCSIStatus defines the observed state of EmberCSI
@@ -40,28 +40,28 @@ type EmberCSI struct {
 }
 
 type EmberCSIConfig struct {
-        EnvVars         EnvVars `json:"envVars"`
-        SysFiles        Secrets `json:"sysFiles"`
+	EnvVars  EnvVars `json:"envVars"`
+	SysFiles Secrets `json:"sysFiles"`
 }
 
 type EnvVars struct {
-        X_CSI_BACKEND_CONFIG     string `json:"X_CSI_BACKEND_CONFIG",omitempty`
-        X_CSI_EMBER_CONFIG       string `json:"X_CSI_EMBER_CONFIG",omitempty`
-        X_CSI_PERSISTENCE_CONFIG string `json:"X_CSI_PERSISTENCE_CONFIG",omitempty`
-        X_CSI_DEBUG_MODE         string `json:"X_CSI_DEBUG_MODE",omitempty`
-        X_CSI_ABORT_DUPLICATES   string `json:"X_CSI_ABORT_DUPLICATES",omitempty`
-        X_CSI_DEFAULT_MOUNT_FS   string `json:"X_CSI_DEFAULT_MOUNT_FS",omitempty`
-        X_CSI_NODE_ID            string `json:"X_CSI_NODE_ID",omitempty`
-        X_CSI_STORAGE_NW_IP      string `json:"X_CSI_STORAGE_NW_IP",omitempty`
-        CSI_ENDPOINT             string `json:"CSI_ENDPOINT",omitempty`
-        CSI_MODE                 string `json:"CSI_MODE",omitempty`
-        EnvSecrets               []Secrets `json:"secret",omitempty`
-} 
+	X_CSI_BACKEND_CONFIG     string    `json:"X_CSI_BACKEND_CONFIG",omitempty`
+	X_CSI_EMBER_CONFIG       string    `json:"X_CSI_EMBER_CONFIG",omitempty`
+	X_CSI_PERSISTENCE_CONFIG string    `json:"X_CSI_PERSISTENCE_CONFIG",omitempty`
+	X_CSI_DEBUG_MODE         string    `json:"X_CSI_DEBUG_MODE",omitempty`
+	X_CSI_ABORT_DUPLICATES   string    `json:"X_CSI_ABORT_DUPLICATES",omitempty`
+	X_CSI_DEFAULT_MOUNT_FS   string    `json:"X_CSI_DEFAULT_MOUNT_FS",omitempty`
+	X_CSI_NODE_ID            string    `json:"X_CSI_NODE_ID",omitempty`
+	X_CSI_STORAGE_NW_IP      string    `json:"X_CSI_STORAGE_NW_IP",omitempty`
+	CSI_ENDPOINT             string    `json:"CSI_ENDPOINT",omitempty`
+	CSI_MODE                 string    `json:"CSI_MODE",omitempty`
+	EnvSecrets               []Secrets `json:"secret",omitempty`
+}
 
 type Secrets struct {
-        Name string `json:"name",omitempty`
-        Key string `json:"key",omitempty`
-} 
+	Name string `json:"name",omitempty`
+	Key  string `json:"key",omitempty`
+}
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
