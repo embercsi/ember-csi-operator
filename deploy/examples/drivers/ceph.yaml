@@ -1,13 +1,9 @@
+---
 apiVersion: "ember-csi.io/v1alpha1"
 kind: "EmberCSI"
 metadata:
-  name: "external-ceph"
+  name: "my-ceph"
 spec:
-# Optional. Use nodeSelector for placing CSI controller pod
-# nodeSelector:
-#   # Any arbitrary key: value pair that must match nodeLabels set by the admin
-#   # kubectl get nodes --show-labels
-#   ember-csi-controller: true
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
