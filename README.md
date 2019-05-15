@@ -18,7 +18,7 @@ $ MULTISTAGE_BUILD=1 make build
 ```
 
 ## Quick Start
-The provided deploy/install.yaml file will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the install.yaml file if you wish to use your container image. By default it uses docker.io/embercsi/ember-csi-operator:latest
+The provided deploy/00-pre.yaml, deploy/01-scc.yaml and deploy/02-operator.yaml files will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the 02-operator.yaml file if you wish to use your container image. By default it uses docker.io/embercsi/ember-csi-operator:latest
 
 An optional environmental variable of X_EMBER_OPERATOR_CLUSTER can be passed to the operator to enable/disable CSI spec versions as well as selecting the appropriate sidecar and driver images. The default value of X_EMBER_OPERATOR_CLUSTER is "default" which enables CSI spec v0.3. 
 
@@ -33,7 +33,7 @@ The Custom Resource File is a yaml file that configures the Ember CSI driver. De
 apiVersion: "ember-csi.io/v1alpha1"
 kind: "EmberCSI"
 metadata:
-  name: "external-ceph"
+  name: "my-ceph"
 spec:
 # Optional. Use nodeSelector for placing CSI controller pod
 # nodeSelector:
@@ -104,7 +104,7 @@ $ oc project ember-csi
 
 ## Deploy the Custom Resource
 ```
-$ oc create -f deploy/examples/external-ceph-cr.yaml
+$ oc create -f deploy/examples/drivers/ceph.yaml
 ```
 
 ## Verify that the pods are created and the Storageclass exists
@@ -116,7 +116,7 @@ ember-csi-test-controller-0           3/3       Running   0          11m
 ember-csi-test-node-2mf5b             2/2       Running   0          11m
 $ oc get storageclass -n ember-csi
 NAME                            PROVISIONER                  AGE
-io.ember-csi.external-ceph-sc   io.ember-csi.external-ceph   5s
+my-ceph-sc.ember-csi.io   	my-ceph.ember-csi.io   	     5s
 ```
 
 ## Uninstallation
@@ -125,6 +125,6 @@ Before uninstalling the operator, make sure all the pods and PVCs using Ember CS
 ```
 $ oc delete -f deploy/examples/app.yaml
 $ oc delete -f deploy/examples/pvc.yaml
-$ oc delete -f deploy/examples/external-ceph-cr.yaml
+$ oc delete -f deploy/examples/drivers/ceph.yaml
 $ make undeploy
 ```

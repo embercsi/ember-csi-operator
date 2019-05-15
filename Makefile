@@ -37,7 +37,7 @@ push:
 	docker push $(REPO):$(TAG)
 
 deploy: 
-	oc create -f deploy/install.yaml
+	oc create -f deploy/00-pre.yaml deploy/01-scc.yaml deploy/02-operator.yaml
 
 undeploy:
 	oc delete -f deploy/uninstall.yaml

@@ -1,7 +1,8 @@
+---
 apiVersion: "ember-csi.io/v1alpha1"
 kind: "EmberCSI"
 metadata:
-  name: "external-ceph"
+  name: "my-ceph-with-topologies"
 spec:
   topologies:
     - topology:
@@ -12,12 +13,11 @@ spec:
           operator: In
           values:
             - node2.example.com
-
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
-      X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "admin", "rbd_pool": "cephfs_data", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/ceph.client.admin.keyring"}'
+      X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
     sysFiles:
-      name: system-files
+      name: sysfiles-secret
       key: "system-files.tar"
 
