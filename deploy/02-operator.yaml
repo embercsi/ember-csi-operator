@@ -35,7 +35,7 @@ spec:
             failureThreshold: 1
           env:
             - name: X_EMBER_OPERATOR_CLUSTER
-              value: k8s-v1.13
+              value: default # currently supported: default, ocp-3.11, k8s-v1.11, k8s-v1.13
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
