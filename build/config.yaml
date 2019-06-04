@@ -7,6 +7,12 @@ sidecars:
     external-provisioner: quay.io/k8scsi/csi-provisioner:v0.3.0
     driver-registrar: quay.io/k8scsi/driver-registrar:v0.3.0
 
+  ocp-3.11:
+    X_CSI_SPEC_VERSION: v0.3
+    external-attacher: quay.io/k8scsi/csi-attacher:v0.4.2
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v0.4.2
+    driver-registrar: quay.io/k8scsi/driver-registrar:v0.4.2
+
   k8s-v1.13:
     X_CSI_SPEC_VERSION: v1.0
     external-attacher: quay.io/k8scsi/csi-attacher:v1.0.1
