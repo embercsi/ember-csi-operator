@@ -1,130 +1,81 @@
-### Project Status: pre-alpha
-The project is currently pre-alpha and it is expected that breaking changes to the API will be made in the upcoming releases.
-
 # ember-csi-operator
-Operator to create/configure/manage Ember CSI Driver atop Kubernetes/OpenShift
-
-## Build
-To build the operator, clone this repo into your GOPATH and run make. NOTE: Please ensure that the container image repo and tag are customized.
-```
-$ mkdir -p ${GOPATH}/src/github.com/embercsi
-$ git clone -b devel https://github.com/embercsi/ember-csi-operator
-$ cd ember-csi-operator
-$ make build
-```
-If the used Docker release supports multistage builds, you can enable this by setting the MULTISTAGE_BUILD env var:
-```
-$ MULTISTAGE_BUILD=1 make build
-```
+Operator to create, configure and manage ember-csi, a multivendor CSI for
+Kubernetes and OpenShift.
 
 ## Quick Start
-The provided deploy/00-pre.yaml, deploy/01-scc.yaml and deploy/02-operator.yaml files will construct all the necessary RBAC, SCC, Service Accounts, Namespace, etc to run the Ember CSI operator. NOTE: Edit the 02-operator.yaml file if you wish to use your container image. By default it uses docker.io/embercsi/ember-csi-operator:latest
+#### Installing the operator
+The operator needs its own namespace, service account, security context, and a
+few roles and bindings. For example, to install these on OpenShift >= 3.10:
 
-An optional environmental variable of X_EMBER_OPERATOR_CLUSTER can be passed to the operator to enable/disable CSI spec versions as well as selecting the appropriate sidecar and driver images. The default value of X_EMBER_OPERATOR_CLUSTER is "default" which enables CSI spec v0.3. 
+    oc create -f deploy/00-pre.yaml -f deploy/01-scc.yaml -f deploy/02-operator.yaml
 
-```
-$ make deploy
-```
+#### Deploy and configure a storage backend
+You also need a storage backend, for example a lightweight Ceph pod for
+development & testing:
 
-## Create a Custom Resource File
-The Custom Resource File is a yaml file that configures the Ember CSI driver. Details such as unique name, driver backend-specific information and files are specified here. 
-### Example CR file.
-```
-apiVersion: "ember-csi.io/v1alpha1"
-kind: "EmberCSI"
-metadata:
-  name: "my-ceph"
-spec:
-# Optional. Use nodeSelector for placing CSI controller pod
-# nodeSelector:
-#   # Any arbitrary key: value pair that must match nodeLabels set by the admin
-#   # kubectl get nodes --show-labels
-#   ember-csi-controller: true
-  config:
-    envVars:
-      X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
-      X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
-    sysFiles:
-      name: sysfiles-secret
-      key: "system-files.tar"
-```
+    oc create -f deploy/examples/ceph-demo.yaml
 
-The name entry will ensure a unique deployment of Ember CSI instance. In the config.envvars section, environment variables specified here are passed to the Ember CSI driver pod. The config.sysFiles entry, specifies the name of the secret, which contains any backend-specific files tar'ed and optionally compressed via gzip or bzip2.
+To use the Ceph container, you need to provide the ceph.conf configuration file
+and the keyring file as a secret. The following commands will extract these two
+files once the pod is ready to use and create a secret:
 
-### Enviroment Variables
+    oc wait -n ceph-demo --timeout=300s --for=condition=Ready pod/ceph-demo-pod
+    oc -n ceph-demo cp ceph-demo/ceph-demo-pod:/etc/ceph/ etc/ceph/
+    echo -e "\n[client]\nrbd default features = 3\n" >> etc/ceph/ceph.conf
+    tar cf system-files.tar etc/ceph/ceph.conf etc/ceph/ceph.client.admin.keyring
+    oc create -n ember-csi secret generic sysfiles-secret --from-file=system-files.tar
 
-The CSI driver is configured via environmental variables, any value that doesn't have a default is a required value.
+Next, setup the storage backend using a custom resource file:
 
-| Name                       | Role       | Description                                                   | Default                                                                                                      | Example                                                                                                                                                                                                                                 |
-| -------------------------- | ---------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CSI_ENDPOINT`             | all        | IP and port to bind the service                               | [::]:50051                                                                                                   | 192.168.1.22:50050                                                                                                                                                                                                                      |
-| `CSI_MODE`                 | all        | Role the service should perform: controller, node, all        | all                                                                                                          | controller                                                                                                                                                                                                                              |
-| `X_CSI_STORAGE_NW_IP`      | node       | IP address in the Node used to connect to the storage         | IP resolved from Node's fqdn                                                                                 | 192.168.1.22                                                                                                                                                                                                                            |
-| `X_CSI_NODE_ID`            | node       | ID used by this node to identify itself to the controller     | Node's fqdn                                                                                                  | csi_test_node                                                                                                                                                                                                                           |
-| `X_CSI_PERSISTENCE_CONFIG` | all        | Configuration of the `cinderlib` metadata persistence plugin. | {'storage': 'db', 'connection': 'sqlite:///db.sqlite'}                                                       | {'storage': 'db', 'connection': 'mysql+pymysql://root:stackdb@192.168.1.1/cinder?charset=utf8'}                                                                                                                                         |
-| `X_CSI_EMBER_CONFIG`       | all        | Global `cinderlib` configuration                              | {'project_id': 'io.ember-csi', 'user_id': 'io.ember-csi', 'root_helper': 'sudo', 'request_multipath': true } | {"project_id":"k8s project","user_id":"csi driver","root_helper":"sudo"}                                                                                                                                                                |
-| `X_CSI_BACKEND_CONFIG`     | controller | Driver configuration                                          |                                                                                                              | {"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/ceph.client.cinder.keyring"} |
-| `X_CSI_DEFAULT_MOUNT_FS`   | node       | Default mount filesystem when missing in publish calls        | ext4                                                                                                         | btrfs                                                                                                                                                                                                                                   |
-| `X_CSI_SYSTEM_FILES`       | all        | All required storage driver-specific files archived in tar, tar.gz or tar.bz2 format|                                                                                        | /path/to/etc-ceph.tar.gz                                                                                                                                                                                                                |
-| `X_CSI_DEBUG_MODE`         | all        | Debug mode (rpdb, pdb) to use. Disabled by default.           |                                                                                                              | rpdb                                                                                                                                                                                                                                    |
-| `X_CSI_ABORT_DUPLICATES`   | all        | If we want to abort or queue (default) duplicated requests.   | false                                                                                                        | true                                                                                                                                                                                                                                    |
+    oc create -f deploy/examples/drivers/ceph.yaml
 
-### Create required secrets which the EmberCSI resource will use
+Now verify that the pods are created and the storage class exists:
 
-#### Create the tar file
+    oc get pods -n ember-csi
+    NAME                                  READY     STATUS    RESTARTS   AGE
+    ember-csi-operator-645585cdc8-m62mp   1/1       Running   0          2m
+    my-ceph-controller-0                  3/3       Running   0          11s
+    my-ceph-node-0-d6gg4                  2/2       Running   0          11s
+    my-ceph-node-0-lfzx6                  2/2       Running   0          11s
 
-##### Example for ceph backend
+	oc get storageclass -n ember-csi
+    NAME                      PROVISIONER            AGE
+    io.ember-csi.my-ceph-sc   io.ember-csi.my-ceph   15s
 
-- Prepare the following tree structure:
-    - etc/ceph/ceph.conf
-    - etc/ceph/keyring
 
-- Create the archive:
-    ```
-    $ tar -cvf system-files.tar etc
-    ```
+#### Using the backend for your pods
+You're all set now! However, you likely want to test the deployment, so let's
+create a pvc and pod for testing.
+
+    oc create namespace demoapp
+    oc create -n demoapp -f deploy/examples/pvc.yaml -f deploy/examples/app.yaml
     
-Notes:
+Once the pvc and pod are up and running, it will look like this:
 
-- The keyring file is renamed for brevity purposes. 
-  It depends on the specified client user. E.g. ceph.client.cinder.keyring
+    oc describe -n demoapp pods my-csi-app | tail
 
-- Add 'rbd default features = 3' to ceph.conf file in order to enable only layering.
-  Otherwise, volume creation might fail due to unsupported features (fast-diff/deep-flatten) on old kernels. 
+    Type    Reason                  Age   From                        Message
+    ----    ------                  ----  ----                        -------
+    Normal  Scheduled               20s   default-scheduler           Successfully assigned demoapp/my-csi-app to node2.example.com
+    Normal  SuccessfulAttachVolume  19s   attachdetach-controller     AttachVolume.Attach succeeded for volume "pvc-6c6b9dd986f411e9"
+    Normal  Pulling                 7s    kubelet, node2.example.com  pulling image "busybox"
+    Normal  Pulled                  2s    kubelet, node2.example.com  Successfully pulled image "busybox"
+    Normal  Created                 2s    kubelet, node2.example.com  Created container
+    Normal  Started                 2s    kubelet, node2.example.com  Started container
 
-#### Deploy the sysfiles-secret
-```
-oc create secret generic sysfiles-secret --from-file=system-files.tar
-```
+Looking inside the container you will notice that the provided volume has been
+mounted:
 
-## Switch to ember-csi project
-```
-$ oc project ember-csi
-```
+    oc exec -n demoapp -it my-csi-app  -- df -h | grep -B 1 /data
+    /var/lib/ember-csi/vols/e1e57b59-f290-408f-87fa-540509bbe8b5 975.9M      2.5M    906.2M   0% /data
 
-## Deploy the Custom Resource
-```
-$ oc create -f deploy/examples/drivers/ceph.yaml
-```
+#### Uninstall the deployment
+Eventually you want to remove all the resources from your cluster. Just delete
+the projects, security context and storage class:
 
-## Verify that the pods are created and the Storageclass exists
-```
-$ oc get pods -n ember-csi
-NAME            READY     STATUS    RESTARTS   AGE
-ember-csi-operator-786769bdc7-dfl4l   1/1       Running   0          11m
-ember-csi-test-controller-0           3/3       Running   0          11m
-ember-csi-test-node-2mf5b             2/2       Running   0          11m
-$ oc get storageclass -n ember-csi
-NAME                            PROVISIONER                  AGE
-my-ceph-sc.ember-csi.io   	my-ceph.ember-csi.io   	     5s
-```
+    oc delete project demoapp
+    oc delete -f deploy/examples/drivers/ceph.yaml -f deploy/examples/ceph-demo.yaml
+    oc delete -f deploy/00-pre.yaml -f deploy/01-scc.yaml -f deploy/02-operator.yaml
 
-## Uninstallation
-Before uninstalling the operator, make sure all the pods and PVCs using Ember CSI is cleaned up. After these are cleaned up, run make undeploy
-
-```
-$ oc delete -f deploy/examples/app.yaml
-$ oc delete -f deploy/examples/pvc.yaml
-$ oc delete -f deploy/examples/drivers/ceph.yaml
-$ make undeploy
-```
+## Next steps
+Documentation is still a work in progress, but have a look into [docs/README.md](docs/README.md) for further infos.

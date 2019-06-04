@@ -9,4 +9,5 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: my-ceph-sc.ember-csi.io
+  # my-ceph-sc.ember-csi.io for CSI spec >= 1.0
+  storageClassName: io.ember-csi.my-ceph-sc
