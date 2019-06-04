@@ -79,39 +79,20 @@ func ReadConfig(configFile *string) {
 	source, err := ioutil.ReadFile(*configFile)
 	if err != nil {
 		glog.Infof("Cannot Open Config File: %s. Will use defaults.\n", *configFile)
-		DefaultConfig()
 	}
 	err = yaml.Unmarshal(source, &Conf)
 	if err != nil {
 		glog.Info("Cannot Unmarshal Config File. Will use defaults.\n")
-		DefaultConfig()
 	}
 
 	// Read X_EMBER_OPERATOR_CLUSTER e.g ocp-3.11, k8s-1.13, k8s-1.14, etc
 	if len(os.Getenv("X_EMBER_OPERATOR_CLUSTER")) > 0 {
 		Cluster = os.Getenv("X_EMBER_OPERATOR_CLUSTER")
 	} else {
-		// Use "default" as the cluster name which is used in DefaultConfig
 		Cluster = "default"
 	}
-}
-
-// Populate the Config Stuct with some default values and Return it
-func DefaultConfig() {
-	var defaultConfig = `
----
-version: 1.0
-sidecars:
-  default:
-    X_CSI_SPEC_VERSION: v0.3
-    external-attacher: quay.io/k8scsi/csi-attacher:v0.3.0
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v0.3.0
-    driver-registrar: quay.io/k8scsi/driver-registrar:v0.3.0
-drivers:
-  default: embercsi/ember-csi:master
-`
-	err := yaml.Unmarshal([]byte(defaultConfig), &Conf)
-	if err != nil {
-		glog.Fatal("Cannot Open Default Config", err)
+	glog.Infof(fmt.Sprintf("Using config section %s", Cluster))
+	if _, ok := Conf.Sidecars[Cluster]; !ok {
+		glog.Fatalf("Invalid config - section %s is missing ", Cluster)
 	}
 }
