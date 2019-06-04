@@ -1,0 +1,47 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ceph-demo
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ceph-demo-sa
+  namespace: ceph-demo
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: ceph-demo
+  name: ceph-demo-pod
+  namespace: ceph-demo
+spec:
+  serviceAccount: ceph-demo-sa
+  hostNetwork: true
+  containers:
+  - name: ceph-demo
+    image: ceph/daemon:latest-luminous
+    securityContext:
+      privileged: true
+    args: ["demo"]
+    env:
+    - name: MON_IP
+      valueFrom:
+        fieldRef:
+          fieldPath: status.hostIP
+    - name: CEPH_PUBLIC_NETWORK
+      value: "0.0.0.0/0"
+    - name: DEMO_DAEMONS
+      value: "osd mds"
+    readinessProbe:
+      exec:
+        command:
+        - cat
+        - /etc/ceph/I_AM_A_DEMO
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      failureThreshold: 300
