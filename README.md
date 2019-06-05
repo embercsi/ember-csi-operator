@@ -15,6 +15,12 @@ development & testing:
 
     oc create -f deploy/examples/ceph-demo.yaml
 
+> If your cluster runs multiple compute nodes you need to allow TCP traffic to
+> the Ceph pod on port 6800-7300. Please have a look at
+> [Ceph Network > Configuration > Reference](http://docs.ceph.com/docs/master/rados/configuration/network-config-ref/#mds-and-manager-ip-tables)
+> and [OpenShift Cluster Administration > Documentation](https://docs.openshift.com/container-platform/3.11/admin_guide/iptables.html)
+> for further reference.
+
 To use the Ceph container, you need to provide the ceph.conf configuration file
 and the keyring file as a secret. The following commands will extract these two
 files once the pod is ready to use and create a secret:
