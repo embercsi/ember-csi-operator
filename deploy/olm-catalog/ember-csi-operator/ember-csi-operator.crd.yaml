@@ -1,0 +1,158 @@
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: embercsis.ember-csi.io
+  namespace: ember-csi
+spec:
+  group: ember-csi.io
+  names:
+    kind: EmberCSI
+    listKind: EmberCSIList
+    plural: embercsis
+    singular: embercsi
+  scope: Namespaced
+  version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          description: EmberCSI Spec
+          properties:
+            nodeSelector:
+              description: Define which Nodes the Pods are scheduled on.
+              type: object
+            tolerations:
+              description: If specified, the pod's tolerations.
+              type: array
+              items:
+                description: The pod this Toleration is attached to tolerates any
+                  taint that matches the triple <key,value,effect> using the matching
+                  operator <operator>.
+                properties:
+                  effect:
+                    description: Effect indicates the taint effect to match. Empty
+                      means match all taint effects. When specified, allowed values
+                      are NoSchedule, PreferNoSchedule and NoExecute.
+                    type: string
+                  key:
+                    description: Key is the taint key that the toleration applies
+                      to. Empty means match all taint keys. If the key is empty, operator
+                      must be Exists; this combination means to match all values and
+                      all keys.
+                    type: string
+                  operator:
+                    description: Operator represents a key's relationship to the value.
+                      Valid operators are Exists and Equal. Defaults to Equal. Exists
+                      is equivalent to wildcard for value, so that a pod can tolerate
+                      all taints of a particular category.
+                    type: string
+                  tolerationSeconds:
+                    description: TolerationSeconds represents the period of time the
+                      toleration (which must be of effect NoExecute, otherwise this
+                      field is ignored) tolerates the taint. By default, it is not
+                      set, which means tolerate the taint forever (do not evict).
+                      Zero and negative values will be treated as 0 (evict immediately)
+                      by the system.
+                    format: int64
+                    type: integer
+                  value:
+                    description: Value is the taint value the toleration matches to.
+                      If the operator is Exists, the value should be empty, otherwise
+                      just a regular string.
+                    type: string
+                type: object
+            topologies:
+              description: If specified, the CSI node topologies.
+              type: array
+              items:
+                description: The key-value pair describing the node's label, which
+                  is matched to the list of nodes specified as an array.
+                properties:
+                  topology: 
+                    description: A key-value pair forming a label which are applied to nodes.
+                    type: object
+                  nodes:
+                    description: A list of node selector requirements by node's labels.
+                    type: array
+                    items:
+                      description: A node selector requirement is a selector
+                        that contains values, a key, and an operator that
+                        relates the key and values.
+                      type: object
+                      properties:
+                        key:
+                          description: The label key that the selector
+                            applies to.
+                          type: string
+                        operator:
+                          description: Represents a key's relationship
+                            to a set of values. Valid operators are In,
+                            NotIn, Exists, DoesNotExist. Gt, and Lt.
+                          type: string
+                        values:
+                          description: An array of string values. If the
+                            operator is In or NotIn, the values array
+                            must be non-empty. If the operator is Exists
+                            or DoesNotExist, the values array must be
+                            empty. If the operator is Gt or Lt, the values
+                            array must have a single element, which will
+                            be interpreted as an integer. This array is
+                            replaced during a strategic merge patch.
+                          type: array
+                          items:
+                            type: string
+                      required:
+                      - key
+                      - operator
+                      - values
+            config:
+              description: Configuration values passed to the Ember-CSI driver
+              type: object
+              properties:
+                envVars:
+                  description: Environment variables passed to the Ember-CSI pod
+                  type: object
+                  properties:
+                    X_CSI_BACKEND_CONFIG: 
+                      description: Backend configuration passed to Ember-CSI pod.
+                      type: string
+                    X_CSI_EMBER_CONFIG:
+                      description: Global Ember and cinderlib configuration.
+                      type: string
+                    X_CSI_PERSISTENCE_CONFIG:
+                      description: Configuration of the cinderlib metadata persistence plugin.
+                      type: string
+                    X_CSI_DEBUG_MODE:
+                      description: Debug mode (rpdb, pdb) to use. Disabled by default.
+                      type: string
+                    X_CSI_ABORT_DUPLICATES:
+                      description: If we want to abort or queue (default) duplicated requests.
+                      type: string
+                    X_CSI_DEFAULT_MOUNT_FS:
+                      description: Default mount filesystem when missing in publish calls. Default
+                        is ext4.
+                      type: string
+                    X_CSI_NODE_ID:
+                      description: ID used by this node to identify itself to the controller.
+                      type: string
+                    X_CSI_STORAGE_NW_IP:
+                      description: IP address in the Node used to connect to the storage.
+                      type: string
+                  required:
+                  - X_CSI_BACKEND_CONFIG
+                sysFiles:
+                  description: All required storage driver-specific files archived in tar, 
+                    tar.gz or tar.bz2 format.
+                  type: object
+                  properties:
+                    name:
+                      description: Name of the secret in the namespace.
+                      type: string
+                    key:
+                      description: The key of the secret to select from.  Must
+                        be a valid secret key.
+                      type: string
+                  required:
+                  - name
+                  - key
