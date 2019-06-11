@@ -4,7 +4,7 @@ sidecars:
   default:
     X_CSI_SPEC_VERSION: v1.0
     external-attacher: quay.io/k8scsi/csi-attacher:v1.1.1
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.2.0
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.1.0
     cluster-driver-registrar: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
     external-snapshotter: quay.io/k8scsi/csi-snapshotter:v1.1.0
