@@ -1,3 +1,22 @@
+### Debugging
+#### Volume mounts fail due to missing directory
+
+If you see an error like this, it's very likely that you need to set your `X_EMBER_OPERATOR_CLUSTER` to your cluster version in your deployment yaml:
+
+```console
+# oc describe -n demoapp pod my-csi-app
+[...]
+Events:
+  Type     Reason                  Age                   From                     Message
+  ----     ------                  ----                  ----                     -------
+  Warning  FailedScheduling        5m2s (x4 over 5m14s)  default-scheduler        pod has unbound immediate PersistentVolumeClaims
+  Normal   Scheduled               4m59s                 default-scheduler        Successfully assigned demoapp/my-csi-app to k8s114
+  Normal   SuccessfulAttachVolume  4m58s                 attachdetach-controller  AttachVolume.Attach succeeded for volume "pvc-397e465a-8c28-11e9-bf37-525400654e82"
+  Warning  FailedMount             41s (x10 over 4m51s)  kubelet, k8s114          MountVolume.MountDevice failed for volume "pvc-397e465a-8c28-11e9-bf37-525400654e82" : rpc error: code = InvalidArgument desc = Parent staging directory for /var/lib/kubelet/plugins/kubernetes.io/csi/pv/pvc-397e465a-8c28-11e9-bf37-525400654e82/globalmount/stage doesn't exist: [Errno 2] No such file or directory: '/var/lib/kubelet/plugins/kubernetes.io/csi/pv/pvc-397e465a-8c28-11e9-bf37-525400654e82/globalmount'
+  Warning  FailedMount             38s (x2 over 2m56s)   kubelet, k8s114          Unable to mount volumes for pod "my-csi-app_demoapp(397f2391-8c28-11e9-bf37-525400654e82)": timeout expired waiting for volumes to attach or mount for pod "demoapp"/"my-csi-app". list of unmounted volumes=[my-csi-volume]. list of unattached volumes=[my-csi-volume default-token-jbbmc]
+```
+
+
 ### Enviroment Variables
 
 The CSI driver is configured via environmental variables, any value that doesn't have a default is a required value.
