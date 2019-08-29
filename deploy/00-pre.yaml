@@ -155,6 +155,7 @@ rules:
   - storage.k8s.io
   resources:
   - storageclasses
+  - csinode
   verbs:
   - create
   - get
