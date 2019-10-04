@@ -15,6 +15,7 @@ spec:
         name: ember-csi-operator
     spec:
       serviceAccountName: ember-csi-operator
+      terminationGracePeriodSeconds: 120
       containers:
         - name: ember-csi-operator
           image: docker.io/embercsi/ember-csi-operator:latest
