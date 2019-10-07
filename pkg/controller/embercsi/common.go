@@ -8,6 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
+	"encoding/json"
 )
 
 // Default values
@@ -44,9 +45,6 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 		}, {
 			Name:  "X_CSI_SPEC_VERSION",
 			Value: Conf.Sidecars[Cluster].CSISpecVersion,
-		}, {
-			Name:  "X_CSI_EMBER_CONFIG",
-			Value: fmt.Sprintf("%s%s%s", "{\"plugin_name\": \"", GetPluginDomainName(ecsi.Name), "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
 		},
 	}
 
@@ -85,7 +83,13 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 		},
 		)
 	}
-
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "X_CSI_EMBER_CONFIG",
+			Value: ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG,
+		},
+		)
+	} 
 	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_BACKEND_CONFIG",
@@ -492,3 +496,26 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 
 	return vol
 }
+
+// Check whether snapshot feature is enabled/disabled
+func isSnapshotEnabled(emberConfig string) bool {
+	type EmberCSIConfig struct {
+		Disabled        []string
+	}
+	var ecc EmberCSIConfig
+
+	err := json.Unmarshal([]byte(emberConfig), &ecc)
+	if err != nil {
+		glog.Fatal("Fatal: Unable to unmarshal X_CSI_EMBER_CONFIG")
+	}
+	glog.V(3).Infof("Info: X_CSI_EMBER_CONFIG Disabled Features: %v", ecc.Disabled)
+
+	for i := 0; i < len(ecc.Disabled); i++ {
+                if ecc.Disabled[i] == "snapshot" {
+			glog.V(3).Infof("Info: Snapshots disabled in Ember config via X_CSI_EMBER_CONFIG")
+			return false
+		}
+	}
+        return true
+}
+

@@ -173,25 +173,31 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 		return err
 	}
 
+	snapShotEnabled := true
+	if len(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 && !isSnapshotEnabled(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) {
+		snapShotEnabled = false
+	}
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
-	if Conf.getCSISpecVersion() >= 1.0 {
-		glog.V(3).Info("Trying to create a new volumeSnapshotClass")
-		vsc := &snapv1a1.VolumeSnapshotClass{}
-		err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), Namespace: vsc.Namespace}, vsc)
-		if err != nil && errors.IsNotFound(err) {
-			// Define a new VolumeSnapshotClass
-			vsc = r.volumeSnapshotClassForEmberCSI(instance)
-			glog.V(3).Infof("Creating a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
-			err = r.client.Create(context.TODO(), vsc)
-			if err != nil {
-				glog.Errorf("Failed to create a new VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace, err)
+	if Conf.getCSISpecVersion() >= 1.0 && snapShotEnabled {
+		//if len(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 && isSnapshotDisabled(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) {
+			glog.V(3).Info("Trying to create a new volumeSnapshotClass")
+			vsc := &snapv1a1.VolumeSnapshotClass{}
+			err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), Namespace: vsc.Namespace}, vsc)
+			if err != nil && errors.IsNotFound(err) {
+				// Define a new VolumeSnapshotClass
+				vsc = r.volumeSnapshotClassForEmberCSI(instance)
+				glog.V(3).Infof("Creating a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
+				err = r.client.Create(context.TODO(), vsc)
+				if err != nil {
+					glog.Errorf("Failed to create a new VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace, err)
+					return err
+				}
+				glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
+			} else if err != nil {
+				glog.Error("failed to get VolumeSnapshotClass", err)
 				return err
 			}
-			glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
-		} else if err != nil {
-			glog.Error("failed to get VolumeSnapshotClass", err)
-			return err
-		}
+		//}
 	}
 
 	return nil
