@@ -278,28 +278,23 @@ func (r *ReconcileEmberCSI) syncVolumeSnapshotClass(instance *embercsiv1alpha1.E
 					}
 					return err
 				}
-				glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", actual.Name, actual.Namespace)
-				return nil
-			}
-			return err
-		}
-	}
-        // Remove the VolumeSnapshotClass and Update the controller and nodes 
-        if !snapshotEnabled {
-                glog.V(3).Info("Info: Request to disable VolumeSnapshotClass")
-                existing := &snapv1a1.VolumeSnapshotClass{}
-                err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-existing", GetPluginDomainName(instance.Name)), Namespace: instance.Namespace}, existing)
-                if err != nil && errors.IsAlreadyExists(err) {
-                        err = r.client.Delete(context.TODO(), existing)
-                        if err != nil {
-                                glog.Errorf("Failed to remove VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-existing", GetPluginDomainName(instance.Name)), instance.Namespace, err)
-                                return err
-                        }
-                } else if err != nil {
-                        glog.Error("Error: Failed to get VolumeSnapshotClass", err)
-                        return err
-                }
-        }
+    }
+    // Remove the VolumeSnapshotClass and Update the controller and nodes 
+    if !snapshotEnabled {
+            glog.V(3).Info("Info: Request to disable VolumeSnapshotClass")
+            existing := &snapv1a1.VolumeSnapshotClass{}
+            err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-existing", GetPluginDomainName(instance.Name)), Namespace: instance.Namespace}, existing)
+            if err != nil && errors.IsAlreadyExists(err) {
+                    err = r.client.Delete(context.TODO(), existing)
+                    if err != nil {
+                            glog.Errorf("Failed to remove VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-existing", GetPluginDomainName(instance.Name)), instance.Namespace, err)
+                            return err
+                    }
+            } else if err != nil {
+                    glog.Error("Error: Failed to get VolumeSnapshotClass", err)
+                    return err
+            }
+    }
 
 	return nil
 }
