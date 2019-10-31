@@ -199,11 +199,11 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	}
 
 	// Remove the VolumeSnapshotClass and Update the controller and nodes 
-	if !snapshotEnabled {
+	if !snapShotEnabled {
 		glog.V(3).Info("Info: Request to disable VolumeSnapshotClass")
 		vsc := &snapv1a1.VolumeSnapshotClass{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), Namespace: vsc.Namespace}, vsc)
-		if err != nil && errors.IsFound(err) {
+		if err != nil && !errors.IsNotFound(err) {
 			err = r.client.Delete(context.TODO(), vsc)
 			if err != nil {
 				glog.Errorf("Failed to remove VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace, err)
