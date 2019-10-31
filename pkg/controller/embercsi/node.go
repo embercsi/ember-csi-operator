@@ -19,7 +19,6 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 	if len(ecsi.Spec.Topologies) > 0 { // DaemonSet with specified topology
 
 		var nodeSelectorRequirement []corev1.NodeSelectorRequirement
-		//var nodeSelectorOperator corev1.NodeSelectorOperator
 		if daemonSetIndex >= 1 {
 			nodeSelectorRequirement = ecsi.Spec.Topologies[daemonSetIndex-1].Nodes
 		} else { // Index == 0
@@ -131,25 +130,26 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []co
 	trueVar := true
 	containers := []corev1.Container{
 		{
-			Name:            "ember-csi-driver",
-			Image:           Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
+			Name:  "ember-csi-driver",
+			Image: emberCSIOperatorConfig.getDriverImage(getBackendName(ecsi)),
 			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: &corev1.SecurityContext{
 				Privileged:               &trueVar,
 				AllowPrivilegeEscalation: &trueVar,
 			},
 			TerminationMessagePath: "/tmp/termination-log",
-			Env:          generateNodeEnvVars(ecsi, daemonSetIndex),
-			VolumeMounts: generateVolumeMounts(ecsi, "node"),
+			Env:                    generateNodeEnvVars(ecsi, daemonSetIndex),
+			VolumeMounts:           generateVolumeMounts(ecsi, "node"),
 			//LivenessProbe:		livenessProbe,
 		},
 	}
 
 	// Add NodeRegistrar sidecar
-	if len(Conf.Sidecars[Cluster].NodeRegistrar) > 0 {
+	//if len(Conf.Sidecars[Cluster].NodeRegistrar) > 0 {
+	if len(emberCSIOperatorConfig.getSidecarImage("node-driver-registrar")) > 0 {
 		containers = append(containers, corev1.Container{
 			Name:  "node-driver-registrar",
-			Image: Conf.Sidecars[Cluster].NodeRegistrar,
+			Image: emberCSIOperatorConfig.getSidecarImage("node-driver-registrar"),
 			Args: []string{
 				"--v=5",
 				"--csi-address=/csi-data/csi.sock",
@@ -181,10 +181,12 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []co
 	}
 
 	// On older CSI specs, use driver registrar
-	if len(Conf.Sidecars[Cluster].Registrar) > 0 {
+	//if len(Conf.Sidecars[Cluster].Registrar) > 0 {
+	if len(emberCSIOperatorConfig.getSidecarImage("driver-registrar")) > 0 {
 		containers = append(containers, corev1.Container{
 			Name:  "driver-registrar",
-			Image: Conf.Sidecars[Cluster].Registrar,
+			Image: emberCSIOperatorConfig.getSidecarImage("driver-registrar"),
+			//Image: Conf.Sidecars[Cluster].Registrar,
 			Args: []string{
 				"--v=5",
 				"--csi-address=/csi-data/csi.sock",
@@ -224,7 +226,7 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 			Value: "unix:///csi-data/csi.sock",
 		}, {
 			Name:  "X_CSI_SPEC_VERSION",
-			Value: Conf.Sidecars[Cluster].CSISpecVersion,
+			Value: emberCSIOperatorConfig.getRawCSISpecVersion(),
 		}, {
 			Name:  "X_CSI_EMBER_CONFIG",
 			Value: fmt.Sprintf("%s%s%s", "{\"plugin_name\": \"", GetPluginDomainName(ecsi.Name), "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),

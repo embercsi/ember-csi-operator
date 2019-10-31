@@ -37,13 +37,8 @@ func main() {
 		glog.Fatal("Failed to get watch namespace: ", err)
 	}
 
-	// Read Config File if provided
-	configFile := flag.String("config", "", "Config file. (Optional)")
-	flag.Parse()
-
-	// Config File
-	glog.Info("Reading Ember CSI Config File")
-	embercsi.ReadConfig(configFile)
+	// Process Config File if provided
+	embercsi.ProcessConfig()
 
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()

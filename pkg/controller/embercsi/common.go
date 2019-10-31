@@ -2,34 +2,50 @@ package embercsi
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
-	"encoding/json"
 )
 
 // Default values
 const (
 	NodeSA           string = "ember-csi-operator"
 	ControllerSA     string = "ember-csi-operator"
+	ConfigLocation   string = "/etc/ember-csi-operator"
 	DEFAULT_CSI_SPEC        = 0.2
 )
 
 // Global variables
-var Conf *Config
-var Cluster string
+var emberCSIOperatorConfig *EmberCSIOperatorConfig
+
+func getBackendName(ecsi *embercsiv1alpha1.EmberCSI) string {
+	var backendConfig map[string]string
+	json.Unmarshal([]byte(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG), &backendConfig)
+	backend := backendConfig["driver"]
+
+	var image string
+	if len(backend) > 0 && len(emberCSIOperatorConfig.viper.GetString(fmt.Sprintf("drivers.%s", backend))) > 0 {
+		return backend
+	} else if len(emberCSIOperatorConfig.viper.GetString("drivers.default")) > 0 {
+		image = emberCSIOperatorConfig.viper.GetString("drivers.default")
+	} else {
+		image = "embercsi/ember-csi:master"
+	}
+
+	return image
+}
 
 // Plugin's domain name to use. Prior to CSI spec 1.0, we used reverse
 // domain name, after 1.0 we use forward.
 func GetPluginDomainName(instanceName string) string {
-	if Conf.getCSISpecVersion() < 1.0 {
-		glog.Info("CSI Spec is < 1.0 using reverse domain plugin name")
+	if emberCSIOperatorConfig.getCSISpecVersion() < 1.0 {
+		glog.V(3).Info("CSI Spec is < 1.0 using reverse domain plugin name")
 		return fmt.Sprintf("%s.%s", "io.ember-csi", instanceName)
 	}
-	glog.Info("CSI Spec is >= 1.0 using forward domain plugin name")
 	return fmt.Sprintf("%s.%s", instanceName, "ember-csi.io")
 }
 
@@ -44,7 +60,10 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 			Value: "unix:///csi-data/csi.sock",
 		}, {
 			Name:  "X_CSI_SPEC_VERSION",
-			Value: Conf.Sidecars[Cluster].CSISpecVersion,
+			Value: emberCSIOperatorConfig.getRawCSISpecVersion(),
+		}, {
+			Name:  "X_CSI_EMBER_CONFIG",
+			Value: fmt.Sprintf("%s%s%s", "{\"plugin_name\": \"", GetPluginDomainName(ecsi.Name), "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
 		},
 	}
 
@@ -83,13 +102,7 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 		},
 		)
 	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  "X_CSI_EMBER_CONFIG",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG,
-		},
-		)
-	} 
+
 	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_BACKEND_CONFIG",
@@ -295,7 +308,7 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string)
 		)
 
 		// ocp
-		if strings.Contains(Cluster, "ocp") || Cluster == "default" {
+		if strings.Contains(emberCSIOperatorConfig.cluster, "ocp") || emberCSIOperatorConfig.cluster == "default" {
 			vm = append(vm, corev1.VolumeMount{
 				Name:             "mountpoint-dir",
 				MountPropagation: &bidirectional,
@@ -425,7 +438,8 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 	// communicate with the kubelet
 	if csiDriverMode == "node" {
 		// Add NodeRegistrar sidecar
-		if len(Conf.Sidecars[Cluster].NodeRegistrar) > 0 {
+		//if len(Conf.Sidecars[Cluster].NodeRegistrar) > 0 {
+		if len(emberCSIOperatorConfig.getSidecarImage("node-driver-registrar")) > 0 {
 			vol = append(vol, corev1.Volume{
 				Name: "registration-dir",
 				VolumeSource: corev1.VolumeSource{
@@ -455,7 +469,7 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 		},
 		)
 		// ocp
-		if strings.Contains(Cluster, "ocp") || Cluster == "default" {
+		if strings.Contains(emberCSIOperatorConfig.cluster, "ocp") || emberCSIOperatorConfig.cluster == "default" {
 			vol = append(vol, corev1.Volume{
 				Name: "mountpoint-dir",
 				VolumeSource: corev1.VolumeSource{
@@ -511,11 +525,11 @@ func isSnapshotEnabled(emberConfig string) bool {
 	glog.V(3).Infof("Info: X_CSI_EMBER_CONFIG Disabled Features: %v", ecc.Disabled)
 
 	for i := 0; i < len(ecc.Disabled); i++ {
-                if ecc.Disabled[i] == "snapshot" {
+		if ecc.Disabled[i] == "snapshot" {
 			glog.V(3).Infof("Info: Snapshots disabled in Ember config via X_CSI_EMBER_CONFIG")
 			return false
 		}
 	}
-        return true
+	return true
 }
 

@@ -1,98 +1,81 @@
 package embercsi
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/fsnotify/fsnotify"
 	"github.com/golang/glog"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
 	"os"
 	"strconv"
 	"strings"
 )
 
-type Versions struct {
-	CSISpecVersion   string `yaml:"X_CSI_SPEC_VERSION,omitempty"`
-	Attacher         string `yaml:"external-attacher,omitempty"`
-	Provisioner      string `yaml:"external-provisioner,omitempty"`
-	Registrar        string `yaml:"driver-registrar,omitempty"` // For use in older CSI specs
-	NodeRegistrar    string `yaml:"node-driver-registrar,omitempty"`
-	ClusterRegistrar string `yaml:"cluster-driver-registrar,omitempty"`
-	Resizer          string `yaml:"external-resizer,omitempty"`
-	Snapshotter      string `yaml:"external-snapshotter,omitempty"`
-	LivenessProbe    string `yaml:"livenessprobe,omitempty"`
+type EmberCSIOperatorConfig struct {
+	viper   *viper.Viper
+	cluster string
 }
 
-type Config struct {
-	ConfigVersion string              `yaml:"version,omitempty"`
-	Sidecars      map[string]Versions `yaml:"sidecars,omitempty"`
-	Drivers       map[string]string   `yaml:"drivers"`
-}
+var k8sClientset *kubernetes.Clientset
 
-func (config *Config) getDriverImage(backend_config string) string {
-	var backend_config_map map[string]string
-	json.Unmarshal([]byte(backend_config), &backend_config_map)
-	backend := backend_config_map["driver"]
-	var image string
-
-	if len(backend) > 0 && len(config.Drivers[backend]) > 0 {
-		image = config.Drivers[backend]
-	} else if len(config.Drivers["default"]) > 0 {
-		image = config.Drivers["default"]
-	} else {
-		image = "embercsi/ember-csi:master"
-	}
-	glog.Infof(fmt.Sprintf("Using driver image %s", image))
-	return image
-}
-
-func (config *Config) getCluster() string {
-	return Cluster
-}
-
-// Returns a float value of CSI_SPEC
-func (config *Config) getCSISpecVersion() float64 {
-
-	// Remove 'v' prefix if it exists
-	if strings.HasPrefix(Conf.Sidecars[Cluster].CSISpecVersion, "v") { // starts with 'v' e.g. v0.3
-		var tmpConf = Conf.Sidecars[Cluster]
-		tmpConf.CSISpecVersion = strings.Replace(Conf.Sidecars[Cluster].CSISpecVersion, "v", "", -1)
-		Conf.Sidecars[Cluster] = tmpConf
+// Return CSI Spec Version as a Float for comparison
+func (emberCSIOperatorConfig EmberCSIOperatorConfig) getCSISpecVersion() float64 {
+	csiSpecVersion := emberCSIOperatorConfig.viper.GetString(fmt.Sprintf("sidecars.%s.X_CSI_SPEC_VERSION", emberCSIOperatorConfig.cluster))
+	if strings.HasPrefix(csiSpecVersion, "v") {
+		csiSpecVersion = strings.Replace(csiSpecVersion, "v", "", -1)
 	}
 
-	spec, err := strconv.ParseFloat(Conf.Sidecars[Cluster].CSISpecVersion, 64)
+	spec, err := strconv.ParseFloat(csiSpecVersion, 64)
 	if err != nil {
 		glog.Info(fmt.Sprintf("Could't convert X_CSI_SPEC_VERSION to float. Using default: %f", DEFAULT_CSI_SPEC))
-		// Use our sane default
-		spec = DEFAULT_CSI_SPEC
+		spec = DEFAULT_CSI_SPEC // Use our sane default
 	}
 	return spec
 }
 
-// Read Config and store values from Config File or Use DefaultConfig
-func ReadConfig(configFile *string) {
-	// If configFile is not specified. Lets use our default
-	if len(strings.TrimSpace(*configFile)) == 0 {
-		*configFile = "/etc/ember-csi-operator/config.yaml"
+// Get sidecar image for the corresponding sidecar
+func (emberCSIOperatorConfig EmberCSIOperatorConfig) getSidecarImage(sidecarName string) string {
+	return emberCSIOperatorConfig.viper.GetString(fmt.Sprintf("sidecars.%s.%s", emberCSIOperatorConfig.cluster, sidecarName))
+}
+
+// Return CSI Spec Version with the prefix 'v', if present
+func (emberCSIOperatorConfig EmberCSIOperatorConfig) getRawCSISpecVersion() string {
+	return emberCSIOperatorConfig.viper.GetString(fmt.Sprintf("sidecars.%s.X_CSI_SPEC_VERSION", emberCSIOperatorConfig.cluster))
+}
+
+// Get Ember CSI driver image
+func (emberCSIOperatorConfig EmberCSIOperatorConfig) getDriverImage(backend string) string {
+	return emberCSIOperatorConfig.viper.GetString(fmt.Sprintf("drivers.%s", backend))
+}
+
+// Configure and Initialize Viper to read our config
+func ProcessConfig() {
+	v := viper.New()
+	v.SetConfigName("config")
+	v.AddConfigPath(ConfigLocation) // Location is /etc/ember-csi-operator/config.yaml
+
+	err := v.ReadInConfig()
+	if err != nil {
+		//glog.Fatal("Error. Unable to read config file. Using Default")
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
-	source, err := ioutil.ReadFile(*configFile)
-	if err != nil {
-		glog.Infof("Cannot Open Config File: %s. Will use defaults.\n", *configFile)
-	}
-	err = yaml.Unmarshal(source, &Conf)
-	if err != nil {
-		glog.Info("Cannot Unmarshal Config File. Will use defaults.\n")
-	}
-
+	var clusterID string
 	// Read X_EMBER_OPERATOR_CLUSTER e.g ocp-3.11, k8s-1.13, k8s-1.14, etc
 	if len(os.Getenv("X_EMBER_OPERATOR_CLUSTER")) > 0 {
-		Cluster = os.Getenv("X_EMBER_OPERATOR_CLUSTER")
+		clusterID = os.Getenv("X_EMBER_OPERATOR_CLUSTER")
 	} else {
-		Cluster = "default"
+		clusterID = "default"
 	}
-	glog.Infof(fmt.Sprintf("Using config section %s", Cluster))
-	if _, ok := Conf.Sidecars[Cluster]; !ok {
-		glog.Fatalf("Invalid config - section %s is missing ", Cluster)
+
+	// Watch changes and Act accordingly
+	v.WatchConfig()
+	v.OnConfigChange(func(e fsnotify.Event) {
+		glog.Infof("INFO: Config changed detected. Sync Required: %s", e.Name)
+	})
+
+	emberCSIOperatorConfig = &EmberCSIOperatorConfig{
+		viper:   v,
+		cluster: clusterID,
 	}
 }

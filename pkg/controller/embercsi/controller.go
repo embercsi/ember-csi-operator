@@ -55,25 +55,25 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 
 	containers := []corev1.Container{
 		{
-			Name:            "ember-csi-driver",
-			Image:           Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
+			Name:  "ember-csi-driver",
+			Image: emberCSIOperatorConfig.getDriverImage(getBackendName(ecsi)),
 			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: &corev1.SecurityContext{
 				Privileged:               &trueVar,
 				AllowPrivilegeEscalation: &trueVar,
 			},
 			TerminationMessagePath: "/tmp/termination-log",
-			Env:          generateEnvVars(ecsi, "controller"),
-			VolumeMounts: generateVolumeMounts(ecsi, "controller"),
+			Env:                    generateEnvVars(ecsi, "controller"),
+			VolumeMounts:           generateVolumeMounts(ecsi, "controller"),
 			//	LivenessProbe:		livenessProbe,
 		},
 	}
 
 	// Add External Attacher sidecar
-	if len(Conf.Sidecars[Cluster].Attacher) > 0 {
+	if len(emberCSIOperatorConfig.getSidecarImage("external-attacher")) > 0 {
 		containers = append(containers, corev1.Container{
 			Name:  "external-attacher",
-			Image: Conf.Sidecars[Cluster].Attacher,
+			Image: emberCSIOperatorConfig.getSidecarImage("external-attacher"),
 			Args: []string{"--v=5",
 				"--csi-address=/csi-data/csi.sock",
 				"--connection-timeout=120s",
@@ -90,7 +90,7 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 	}
 
 	// Add External Provisioner sidecar
-	if len(Conf.Sidecars[Cluster].Provisioner) > 0 {
+	if len(emberCSIOperatorConfig.getSidecarImage("external-provisioner")) > 0 {
 		// Customize the arguments for the container
 		args := []string{
 			"--v=5",
@@ -98,12 +98,12 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 			fmt.Sprintf("%s%s", "--provisioner=", GetPluginDomainName(ecsi.Name)),
 		}
 
-		if Conf.getCSISpecVersion() > 0.3 {
+		if emberCSIOperatorConfig.getCSISpecVersion() > 0.3 {
 			args = append(args, "--feature-gates=Topology=true")
 		}
 		containers = append(containers, corev1.Container{
-			Name:            "external-provisioner",
-			Image:           Conf.Sidecars[Cluster].Provisioner,
+			Name:  "external-provisioner",
+			Image: emberCSIOperatorConfig.getSidecarImage("external-provisioner"),
 			Args:            args,
 			SecurityContext: &corev1.SecurityContext{Privileged: &trueVar},
 			VolumeMounts: []corev1.VolumeMount{
@@ -117,10 +117,10 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 	}
 
 	// Add ClusterRegistrar sidecar
-	if len(Conf.Sidecars[Cluster].ClusterRegistrar) > 0 {
+	if len(emberCSIOperatorConfig.getSidecarImage("cluster-driver-registrar")) > 0 {
 		containers = append(containers, corev1.Container{
 			Name:  "cluster-driver-registrar",
-			Image: Conf.Sidecars[Cluster].ClusterRegistrar,
+			Image: emberCSIOperatorConfig.getSidecarImage("cluster-driver-registrar"),
 			Args: []string{
 				"--csi-address=/csi-data/csi.sock",
 			},
@@ -136,10 +136,10 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 	}
 
 	// Add Snapshotter sidecar
-	if len(Conf.Sidecars[Cluster].Snapshotter) > 0 {
+	if len(emberCSIOperatorConfig.getSidecarImage("external-snapshotter")) > 0 {
 		containers = append(containers, corev1.Container{
 			Name:  "external-snapshotter",
-			Image: Conf.Sidecars[Cluster].Snapshotter,
+			Image: emberCSIOperatorConfig.getSidecarImage("external-snapshotter"),
 			Args: []string{"--v=5",
 				"--csi-address=/csi-data/csi.sock",
 			},
