@@ -155,7 +155,7 @@ rules:
   - storage.k8s.io
   resources:
   - storageclasses
-  - csinode
+  - csinodes
   verbs:
   - create
   - get
@@ -204,6 +204,17 @@ rules:
   - list
   - watch
   - update
+- apiGroups:
+  - csi.storage.k8s.io
+  resources:
+  - csidrivers
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - delete
 
 ---
 kind: ClusterRoleBinding
