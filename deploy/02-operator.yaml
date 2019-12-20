@@ -35,7 +35,7 @@ spec:
             periodSeconds: 10
             failureThreshold: 1
           env:
-              # currently supported: default, ocp-3.10, ocp-3.11, k8s-v1.10, k8s-v1.11, k8s-v1.12, k8s-v1.13, k8s-v1.14
+              # currently supported: default, ocp-3.10, ocp-3.11, ocp-4.2, k8s-v1.10, k8s-v1.11, k8s-v1.12, k8s-v1.13, k8s-v1.14, k8s-v1.15, k8s-v1.16
             - name: X_EMBER_OPERATOR_CLUSTER
               value: default
             - name: WATCH_NAMESPACE

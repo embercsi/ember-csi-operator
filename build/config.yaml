@@ -2,12 +2,13 @@
 version: 1.0
 sidecars:
   default:
-    X_CSI_SPEC_VERSION: v1.0
-    external-attacher: quay.io/k8scsi/csi-attacher:v1.1.1
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.1.0
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: quay.io/k8scsi/csi-attacher:v1.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.4.0
     cluster-driver-registrar: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
-    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
+    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.2
     external-snapshotter: quay.io/k8scsi/csi-snapshotter:v1.1.0
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.3.0
 
   ocp-3.10:
     X_CSI_SPEC_VERSION: v0.3
@@ -20,6 +21,14 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v0.4.2
     external-provisioner: quay.io/k8scsi/csi-provisioner:v0.4.2
     driver-registrar: quay.io/k8scsi/driver-registrar:v0.4.2
+
+  ocp-4.2:
+    X_CSI_SPEC_VERSION: v1.0
+    external-attacher: quay.io/k8scsi/csi-attacher:v1.1.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.1.0
+    cluster-driver-registrar: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
+    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v1.1.0
 
   k8s-v1.10:
     X_CSI_SPEC_VERSION: v0.3
@@ -54,6 +63,25 @@ sidecars:
     cluster-driver-registrar: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
     external-snapshotter: quay.io/k8scsi/csi-snapshotter:v1.1.0
+
+  k8s-v1.15:
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: quay.io/k8scsi/csi-attacher:v1.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.4.0
+    cluster-driver-registrar: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
+    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.2
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v1.1.0
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.3.0
+
+  k8s-v1.16:
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: quay.io/k8scsi/csi-attacher:v1.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.4.0
+    cluster-driver-registrar: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
+    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.2
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v1.1.0
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.3.0
+
 
 drivers:
   default: embercsi/ember-csi:master
