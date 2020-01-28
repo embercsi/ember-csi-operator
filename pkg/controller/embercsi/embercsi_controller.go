@@ -9,6 +9,7 @@ import (
 	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -50,6 +51,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		&appsv1.StatefulSet{},
 		&appsv1.DaemonSet{},
 		&storagev1.StorageClass{},
+		&storagev1beta1.CSIDriver{},
 	}
 	// Enable objects based on CSI Spec
 	//if Conf.getCSISpecVersion() >= 1.0 {
@@ -224,6 +226,26 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 
 		// Update the controller and node
 	}
+
+	// Only valid for cluster without using a driver registrar, ie k8s >= 1.13 / ocp >= 4.
+	if len(Conf.Sidecars[Cluster].ClusterRegistrar) == 0 && len(Conf.Sidecars[Cluster].Registrar) == 0 {
+		// Check if the CSIDriver already exists, if not create a new one
+		driver := &storagev1beta1.CSIDriver{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name)}, driver)
+		if err != nil && errors.IsNotFound(err) {
+			driver = r.csiDriverForEmberCSI(instance)
+			glog.V(3).Infof("Creating a new CSIDriver %s", driver.Name)
+			err = r.client.Create(context.TODO(), driver)
+			if err != nil {
+				glog.Errorf("Failed to create a new CSIDriver %s: %s", driver.Name, err)
+				return err
+			}
+			glog.V(3).Infof("Successfully created a new CSIDriver %s", driver.Name)
+		} else if err != nil {
+			glog.Error("Failed to get CSIDriver %s: %s", driver.Name, err)
+			return err
+		}
+        }
 
 	return nil
 }
