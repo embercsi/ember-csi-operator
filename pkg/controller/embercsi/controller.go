@@ -110,7 +110,7 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 			Image: Conf.Sidecars[Cluster].Attacher,
 			Args: []string{"--v=5",
 				"--csi-address=/csi-data/csi.sock",
-				"--connection-timeout=120s",
+				"--timeout=120s",
 			},
 			SecurityContext: &corev1.SecurityContext{Privileged: &trueVar},
 			VolumeMounts: []corev1.VolumeMount{
