@@ -5,9 +5,34 @@ import (
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+// csiDriverForEmberCSI returns a EmberCSI CSIDriver object
+func (r *ReconcileEmberCSI) csiDriverForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *storagev1beta1.CSIDriver {
+	trueVar := true
+	falseVar := false
+
+	driver := &storagev1beta1.CSIDriver{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "storage.k8s.io/v1beta1",
+			Kind:       "CSIDriver",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GetPluginDomainName(ecsi.Name),
+		},
+		Spec: storagev1beta1.CSIDriverSpec{
+			PodInfoOnMount: &falseVar,
+			AttachRequired: &trueVar,
+		},
+	}
+	controllerutil.SetControllerReference(ecsi, driver, r.scheme)
+	return driver
+}
+
+
 
 // statefulSetForEmberCSI returns a EmberCSI StatefulSet object
 func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *appsv1.StatefulSet {
