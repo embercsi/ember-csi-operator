@@ -15,6 +15,7 @@ spec:
             - node2.example.com
   config:
     envVars:
+      X_CSI_EMBER_CONFIG:             '{"plugin_name": "my-ceph-with-topologies"}'
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
       X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "cinder", "rbd_pool": "cinder_volumes", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/keyring"}'
     sysFiles:

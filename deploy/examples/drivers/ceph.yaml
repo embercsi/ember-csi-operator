@@ -8,6 +8,7 @@ spec:
   config:
     envVars:
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
+      X_CSI_EMBER_CONFIG:             '{"plugin_name": "my-ceph"}'
       X_CSI_BACKEND_CONFIG :          '{"name": "rbd", "driver": "RBD", "rbd_user": "admin", "rbd_pool": "cephfs_data", "rbd_ceph_conf": "/etc/ceph/ceph.conf", "rbd_keyring_conf": "/etc/ceph/ceph.client.admin.keyring"}'
     sysFiles:
       name: sysfiles-secret
