@@ -6,5 +6,6 @@ metadata:
 spec:
   config:
     envVars:
+      X_CSI_EMBER_CONFIG:             '{"plugin_name": "my-dell-emc-vmax"}'
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
       X_CSI_BACKEND_CONFIG :          '{"name":"VMAX_ISCSI_DIAMOND", "driver":"VMAXISCSI", "san_ip":"1.2.3.4", "san_login":"someusername", "san_password":"somesecretpassword", "san_reset_port":"8443", "vmax_srp":"SRP_1", "vmax_array":"0001919191919", "vmax_port_groups": [ "os-iscsi-pg" ], "image_volume_cache_enabled":"true", "volume_clear":"zero"}' 

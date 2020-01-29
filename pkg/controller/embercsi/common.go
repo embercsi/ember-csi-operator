@@ -294,8 +294,8 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string)
 		},
 		)
 
-		// ocp
-		if strings.Contains(Cluster, "ocp") || Cluster == "default" {
+		// ocp 3.x
+		if strings.Contains(Cluster, "ocp-3") {
 			vm = append(vm, corev1.VolumeMount{
 				Name:             "mountpoint-dir",
 				MountPropagation: &bidirectional,
@@ -306,7 +306,7 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string)
 				MountPropagation: &bidirectional,
 			},
 			)
-		} else { // k8s
+		} else { // k8s, ocp >= 4.x
 			vm = append(vm, corev1.VolumeMount{
 				Name:             "mountpoint-dir",
 				MountPropagation: &bidirectional,
@@ -454,8 +454,8 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 			},
 		},
 		)
-		// ocp
-		if strings.Contains(Cluster, "ocp") || Cluster == "default" {
+		// ocp 3.x
+		if strings.Contains(Cluster, "ocp-3") {
 			vol = append(vol, corev1.Volume{
 				Name: "mountpoint-dir",
 				VolumeSource: corev1.VolumeSource{
@@ -473,7 +473,7 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 				},
 			},
 			)
-		} else { // k8s
+		} else { // k8s, ocp >= 4.x
 			vol = append(vol, corev1.Volume{
 				Name: "mountpoint-dir",
 				VolumeSource: corev1.VolumeSource{

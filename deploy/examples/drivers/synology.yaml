@@ -6,5 +6,6 @@ metadata:
 spec:
   config:
     envVars:
+      X_CSI_EMBER_CONFIG:             '{"plugin_name": "my-synology"}'
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
       X_CSI_BACKEND_CONFIG :          '{ "name": "synology", "driver": "SynoISCSI", "iscsi_protocol": "iscsi", "target_ip_address": "synology.example.com", "synology_admin_port": 5001, "synology_username": "admin", "synology_password": "toomanysecrets", "synology_pool_name": "volume1", "driver_use_ssl": true }'

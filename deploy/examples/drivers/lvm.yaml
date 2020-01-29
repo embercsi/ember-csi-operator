@@ -6,5 +6,6 @@ metadata:
 spec:
   config:
     envVars:
+      X_CSI_EMBER_CONFIG:             '{"plugin_name": "my-lvm"}'
       X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
       X_CSI_BACKEND_CONFIG :          '{"name": "lvm", "driver": "LVMVolum", "volume_group": "ember-volumes", "target_protocol": "iscsi", "iscsi_ip_address":"192.168.10.100", "target_helper": "lioadm"}' 
