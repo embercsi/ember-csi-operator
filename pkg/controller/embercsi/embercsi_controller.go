@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
+	"github.com/embercsi/ember-csi-operator/version"
 	"github.com/golang/glog"
 	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -93,6 +94,12 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 		glog.Warningf("Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
+	}
+
+	instance.Status.Version = version.Version
+	err = r.client.Update(context.TODO(), instance)
+	if err != nil {
+		glog.Error("Status version update failed: ", err)
 	}
 
 	// Manage objects created by the operator

@@ -25,6 +25,7 @@ type Topologies struct {
 type EmberCSIStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
+	Version string `json:"version"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -36,7 +37,7 @@ type EmberCSI struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   EmberCSISpec   `json:"spec,omitempty"`
-	Status EmberCSIStatus `json:"status,omitempty"`
+	Status EmberCSIStatus `json:"status"`
 }
 
 type EmberCSIConfig struct {
