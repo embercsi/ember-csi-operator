@@ -257,7 +257,7 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 	} else { // Use CRD as the default persistence
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_PERSISTENCE_CONFIG",
-			Value: fmt.Sprintf("{\"storage\":\"crd\",\"namespace\":%s}", ecsi.Namespace),
+			Value: fmt.Sprintf("{\"storage\":\"crd\",\"namespace\":\"%s\"}", ecsi.Namespace),
 		},
 		)
 	}
