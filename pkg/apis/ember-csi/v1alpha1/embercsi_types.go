@@ -46,9 +46,9 @@ type EmberCSIConfig struct {
 }
 
 type EnvVars struct {
-	X_CSI_BACKEND_CONFIG     string    `json:"X_CSI_BACKEND_CONFIG",omitempty`
-	X_CSI_EMBER_CONFIG       string    `json:"X_CSI_EMBER_CONFIG",omitempty`
-	X_CSI_PERSISTENCE_CONFIG string    `json:"X_CSI_PERSISTENCE_CONFIG",omitempty`
+	X_CSI_BACKEND_CONFIG     interface{}    `yaml:"X_CSI_BACKEND_CONFIG",omitempty`
+	X_CSI_EMBER_CONFIG       interface{}    `yaml:"X_CSI_EMBER_CONFIG",omitempty`
+	X_CSI_PERSISTENCE_CONFIG interface{}    `yaml:"X_CSI_PERSISTENCE_CONFIG",omitempty`
 	X_CSI_DEBUG_MODE         string    `json:"X_CSI_DEBUG_MODE",omitempty`
 	X_CSI_ABORT_DUPLICATES   string    `json:"X_CSI_ABORT_DUPLICATES",omitempty`
 	X_CSI_DEFAULT_MOUNT_FS   string    `json:"X_CSI_DEFAULT_MOUNT_FS",omitempty`
