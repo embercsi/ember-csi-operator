@@ -56,7 +56,7 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 	containers := []corev1.Container{
 		{
 			Name:            "ember-csi-driver",
-			Image:           Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
+			Image:           Conf.getDriverImage(interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)),
 			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: &corev1.SecurityContext{
 				Privileged:               &trueVar,

@@ -30,13 +30,13 @@ spec:
   # Config section to pass to Ember-CSI driver
   config:
     envVars:
-        # Required. Passed to the driver to configure the backend. JSON string.
+        # Required. Passed to the driver to configure the backend. JSON string or YAML map.
         X_CSI_BACKEND_CONFIG:
-        # Optional. Passed to the driver to configure the driver. JSON string.
+        # Optional. Passed to the driver to configure the driver. JSON string or YAML map.
         X_CSI_EMBER_CONFIG
-        # Optional. Passed to the driver to configure the presistent storage. JSON string.
+        # Optional. Passed to the driver to configure the presistent storage. JSON string or YAML map.
         X_CSI_PERSISTENCE_CONFIG
-        # Optional. Passed to the driver to configure debugging. JSON string.
+        # Optional. Passed to the driver to configure debugging. JSON string or YAML map.
         X_CSI_DEBUG_MODE
         # Optional. If we want to abort or queue (default) duplicated requests.
         X_CSI_ABORT_DUPLICATES

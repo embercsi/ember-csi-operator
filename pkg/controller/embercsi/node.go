@@ -129,10 +129,11 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 // Construct a Containers PodSpec for Nodes
 func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []corev1.Container {
 	trueVar := true
+
 	containers := []corev1.Container{
 		{
 			Name:            "ember-csi-driver",
-			Image:           Conf.getDriverImage(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG),
+			Image:           Conf.getDriverImage(interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)),
 			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: &corev1.SecurityContext{
 				Privileged:               &trueVar,
@@ -241,17 +242,19 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 		},
 	}
 
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 {
+	X_CSI_BACKEND_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if len(X_CSI_BACKEND_CONFIG) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_BACKEND_CONFIG",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG,
+			Value: X_CSI_BACKEND_CONFIG,
 		},
 		)
 	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG) > 0 {
+	X_CSI_PERSISTENCE_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
+	if len(X_CSI_PERSISTENCE_CONFIG) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_PERSISTENCE_CONFIG",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG,
+			Value: X_CSI_PERSISTENCE_CONFIG,
 		},
 		)
 	} else { // Use CRD as the default persistence
@@ -261,10 +264,11 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 		},
 		)
 	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
+	X_CSI_DEBUG_MODE := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE)
+	if len(X_CSI_DEBUG_MODE) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_DEBUG_MODE",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE,
+			Value: X_CSI_DEBUG_MODE,
 		},
 		)
 	}

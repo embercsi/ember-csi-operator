@@ -83,24 +83,27 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 		},
 		)
 	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 {
+	X_CSI_EMBER_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if len(X_CSI_EMBER_CONFIG) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_EMBER_CONFIG",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG,
-		},
-		)
-	} 
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  "X_CSI_BACKEND_CONFIG",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG,
+			Value: X_CSI_EMBER_CONFIG,
 		},
 		)
 	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG) > 0 {
+	X_CSI_BACKEND_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if len(X_CSI_BACKEND_CONFIG) > 0 {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "X_CSI_BACKEND_CONFIG",
+			Value: X_CSI_BACKEND_CONFIG,
+		},
+		)
+	}
+	X_CSI_PERSISTENCE_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
+	if len(X_CSI_PERSISTENCE_CONFIG) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_PERSISTENCE_CONFIG",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG,
+			Value: X_CSI_PERSISTENCE_CONFIG,
 		},
 		)
 	} else { // Use CRD as the default persistence
@@ -110,10 +113,11 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 		},
 		)
 	}
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
+	X_CSI_DEBUG_MODE := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE)
+	if len(X_CSI_DEBUG_MODE) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_DEBUG_MODE",
-			Value: ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE,
+			Value: X_CSI_DEBUG_MODE,
 		},
 		)
 	}
@@ -263,7 +267,8 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string)
 	}
 
 	// Check to see if the volume driver is LVM
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG), "lvmvolume") {
+	X_CSI_BACKEND_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if len(X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(X_CSI_BACKEND_CONFIG), "lvmvolume") {
 		vm = append(vm, corev1.VolumeMount{
 			Name:             "etc-lvm",
 			MountPath:        "/etc/lvm",
@@ -383,7 +388,8 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 	}
 
 	// Check to see if the volume driver is LVM
-	if len(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG), "lvmvolume") {
+	X_CSI_BACKEND_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if len(X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(X_CSI_BACKEND_CONFIG), "lvmvolume") {
 		vol = append(vol, corev1.Volume{
 			Name: "etc-lvm",
 			VolumeSource: corev1.VolumeSource{
@@ -519,3 +525,29 @@ func isSnapshotEnabled(emberConfig string) bool {
         return true
 }
 
+
+func interfaceToString(input interface{}) string {
+	m, ok := input.(map[string]interface{})
+	if ok {
+		jsonString, _ := json.Marshal(m)
+		return string(jsonString)
+	}
+
+	// String, maybe a JSON?
+	s, ok := input.(string)
+	if ok {
+		j := make(map[string]interface{})
+		err := json.Unmarshal([]byte(s), &j)
+		if err == nil {
+			jsonString, _ := json.Marshal(j)
+			return string(jsonString)
+		} else { // string, but not valid JSON
+			glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
+			return s
+		}
+	}
+
+	// Something else, fail safely
+	glog.Errorf("Could not marshal %v (type %T) to JSON\n", input, input)
+	return ""
+}

@@ -181,7 +181,8 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	}
 
 	snapShotEnabled := true
-	if len(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) > 0 && !isSnapshotEnabled(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG) {
+	X_CSI_EMBER_CONFIG := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if len(X_CSI_EMBER_CONFIG) > 0 && !isSnapshotEnabled(X_CSI_EMBER_CONFIG) {
 		snapShotEnabled = false
 	}
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
