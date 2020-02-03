@@ -1,11 +1,19 @@
 ---
-apiVersion: "ember-csi.io/v1alpha1"
-kind: "EmberCSI"
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
 metadata:
-  name: "my-lvm"
+  name: my-lvm
 spec:
   config:
     envVars:
-      X_CSI_EMBER_CONFIG:             '{"plugin_name": "my-lvm"}'
-      X_CSI_PERSISTENCE_CONFIG:       '{"storage":"crd"}'
-      X_CSI_BACKEND_CONFIG :          '{"name": "lvm", "driver": "LVMVolum", "volume_group": "ember-volumes", "target_protocol": "iscsi", "iscsi_ip_address":"192.168.10.100", "target_helper": "lioadm"}' 
+      X_CSI_EMBER_CONFIG:
+        plugin_name: my-lvm
+      X_CSI_PERSISTENCE_CONFIG:
+        storage:crd
+      X_CSI_BACKEND_CONFIG:
+        name: lvm
+        driver: LVMVolum
+        volume_group: ember-volumes
+        target_protocol: iscsi
+        iscsi_ip_address:192.168.10.100
+        target_helper: lioadm
