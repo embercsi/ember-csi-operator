@@ -7,7 +7,7 @@ Kubernetes and OpenShift.
 The operator needs its own namespace, service account, security context, and a
 few roles and bindings. For example, to install these on OpenShift >= 3.10:
 
-    oc create -f deploy/00-pre.yaml -f deploy/01-scc.yaml -f deploy/02-operator.yaml
+    oc create -f deploy/service_account.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/crds/ember.crd.yaml -f deploy/scc.yaml -f deploy/operator.yaml
 
 #### Deploy and configure a storage backend
 You also need a storage backend, for example a lightweight Ceph pod for
@@ -81,7 +81,7 @@ the projects, security context and storage class:
 
     oc delete project demoapp
     oc delete -f deploy/examples/drivers/ceph.yaml -f deploy/examples/ceph-demo.yaml
-    oc delete -f deploy/00-pre.yaml -f deploy/01-scc.yaml -f deploy/02-operator.yaml
+    oc delete -f deploy/service_account.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/crds/ember.crd.yaml -f deploy/scc.yaml -f deploy/operator.yaml
 
 ## Next steps
 Documentation is still a work in progress, but have a look into [docs/README.md](docs/README.md) for further infos.

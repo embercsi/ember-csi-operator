@@ -1,0 +1,27 @@
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ember-csi-operator
+  namespace: ember-csi
+subjects:
+- kind: ServiceAccount
+  name: ember-csi-operator
+roleRef:
+  kind: Role
+  name: ember-csi-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: ember-csi-operator
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: ember-csi-operator
+subjects:
+- kind: ServiceAccount
+  name: ember-csi-operator
+  namespace: ember-csi
+
