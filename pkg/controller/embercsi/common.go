@@ -447,7 +447,7 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 			Name: "socket-dir",
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
-					Path: fmt.Sprintf("%s/%s", "/var/lib/kubelet/plugins", GetPluginDomainName(ecsi.Name)),
+					Path: fmt.Sprintf("%s/%s", "/var/lib/kubelet", GetPluginDomainName(ecsi.Name)),
 				},
 			},
 		}, corev1.Volume{

@@ -154,7 +154,7 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []co
 			Args: []string{
 				"--v=5",
 				"--csi-address=/csi-data/csi.sock",
-				fmt.Sprintf("%s/%s/%s", "--kubelet-registration-path=/var/lib/kubelet/plugins", GetPluginDomainName(ecsi.Name), "csi.sock"),
+				fmt.Sprintf("%s/%s/%s", "--kubelet-registration-path=/var/lib/kubelet", GetPluginDomainName(ecsi.Name), "csi.sock"),
 			},
 			SecurityContext: &corev1.SecurityContext{Privileged: &trueVar},
 			Env: []corev1.EnvVar{
