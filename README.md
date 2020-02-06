@@ -3,13 +3,22 @@ Operator to create, configure and manage ember-csi, a multivendor CSI for
 Kubernetes and OpenShift.
 
 ## Quick Start
-#### Installing the operator
+### Installing the operator
+#### Operatorhub installation
+You can use the operatorhub catalog to deploy the Ember CSI operator if you're
+using Openshift 4.  You'll find the Ember CSI operator in the "Storage"
+section. We recommend to create a custom namespace "ember-csi" and deploy the
+operator within this namespace.
+
+#### Manual installation
 The operator needs its own namespace, service account, security context, and a
 few roles and bindings. For example, to install these on OpenShift >= 3.10:
 
     oc create -f deploy/service_account.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/crds/ember.crd.yaml -f deploy/scc.yaml -f deploy/operator.yaml
 
-#### Deploy and configure a storage backend
+> You don't need to apply deploy/scc.yaml if you are using Kubernetes.
+
+### Deploy and configure a storage backend
 You also need a storage backend, for example a lightweight Ceph pod for
 development & testing:
 
@@ -49,7 +58,7 @@ Now verify that the pods are created and the storage class exists:
     io.ember-csi.my-ceph-sc   io.ember-csi.my-ceph   15s
 
 
-#### Using the backend for your pods
+### Using the backend for your pods
 You're all set now! However, you likely want to test the deployment, so let's
 create a pvc and pod for testing.
 
@@ -75,12 +84,18 @@ mounted:
     oc exec -n demoapp -it my-csi-app  -- df -h | grep -B 1 /data
     /var/lib/ember-csi/vols/e1e57b59-f290-408f-87fa-540509bbe8b5 975.9M      2.5M    906.2M   0% /data
 
-#### Uninstall the deployment
+### Uninstall the deployment
 Eventually you want to remove all the resources from your cluster. Just delete
 the projects, security context and storage class:
 
     oc delete project demoapp
     oc delete -f deploy/examples/drivers/ceph.yaml -f deploy/examples/ceph-demo.yaml
+
+#### Removing the operator using the operator catalog
+Simply select "Uninstall Operator" from the UI menu in "Operator" - "Installed Operators".
+
+#### Removing the operator manually
+
     oc delete -f deploy/service_account.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/crds/ember.crd.yaml -f deploy/scc.yaml -f deploy/operator.yaml
 
 ## Next steps
