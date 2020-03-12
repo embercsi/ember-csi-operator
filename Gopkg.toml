@@ -8,7 +8,7 @@
 
 [[override]]
   name = "k8s.io/apimachinery"
-  revision = "release-1.14"
+  revision = "c5d2f014d689246b84637774317fa0288dd3129b" # release-1.14
 
 [[override]]
   name = "k8s.io/client-go"
