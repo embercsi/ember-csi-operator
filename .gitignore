@@ -22,6 +22,7 @@ tramp
 .org-id-locations
 *_archive
 
+build/olm-catalog/out.yaml
 # flymake-mode
 *_flymake.*
 
