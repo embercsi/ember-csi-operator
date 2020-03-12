@@ -426,7 +426,7 @@
     "storage/v1beta1",
   ]
   pruneopts = ""
-  revision = "release-1.14"
+  revision = "159aefb8556bb8ed4be7631461d1558546d304db"
 
 [[projects]]
   digest = "1:7dee013bc9e0fba315f9168bffeef25a1685eaa5e6e0b6d95b1aad9fd32e0356"
@@ -557,7 +557,7 @@
     "util/workqueue",
   ]
   pruneopts = ""
-  revision = "release-11.0"
+  revision = "8e412805300829bc5a39e63eaccfc8a3355e4797"
 
 [[projects]]
   digest = "1:7ce71844fcaaabcbe09a392902edb5790ddca3a7070ae8d20830dc6dbe2751af"

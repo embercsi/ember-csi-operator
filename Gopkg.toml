@@ -1,6 +1,6 @@
 [[override]]
   name = "k8s.io/api"
-  revision = "release-1.14"
+  revision = "159aefb8556bb8ed4be7631461d1558546d304db" # release-1.14
 
 [[override]]
   name = "gopkg.in/fsnotify.v1"
@@ -12,8 +12,8 @@
 
 [[override]]
   name = "k8s.io/client-go"
-  # Compatibility: Kubernetes main repo, 1.14 branch
-  revision = "release-11.0"
+  # Compatibility: Kubernetes main repo, 1.14 branch, release-11.0
+  revision = "8e412805300829bc5a39e63eaccfc8a3355e4797"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
