@@ -503,8 +503,8 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 	return vol
 }
 
-// Check whether snapshot feature is enabled/disabled
-func isSnapshotEnabled(emberConfig string) bool {
+// Check whether feature is enabled/disabled
+func isFeatureEnabled(emberConfig string, feature string) bool {
 	type EmberCSIConfig struct {
 		Disabled        []string
 	}
@@ -517,8 +517,8 @@ func isSnapshotEnabled(emberConfig string) bool {
 	glog.V(3).Infof("Info: X_CSI_EMBER_CONFIG Disabled Features: %v", ecc.Disabled)
 
 	for i := 0; i < len(ecc.Disabled); i++ {
-                if ecc.Disabled[i] == "snapshot" {
-			glog.V(3).Infof("Info: Snapshots disabled in Ember config via X_CSI_EMBER_CONFIG")
+                if ecc.Disabled[i] == feature {
+			glog.V(3).Infof("Info: %s disabled in Ember config via X_CSI_EMBER_CONFIG", feature)
 			return false
 		}
 	}
