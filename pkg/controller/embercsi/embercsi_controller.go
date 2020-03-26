@@ -2,6 +2,7 @@ package embercsi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	"github.com/embercsi/ember-csi-operator/version"
@@ -98,10 +99,19 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		return reconcile.Result{}, err
 	}
 
+	backend_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	backend_config_map := make(map[string]interface{})
+	err = json.Unmarshal([]byte(backend_config_json), &backend_config_map)
+	if err == nil {
+		instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG = backend_config_map
+	} else {
+		glog.Error("Unmarshal of X_CSI_BACKEND_CONFIG failed: ", err)
+	}
+
 	instance.Status.Version = version.Version
 	err = r.client.Update(context.TODO(), instance)
 	if err != nil {
-		glog.Error("Status version update failed: ", err)
+		glog.Error("EmberCSI instance update failed: ", err)
 	}
 
 	// Manage objects created by the operator

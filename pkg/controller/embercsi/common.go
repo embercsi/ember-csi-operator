@@ -540,7 +540,7 @@ func interfaceToString(input interface{}) string {
 		err := json.Unmarshal([]byte(s), &j)
 		if err == nil {
 			jsonString, _ := json.Marshal(j)
-			return string(jsonString)
+			return suffixTransform(string(jsonString))
 		} else { // string, but not valid JSON
 			glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
 			return s
@@ -550,4 +550,53 @@ func interfaceToString(input interface{}) string {
 	// Something else, fail safely
 	glog.Errorf("Could not marshal %v (type %T) to JSON\n", input, input)
 	return ""
+}
+
+
+func suffixTransform(input string) string {
+	b := []byte(input)
+	var m map[string]interface{}
+	err := json.Unmarshal(b, &m)
+	if err != nil {
+		glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
+		return input
+	}
+
+	for k, v := range m {
+		if strings.HasSuffix(k, "__transform_empty_none") && v == "" {
+			newkey := strings.Replace(k, "__transform_empty_none", "", -1)
+			m[newkey] = nil
+			delete(m, k)
+		}
+
+		if strings.HasSuffix(k, "__transform_csv") {
+			newkey := strings.Replace(k, "__transform_csv", "", -1)
+			m[newkey] = strings.Split(v.(string), ",")
+			delete(m, k)
+		}
+
+		if strings.HasSuffix(k, "__transform_csv_kvs") {
+			newkey := strings.Replace(k, "__transform_csv_kvs", "", -1)
+
+			kvpairs := strings.Split(v.(string), ",")
+			for _, pair := range kvpairs {
+				s := strings.Split(pair, ":")
+				if len(s) > 1 {
+					subkey, subval := s[0], s[1]
+					submap := make(map[string]string)
+					submap[subkey] = subval
+					m[newkey] = submap
+				}
+			}
+			delete(m, k)
+		}
+	}
+
+	output, err := json.Marshal(m)
+	if err != nil {
+		glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
+		return input
+	}
+
+	return string(output)
 }
