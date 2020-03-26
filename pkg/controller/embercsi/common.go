@@ -512,7 +512,8 @@ func isFeatureEnabled(emberConfig string, feature string) bool {
 
 	err := json.Unmarshal([]byte(emberConfig), &ecc)
 	if err != nil {
-		glog.Fatal("Fatal: Unable to unmarshal X_CSI_EMBER_CONFIG")
+		glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", emberConfig, emberConfig)
+		glog.Error(err)
 	}
 	glog.V(3).Infof("Info: X_CSI_EMBER_CONFIG Disabled Features: %v", ecc.Disabled)
 
@@ -543,6 +544,7 @@ func interfaceToString(input interface{}) string {
 			return suffixTransform(string(jsonString))
 		} else { // string, but not valid JSON
 			glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
+			glog.Error(err)
 			return s
 		}
 	}
@@ -559,6 +561,7 @@ func suffixTransform(input string) string {
 	err := json.Unmarshal(b, &m)
 	if err != nil {
 		glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
+		glog.Error(err)
 		return input
 	}
 
