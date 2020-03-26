@@ -252,7 +252,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 			}
 			glog.V(3).Infof("Successfully created a new CSIDriver %s", driver.Name)
 		} else if err != nil {
-			glog.Error("Failed to get CSIDriver %s: %s", driver.Name, err)
+			glog.Errorf("Failed to get CSIDriver %s: %s", driver.Name, err)
 			return err
 		}
         }
