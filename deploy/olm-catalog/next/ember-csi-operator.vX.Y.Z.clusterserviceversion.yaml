@@ -3635,6 +3635,7 @@ spec:
           resources:
           - storageclasses
           - csinodes
+          - csidrivers
           verbs:
           - create
           - get

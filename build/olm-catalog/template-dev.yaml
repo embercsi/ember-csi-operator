@@ -193,6 +193,7 @@ ${DRIVER_OPTIONS}
               resources:
                 - storageclasses
                 - csinodes
+                - csidrivers
               verbs:
                 - create
                 - get

@@ -249,7 +249,7 @@ SAMPLE_TEMPLATE = collections.OrderedDict([
                                         "grpc_workers": 30,
                                         "slow_operations": True,
                                         "enable_probe": False,
-                                        "disabled": "[]",
+                                        "disabled": [],
                                         "project_id": "ember_csi.io",
                                         "user_id": "ember_csi.io",
                                         "disable_logs": False,
@@ -451,7 +451,8 @@ def additional_options():
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
-        - description: > List of features we want to disable on the plugin.
+        - description: >
+            List of features we want to disable on the plugin.
             Features that can be disabled are clone, snapshot, expand,
             expand_online. Must be a JSON list ie: ["clone", "expand_online"]'
           displayName: Disabled features
@@ -531,18 +532,18 @@ def additional_options():
             - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: sysFiles secrets
-          displayName: sysFiles secrets
+          displayName: sysFiles secrets key
           path: config.sysFiles.key
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
-            - 'urn:alm:descriptor:io.kubernetes:Secret'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: sysFiles secrets
-          displayName: sysFiles secrets name
+          displayName: sysFiles secrets
           path: config.sysFiles.name
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:io.kubernetes:Secret'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: Use multipath if driver supports it
           displayName: Multipath
