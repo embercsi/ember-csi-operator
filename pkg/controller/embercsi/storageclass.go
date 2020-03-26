@@ -20,6 +20,12 @@ func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.Ember
 		volumeBindingMode = storagev1.VolumeBindingWaitForFirstConsumer
 	}
 
+	expandEnabled := true
+	X_CSI_EMBER_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if len(X_CSI_EMBER_CONFIG) > 0 && !isFeatureEnabled(X_CSI_EMBER_CONFIG, "expand") {
+		expandEnabled = false
+	}
+
 	sc := &storagev1.StorageClass{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "storage.k8s.io/v1",
@@ -32,6 +38,7 @@ func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.Ember
 		},
 		Provisioner:       GetPluginDomainName(ecsi.Name),
 		VolumeBindingMode: &volumeBindingMode,
+		AllowVolumeExpansion: &expandEnabled,
 	}
 
 	controllerutil.SetControllerReference(ecsi, sc, r.scheme)
