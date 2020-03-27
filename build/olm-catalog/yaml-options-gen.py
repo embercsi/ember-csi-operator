@@ -366,6 +366,9 @@ class Option(object):
     def add_driver(self, driver):
         self.drivers.add(driver)
 
+    def option_name(self, driver):
+        return "driver__%s__%s" % (driver, self.name)
+
 
 def include_driver(drivername):
     if EXCLUDE_DRIVERS is not None:
@@ -396,7 +399,7 @@ def render_option(option, driver, group_options=False):
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:{group}'
             - {opt_type}
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:{driver}'
-    """.format(name=option.name,  # noqa
+    """.format(name=option.option_name(driver),  # noqa
                display_name=option.display_name,
                description='"' + option.help + '"',
                opt_type=option.form_type,
@@ -583,7 +586,7 @@ def generate_driver_options(original_drivers, options):
 def generate_sample_options(name, option_names, options):
     cfg = collections.OrderedDict(name='', enable_unsupported_driver=False,
                                   driver=name)
-    cfg.update((k, options[k].default)
+    cfg.update((options[k].option_name(name), options[k].default)
                for k in option_names
                if not options[k].ignore)
     sample = copy.deepcopy(SAMPLE_TEMPLATE)
@@ -605,8 +608,13 @@ def generate_sample_config(original_drivers, options):
         original_drivers[name] for name in original_drivers.keys())
     ))
     # We generate a sample with all the options and the first driver name
-    defaults = generate_sample_options(sorted(original_drivers.keys())[0],
-                                       used_options, options)
+    defaults = samples[0]
+    for sample in samples:
+        s = sample['spec']['config']['envVars']['X_CSI_BACKEND_CONFIG']
+        d = defaults['spec']['config']['envVars']['X_CSI_BACKEND_CONFIG']
+        d.update(s)
+    defaults['spec']['config']['envVars']['X_CSI_BACKEND_CONFIG']['driver'] = sorted(original_drivers.keys())[0]
+
     # The first examples is used  for the defaults of the form.
     samples.insert(0, defaults)
 

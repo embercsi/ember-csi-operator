@@ -531,7 +531,7 @@ func interfaceToString(input interface{}) string {
 	m, ok := input.(map[string]interface{})
 	if ok {
 		jsonString, _ := json.Marshal(m)
-		return string(jsonString)
+		return configTransform(string(jsonString))
 	}
 
 	// String, maybe a JSON?
@@ -541,7 +541,7 @@ func interfaceToString(input interface{}) string {
 		err := json.Unmarshal([]byte(s), &j)
 		if err == nil {
 			jsonString, _ := json.Marshal(j)
-			return suffixTransform(string(jsonString))
+			return configTransform(string(jsonString))
 		} else { // string, but not valid JSON
 			glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
 			glog.Error(err)
@@ -555,7 +555,7 @@ func interfaceToString(input interface{}) string {
 }
 
 
-func suffixTransform(input string) string {
+func configTransform(input string) string {
 	b := []byte(input)
 	var m map[string]interface{}
 	err := json.Unmarshal(b, &m)
@@ -564,6 +564,9 @@ func suffixTransform(input string) string {
 		glog.Error(err)
 		return input
 	}
+
+	driver_prefix := "driver__"
+	driver_prefix_keep := fmt.Sprintf("driver__%s__", m["driver"])
 
 	for k, v := range m {
 		if strings.HasSuffix(k, "__transform_empty_none") && v == "" {
@@ -592,6 +595,17 @@ func suffixTransform(input string) string {
 				}
 			}
 			delete(m, k)
+		}
+	}
+
+	// Need to iterate again, keys might have been transformed earlier
+	for k, v := range m {
+		if strings.HasPrefix(k, driver_prefix) {
+			delete(m, k)
+			if strings.HasPrefix(k, driver_prefix_keep) {
+				newkey := strings.Replace(k, driver_prefix_keep, "", -1)
+				m[newkey] = v
+			}
 		}
 	}
 
