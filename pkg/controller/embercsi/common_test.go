@@ -36,24 +36,31 @@ func TestMarshal(t *testing.T) {
 	}
 }
 
-func TestSuffixTransform(t *testing.T) {
+func TestConfigTransform(t *testing.T) {
 	input := "{\"key__transform_empty_none\":\"\"}"
 	expected := "{\"key\":null}"
-	result := suffixTransform(input)
+	result := configTransform(input)
 	if result != expected {
 		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
 	}
 
 	input = "{\"key__transform_csv\":\"a,b,c\"}"
 	expected = "{\"key\":[\"a\",\"b\",\"c\"]}"
-	result = suffixTransform(input)
+	result = configTransform(input)
 	if result != expected {
 		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
 	}
 
 	input = "{\"key__transform_csv_kvs\":\"a:b\"}"
 	expected = "{\"key\":{\"a\":\"b\"}}"
-	result = suffixTransform(input)
+	result = configTransform(input)
+	if result != expected {
+		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
+	}
+
+	input = "{\"driver\":\"Someone\",\"driver__Someone__option\":\"abc\",\"driver__Other__option\":\"def\"}"
+	expected = "{\"driver\":\"Someone\",\"option\":\"abc\"}"
+	result = configTransform(input)
 	if result != expected {
 		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
 	}
