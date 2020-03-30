@@ -65,3 +65,30 @@ func TestConfigTransform(t *testing.T) {
 		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
 	}
 }
+
+
+func TestSetJsonKeyIfEmpty(t *testing.T) {
+	// key already set, but empty
+	json := "{\"key\":\"\"}"
+	expected := "{\"key\":\"42\"}"
+	setJsonKeyIfEmpty(&json, "key", "42")
+	if json != expected {
+		t.Errorf("Failed to transform, got %v, expected %v\n", json, expected)
+	}
+
+	// key not set at all
+	json = "{}"
+	expected = "{\"key\":\"42\"}"
+	setJsonKeyIfEmpty(&json, "key", "42")
+	if json != expected {
+		t.Errorf("Failed to transform, got %v, expected %v\n", json, expected)
+	}
+
+	// key already set, do not overwrite
+	json = "{\"key\":\"23\"}"
+	expected = "{\"key\":\"23\"}"
+	setJsonKeyIfEmpty(&json, "key", "42")
+	if json != expected {
+		t.Errorf("Failed to transform, got %v, expected %v\n", json, expected)
+	}
+}
