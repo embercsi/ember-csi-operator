@@ -100,12 +100,24 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 	}
 
 	backend_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	setJsonKeyIfEmpty(&backend_config_json, "name", request.Name)
 	backend_config_map := make(map[string]interface{})
 	err = json.Unmarshal([]byte(backend_config_json), &backend_config_map)
 	if err == nil {
 		instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG = backend_config_map
 	} else {
 		glog.Error("Unmarshal of X_CSI_BACKEND_CONFIG failed: ", err)
+	}
+
+	ember_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	plugin_name := request.Name + "-" + randomString(6)
+	setJsonKeyIfEmpty(&ember_config_json, "plugin_name", plugin_name)
+	ember_config_map := make(map[string]interface{})
+	err = json.Unmarshal([]byte(ember_config_json), &ember_config_map)
+	if err == nil {
+		instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG = ember_config_map
+	} else {
+		glog.Error("Unmarshal of X_CSI_EMBER_CONFIG failed: ", err)
 	}
 
 	instance.Status.Version = version.Version
