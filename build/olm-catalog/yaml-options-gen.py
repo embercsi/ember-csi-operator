@@ -257,7 +257,6 @@ SAMPLE_TEMPLATE = collections.OrderedDict([
                                         })])),
             ("sysFiles", {
                 "name": "",
-                "key": ""
             })
         ])
     })
@@ -533,13 +532,6 @@ def additional_options():
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
-            - 'urn:alm:descriptor:com.tectonic.ui:advanced'
-        - description: sysFiles secrets
-          displayName: sysFiles secrets key
-          path: config.sysFiles.key
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: sysFiles secrets
           displayName: sysFiles secrets

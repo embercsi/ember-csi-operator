@@ -42,7 +42,6 @@ spec:
                     name:
                       type: string
                   required:
-                  - key
                   - name
                   type: object
               required:
