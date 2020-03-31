@@ -417,12 +417,6 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: ecsi.Spec.Config.SysFiles.Name,
-					Items: []corev1.KeyToPath{
-						{
-							Key:  ecsi.Spec.Config.SysFiles.Key,
-							Path: ecsi.Spec.Config.SysFiles.Key,
-						},
-					},
 				},
 			},
 		},

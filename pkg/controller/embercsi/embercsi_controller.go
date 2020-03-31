@@ -9,6 +9,7 @@ import (
 	"github.com/golang/glog"
 	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -97,6 +98,20 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 		glog.Warningf("Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
+	}
+
+	if len(instance.Spec.Config.SysFiles.Name) > 0 {
+		key := types.NamespacedName{Namespace: instance.Namespace, Name: instance.Spec.Config.SysFiles.Name}
+		secret := &corev1.Secret{}
+		err := r.client.Get(context.TODO(), key, secret)
+		if err != nil {
+			glog.Warningf("Failed to get secret %s: %s\n", instance.Spec.Config.SysFiles.Name, err)
+		}
+
+		// If multiple keys are found only last one is used
+		for key, _ := range secret.Data {
+			instance.Spec.Config.SysFiles.Key = key
+		}
 	}
 
 	backend_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
