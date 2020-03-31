@@ -135,6 +135,17 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		glog.Error("Unmarshal of X_CSI_EMBER_CONFIG failed: ", err)
 	}
 
+	persistence_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
+	setJsonKeyIfEmpty(&persistence_config_json, "storage", "crd")
+	setJsonKeyIfEmpty(&persistence_config_json, "namespace", instance.Namespace)
+	persistence_config_map := make(map[string]interface{})
+	err = json.Unmarshal([]byte(persistence_config_json), &persistence_config_map)
+	if err == nil {
+		instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG = persistence_config_map
+	} else {
+		glog.Error("Unmarshal of X_CSI_PERSISTENCE_CONFIG failed: ", err)
+	}
+
 	instance.Status.Version = version.Version
 	err = r.client.Update(context.TODO(), instance)
 	if err != nil {
