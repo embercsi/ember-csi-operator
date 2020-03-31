@@ -108,12 +108,6 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 			Value: X_CSI_PERSISTENCE_CONFIG,
 		},
 		)
-	} else { // Use CRD as the default persistence
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  "X_CSI_PERSISTENCE_CONFIG",
-			Value: fmt.Sprintf("{\"storage\":\"crd\",\"namespace\":\"%s\"}", ecsi.Namespace),
-		},
-		)
 	}
 	X_CSI_DEBUG_MODE := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE)
 	if len(X_CSI_DEBUG_MODE) > 0 {
@@ -547,7 +541,7 @@ func interfaceToString(input interface{}) string {
 
 	// Something else, fail safely
 	glog.Errorf("Could not marshal %v (type %T) to JSON\n", input, input)
-	return ""
+	return "{}"
 }
 
 
