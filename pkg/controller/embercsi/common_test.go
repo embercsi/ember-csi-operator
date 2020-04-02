@@ -31,7 +31,7 @@ func TestMarshal(t *testing.T) {
 
 	// Invalid data type
 	result = interfaceToString(42)
-	if result != "" {
+	if result != "{}" {
 		t.Errorf("Failed to marshal invalid JSON string, got %v\n", result)
 	}
 }
@@ -60,6 +60,13 @@ func TestConfigTransform(t *testing.T) {
 
 	input = "{\"driver\":\"Someone\",\"driver__Someone__option\":\"abc\",\"driver__Other__option\":\"def\"}"
 	expected = "{\"driver\":\"Someone\",\"option\":\"abc\"}"
+	result = configTransform(input)
+	if result != expected {
+		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
+	}
+
+	input = "{\"driver\":\"Someone\",\"driver__Someone__option\":\"C:\\\\somepath\",\"driver__Other__option\":\"def\"}"
+	expected = "{\"driver\":\"Someone\",\"option\":\"C:\\\\somepath\"}"
 	result = configTransform(input)
 	if result != expected {
 		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
