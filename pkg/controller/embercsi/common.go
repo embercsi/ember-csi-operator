@@ -527,6 +527,7 @@ func interfaceToString(input interface{}) string {
 	// String, maybe a JSON?
 	s, ok := input.(string)
 	if ok {
+		s = strings.Replace(s, "\\", "\\\\", -1)
 		j := make(map[string]interface{})
 		err := json.Unmarshal([]byte(s), &j)
 		if err == nil {
