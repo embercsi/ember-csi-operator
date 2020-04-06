@@ -6,6 +6,7 @@ import (
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"github.com/golang/glog"
 )
 
 // storageClassForEmberCSI returns a EmberCSI StorageClass object
@@ -21,9 +22,13 @@ func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.Ember
 	}
 
 	expandEnabled := true
-	X_CSI_EMBER_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
-	if len(X_CSI_EMBER_CONFIG) > 0 && !isFeatureEnabled(X_CSI_EMBER_CONFIG, "expand") {
-		expandEnabled = false
+	X_CSI_EMBER_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if err == nil {
+		if !isFeatureEnabled(X_CSI_EMBER_CONFIG, "expand") {
+			expandEnabled = false
+		}
+	} else {
+		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
 	}
 
 	sc := &storagev1.StorageClass{
