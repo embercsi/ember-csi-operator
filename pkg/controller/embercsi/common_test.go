@@ -9,39 +9,59 @@ func TestMarshal(t *testing.T) {
 	input_map := make(map[string]interface{})
 	input_map["key"] = "val"
 	expected := "{\"key\":\"val\"}"
-	result := interfaceToString(input_map)
+	result, err := interfaceToString(input_map)
 	if result != expected {
 		t.Errorf("Failed to marshal valid YAML map, got %v\n", result)
 	}
+	if err != nil {
+		t.Errorf("Error return is wrong, got %v\n",  err)
+	}
+
 
 	// JSON string
 	input_string := "{\"key\":\"val\"}"
-	result = interfaceToString(input_string)
+	result, err = interfaceToString(input_string)
 	if result != expected {
 		t.Errorf("Failed to marshal valid JSON string, got %v\n", result)
 	}
+	if err != nil {
+		t.Errorf("Error return is wrong, got %v\n",  err)
+	}
+
 
 	// Invalid JSON string
 	input_string = "{key\":\"val\"}"
 	expected = "{key\":\"val\"}"
-	result = interfaceToString(input_string)
+	result, err = interfaceToString(input_string)
 	if result != expected {
 		t.Errorf("Failed to marshal invalid JSON string, got %v\n", result)
 	}
+	if err == nil {
+		t.Errorf("Error return is wrong, got %v\n",  err)
+	}
+
 
 	// Invalid data type
-	result = interfaceToString(42)
+	result, err = interfaceToString(42)
 	if result != "{}" {
 		t.Errorf("Failed to marshal invalid JSON string, got %v\n", result)
 	}
+	if err == nil {
+		t.Errorf("Error return is wrong, got %v\n",  err)
+	}
+
 
 	// JSON with escape chars
 	input_string = "{\"key\":\"C:\\\\somepath\"}"
 	expected = "{\"key\":\"C:\\\\somepath\"}"
-	result = interfaceToString(input_string)
+	result, err = interfaceToString(input_string)
 	if result != expected {
 		t.Errorf("Failed to marshal invalid JSON string, got %v, expected %v\n", result, expected)
 	}
+	if err != nil {
+		t.Errorf("Error return is wrong, got %v\n",  err)
+	}
+
 
 }
 

@@ -8,6 +8,7 @@ import (
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"github.com/golang/glog"
 )
 
 // csiDriverForEmberCSI returns a EmberCSI CSIDriver object
@@ -77,11 +78,15 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 // Construct a Containers PodSpec for Controller
 func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
 	trueVar := true
+	backend_config, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if err != nil {
+		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
+	}
 
 	containers := []corev1.Container{
 		{
 			Name:            "ember-csi-driver",
-			Image:           Conf.getDriverImage(interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)),
+			Image:           Conf.getDriverImage(backend_config),
 			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: &corev1.SecurityContext{
 				Privileged:               &trueVar,

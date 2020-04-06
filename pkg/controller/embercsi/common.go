@@ -85,29 +85,35 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 		},
 		)
 	}
-	X_CSI_EMBER_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
-	if len(X_CSI_EMBER_CONFIG) > 0 {
+	X_CSI_EMBER_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if err == nil {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_EMBER_CONFIG",
 			Value: X_CSI_EMBER_CONFIG,
 		},
 		)
+	} else {
+		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
 	}
-	X_CSI_BACKEND_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
-	if len(X_CSI_BACKEND_CONFIG) > 0 {
+	X_CSI_BACKEND_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if err == nil {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_BACKEND_CONFIG",
 			Value: X_CSI_BACKEND_CONFIG,
 		},
 		)
+	} else {
+		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
 	}
-	X_CSI_PERSISTENCE_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
-	if len(X_CSI_PERSISTENCE_CONFIG) > 0 {
+	X_CSI_PERSISTENCE_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
+	if err == nil {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_PERSISTENCE_CONFIG",
 			Value: X_CSI_PERSISTENCE_CONFIG,
 		},
 		)
+	} else {
+		glog.Errorf("Error parsing X_CSI_PERSISTENCE_CONFIG,: %v\n", err)
 	}
 	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
@@ -262,18 +268,22 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string)
 	}
 
 	// Check to see if the volume driver is LVM
-	X_CSI_BACKEND_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
-	if len(X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(X_CSI_BACKEND_CONFIG), "lvmvolume") {
-		vm = append(vm, corev1.VolumeMount{
-			Name:             "etc-lvm",
-			MountPath:        "/etc/lvm",
-			MountPropagation: &bidirectional,
-		}, corev1.VolumeMount{
-			Name:             "var-lock-lvm",
-			MountPath:        "/var/lock/lvm",
-			MountPropagation: &bidirectional,
-		},
-		)
+	X_CSI_BACKEND_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if err == nil {
+		if strings.Contains(strings.ToLower(X_CSI_BACKEND_CONFIG), "lvmvolume") {
+			vm = append(vm, corev1.VolumeMount{
+				Name:             "etc-lvm",
+				MountPath:        "/etc/lvm",
+				MountPropagation: &bidirectional,
+			}, corev1.VolumeMount{
+				Name:             "var-lock-lvm",
+				MountPath:        "/var/lock/lvm",
+				MountPropagation: &bidirectional,
+			},
+			)
+		}
+	} else {
+		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
 	}
 
 	// Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
@@ -383,24 +393,28 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 	}
 
 	// Check to see if the volume driver is LVM
-	X_CSI_BACKEND_CONFIG := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
-	if len(X_CSI_BACKEND_CONFIG) > 0 && strings.Contains(strings.ToLower(X_CSI_BACKEND_CONFIG), "lvmvolume") {
-		vol = append(vol, corev1.Volume{
-			Name: "etc-lvm",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/etc/lvm",
+	X_CSI_BACKEND_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if err == nil {
+		if strings.Contains(strings.ToLower(X_CSI_BACKEND_CONFIG), "lvmvolume") {
+			vol = append(vol, corev1.Volume{
+				Name: "etc-lvm",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: "/etc/lvm",
+					},
+				},
+			}, corev1.Volume{
+				Name: "var-lock-lvm",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{
+						Path: "/var/lock/lvm",
+					},
 				},
 			},
-		}, corev1.Volume{
-			Name: "var-lock-lvm",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/var/lock/lvm",
-				},
-			},
-		},
-		)
+			)
+		}
+	} else {
+		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
 	}
 
 	// Check to see if the X_CSI_SYSTEM_FILES secret is present in the CR
@@ -516,11 +530,11 @@ func isFeatureEnabled(emberConfig string, feature string) bool {
 }
 
 
-func interfaceToString(input interface{}) string {
+func interfaceToString(input interface{}) (string, error) {
 	m, ok := input.(map[string]interface{})
 	if ok {
 		jsonString, _ := json.Marshal(m)
-		return configTransform(string(jsonString))
+		return configTransform(string(jsonString)), nil
 	}
 
 	// String, maybe a JSON?
@@ -530,17 +544,16 @@ func interfaceToString(input interface{}) string {
 		err := json.Unmarshal([]byte(s), &j)
 		if err == nil {
 			jsonString, _ := json.Marshal(j)
-			return configTransform(string(jsonString))
+			return configTransform(string(jsonString)), nil
 		} else { // string, but not valid JSON
-			glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
-			glog.Error(err)
-			return s
+			err := fmt.Errorf("Forwarding unmodified input %v (type %T) to Ember\n", input, input)
+			return s, err
 		}
 	}
 
 	// Something else, fail safely
-	glog.Errorf("Could not marshal %v (type %T) to JSON\n", input, input)
-	return "{}"
+	err := fmt.Errorf("Could not marshal %v (type %T) to JSON\n", input, input)
+	return "{}", err
 }
 
 

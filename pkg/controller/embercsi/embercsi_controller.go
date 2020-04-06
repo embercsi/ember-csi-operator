@@ -114,7 +114,10 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		}
 	}
 
-	backend_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	backend_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if err != nil {
+		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
+	}
 	setJsonKeyIfEmpty(&backend_config_json, "name", request.Name)
 	backend_config_map := make(map[string]interface{})
 	err = json.Unmarshal([]byte(backend_config_json), &backend_config_map)
@@ -124,7 +127,10 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		glog.Error("Unmarshal of X_CSI_BACKEND_CONFIG failed: ", err)
 	}
 
-	ember_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	ember_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if err != nil {
+		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
+	}
 	plugin_name := request.Name + "-" + randomString(6)
 	setJsonKeyIfEmpty(&ember_config_json, "plugin_name", plugin_name)
 	ember_config_map := make(map[string]interface{})
@@ -135,7 +141,10 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		glog.Error("Unmarshal of X_CSI_EMBER_CONFIG failed: ", err)
 	}
 
-	persistence_config_json := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
+	persistence_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
+	if err != nil {
+		glog.Errorf("Error parsing X_CSI_PERSISTENCE_CONFIG: %v\n", err)
+	}
 	setJsonKeyIfEmpty(&persistence_config_json, "storage", "crd")
 	setJsonKeyIfEmpty(&persistence_config_json, "namespace", instance.Namespace)
 	persistence_config_map := make(map[string]interface{})
@@ -231,10 +240,15 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	}
 
 	snapShotEnabled := true
-	X_CSI_EMBER_CONFIG := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
-	if len(X_CSI_EMBER_CONFIG) > 0 && !isFeatureEnabled(X_CSI_EMBER_CONFIG, "snapshot") {
-		snapShotEnabled = false
+	X_CSI_EMBER_CONFIG, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if err == nil {
+		if !isFeatureEnabled(X_CSI_EMBER_CONFIG, "snapshot") {
+			snapShotEnabled = false
+		}
+	} else {
+		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
 	}
+
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
 	if Conf.getCSISpecVersion() >= 1.0 && snapShotEnabled {
 		glog.V(3).Info("Trying to create a new volumeSnapshotClass")
