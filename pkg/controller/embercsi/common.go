@@ -109,11 +109,10 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 		},
 		)
 	}
-	X_CSI_DEBUG_MODE := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE)
-	if len(X_CSI_DEBUG_MODE) > 0 {
+	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_DEBUG_MODE",
-			Value: X_CSI_DEBUG_MODE,
+			Value: ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE,
 		},
 		)
 	}
