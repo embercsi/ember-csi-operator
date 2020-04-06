@@ -28,10 +28,8 @@ var Cluster string
 // domain name, after 1.0 we use forward.
 func GetPluginDomainName(instanceName string) string {
 	if Conf.getCSISpecVersion() < 1.0 {
-		glog.Info("CSI Spec is < 1.0 using reverse domain plugin name")
 		return fmt.Sprintf("%s.%s", "io.ember-csi", instanceName)
 	}
-	glog.Info("CSI Spec is >= 1.0 using forward domain plugin name")
 	return fmt.Sprintf("%s.%s", instanceName, "ember-csi.io")
 }
 
