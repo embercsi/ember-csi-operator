@@ -25,7 +25,7 @@ func TestMarshal(t *testing.T) {
 	input_string = "{key\":\"val\"}"
 	expected = "{key\":\"val\"}"
 	result = interfaceToString(input_string)
-	if result != "{key\":\"val\"}" {
+	if result != expected {
 		t.Errorf("Failed to marshal invalid JSON string, got %v\n", result)
 	}
 
@@ -34,6 +34,15 @@ func TestMarshal(t *testing.T) {
 	if result != "{}" {
 		t.Errorf("Failed to marshal invalid JSON string, got %v\n", result)
 	}
+
+	// JSON with escape chars
+	input_string = "{\"key\":\"C:\\\\somepath\"}"
+	expected = "{\"key\":\"C:\\\\somepath\"}"
+	result = interfaceToString(input_string)
+	if result != expected {
+		t.Errorf("Failed to marshal invalid JSON string, got %v, expected %v\n", result, expected)
+	}
+
 }
 
 func TestConfigTransform(t *testing.T) {
