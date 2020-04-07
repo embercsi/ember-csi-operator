@@ -10,7 +10,7 @@ spec:
         enable_unsupported_driver: false
         iet_conf: /etc/iet/ietd.conf
         iscsi_iotype: fileio
-        iscsi_secondary_ip_addresses__transform_csv: ''
+        iscsi_secondary_ip_addresses: ''
         iscsi_target_flags: ''
         iscsi_write_cache: 'on'
         lvm_conf_file: /etc/cinder/lvm.conf

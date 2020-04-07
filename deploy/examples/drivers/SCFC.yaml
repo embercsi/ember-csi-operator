@@ -16,7 +16,7 @@ spec:
         dell_server_os: Red Hat Linux 6.x
         driver: SCFC
         enable_unsupported_driver: false
-        excluded_domain_ips__transform_csv: ''
+        excluded_domain_ips: ''
         name: ''
         secondary_san_ip: ''
         secondary_san_login: Admin

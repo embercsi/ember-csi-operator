@@ -10,8 +10,8 @@ spec:
         enable_unsupported_driver: false
         name: ''
         remove_empty_host: false
-        unity_io_ports__transform_csv: ''
-        unity_storage_pool_names__transform_csv: ''
+        unity_io_ports: ''
+        unity_storage_pool_names: ''
       X_CSI_DEBUG_MODE: ''
       X_CSI_DEFAULT_MOUNT_FS: ext4
       X_CSI_EMBER_CONFIG:

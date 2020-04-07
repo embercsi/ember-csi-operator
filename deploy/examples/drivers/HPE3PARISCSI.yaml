@@ -9,11 +9,11 @@ spec:
         driver: HPE3PARISCSI
         enable_unsupported_driver: false
         hpe3par_api_url: ''
-        hpe3par_cpg__transform_csv: OpenStack
+        hpe3par_cpg: OpenStack
         hpe3par_cpg_snap: ''
         hpe3par_debug: false
         hpe3par_iscsi_chap_enabled: false
-        hpe3par_iscsi_ips__transform_csv: ''
+        hpe3par_iscsi_ips: ''
         hpe3par_password: ''
         hpe3par_snapshot_expiration: ''
         hpe3par_snapshot_retention: ''

@@ -273,6 +273,7 @@ class Option(object):
     def __init__(self, option):
         self.drivers = set()
         self.name = option['name']
+        self.name_raw = self.name
         self.display_name = option['name'].replace('_', ' ').title()
         self.help = option['help'].replace('\n', '.').replace('"', "'").title()
         self.ignore = (option['deprecated_for_removal'] == 'True' or
@@ -370,7 +371,7 @@ class Option(object):
         if driver:
             return "driver__%s__%s" % (driver, self.name)
         else:
-            return self.name
+            return self.name_raw
 
 
 def include_driver(drivername):

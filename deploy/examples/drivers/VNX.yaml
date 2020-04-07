@@ -14,13 +14,13 @@ spec:
         ignore_pool_full_threshold: false
         initiator_auto_deregistration: false
         initiator_auto_registration: false
-        io_port_list__transform_csv: ''
+        io_port_list: ''
         iscsi_initiators: ''
         max_luns_per_storage_group: 255
         name: ''
         naviseccli_path: ''
         storage_vnx_authentication_type: global
-        storage_vnx_pool_names__transform_csv: ''
+        storage_vnx_pool_names: ''
         storage_vnx_security_file_dir: ''
         vnx_async_migrate: true
       X_CSI_DEBUG_MODE: ''

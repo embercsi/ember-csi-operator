@@ -13,7 +13,7 @@ spec:
         nec_auto_accesscontrol: true
         nec_backend_max_ld_count: 1024
         nec_backup_ldname_format: LX:%s
-        nec_backup_pools__transform_csv: ''
+        nec_backup_pools: ''
         nec_cv_ldname_format: LX:__ControlVolume_%xh
         nec_diskarray_name: ''
         nec_ismcli_fip: ''
@@ -24,7 +24,7 @@ spec:
         nec_ismview_dir: /tmp/nec/cinder
         nec_ldname_format: LX:%s
         nec_ldset: ''
-        nec_pools__transform_csv: ''
+        nec_pools: ''
         nec_queryconfig_view: false
         nec_ssh_pool_port_number: 22
         nec_unpairthread_timeout: 3600
