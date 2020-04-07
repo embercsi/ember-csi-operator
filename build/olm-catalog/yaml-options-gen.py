@@ -10,6 +10,7 @@ import json
 import re
 import os
 import sys
+import yaml
 
 
 # We don't support NFS drivers right now
@@ -365,8 +366,11 @@ class Option(object):
     def add_driver(self, driver):
         self.drivers.add(driver)
 
-    def option_name(self, driver):
-        return "driver__%s__%s" % (driver, self.name)
+    def option_name(self, driver=None):
+        if driver:
+            return "driver__%s__%s" % (driver, self.name)
+        else:
+            return self.name
 
 
 def include_driver(drivername):
@@ -605,10 +609,11 @@ def generate_sample_config(original_drivers, options):
         s = sample['spec']['config']['envVars']['X_CSI_BACKEND_CONFIG']
         d = defaults['spec']['config']['envVars']['X_CSI_BACKEND_CONFIG']
         d.update(s)
+
     defaults['spec']['config']['envVars']['X_CSI_BACKEND_CONFIG']['driver'] = sorted(original_drivers.keys())[0]
 
-    # The first examples is used  for the defaults of the form.
-    samples.insert(0, defaults)
+    # The first examples is used for the defaults of the form.
+    samples = [defaults]
 
     result = json.dumps(samples, indent=2)
     # We need to indent it
@@ -616,6 +621,18 @@ def generate_sample_config(original_drivers, options):
     res = '    alm-examples: |-\n' + examples
     # Remove trailing spaces introduced by JSON
     return '\n'.join(line.rstrip() for line in res.splitlines())
+
+
+def generate_examples(original_drivers, options):
+    """Generate one example config yaml per driver."""
+    if os.path.exists("examples"):
+        for name in sorted(original_drivers.keys()):
+            sample = generate_sample_options(None, sorted(original_drivers[name]), options)
+            sample['spec']['config']['envVars']['X_CSI_BACKEND_CONFIG']['driver'] = name
+            fn = "examples/" + name + ".yaml"
+            # Convert nested OrderedDicts to nested dicts
+            cfg = json.loads(json.dumps(sample))
+            yaml.safe_dump(cfg, file(fn,'w'), allow_unicode=True)
 
 
 def add_missing_config_options(backends, options):
@@ -654,6 +671,7 @@ if __name__ == '__main__':
 
     driver_options = generate_driver_options(backends, options)
     sample_config = generate_sample_config(backends, options)
+    generate_examples(backends, options)
 
     template_name = 'template-dev.yaml' if DEVELOPMENT else 'template.yaml'
     with open(template_name, 'r') as f:

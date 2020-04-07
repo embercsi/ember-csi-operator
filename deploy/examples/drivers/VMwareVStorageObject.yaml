@@ -1,0 +1,47 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: VMwareVStorageObject
+        enable_unsupported_driver: false
+        name: ''
+        vmware_adapter_type: lsiLogic
+        vmware_api_retry_count: 10
+        vmware_ca_file: ''
+        vmware_cluster_name: ''
+        vmware_connection_pool_size: 10
+        vmware_datastore_regex: ''
+        vmware_host_ip: ''
+        vmware_host_password: ''
+        vmware_host_port: 443
+        vmware_host_username: ''
+        vmware_host_version: ''
+        vmware_image_transfer_timeout_secs: 7200
+        vmware_insecure: false
+        vmware_lazy_create: true
+        vmware_max_objects_retrieval: 100
+        vmware_snapshot_format: template
+        vmware_task_poll_interval: '2.0'
+        vmware_tmp_dir: /tmp
+        vmware_volume_folder: Volumes
+        vmware_wsdl_location: ''
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

@@ -1,0 +1,63 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        backend_availability_zone: ''
+        chap_password: ''
+        chap_username: ''
+        chiscsi_conf: /etc/chelsio-iscsi/chiscsi.conf
+        driver: MacroSANFC
+        driver_client_cert: ''
+        driver_client_cert_key: ''
+        driver_data_namespace: ''
+        driver_ssl_cert_path: ''
+        driver_ssl_cert_verify: false
+        driver_use_ssl: false
+        enable_unsupported_driver: false
+        filter_function: ''
+        goodness_function: ''
+        iet_conf: /etc/iet/ietd.conf
+        iscsi_iotype: fileio
+        iscsi_secondary_ip_addresses__transform_csv: ''
+        iscsi_target_flags: ''
+        iscsi_write_cache: 'on'
+        name: ''
+        num_shell_tries: 3
+        num_volume_device_scan_tries: 3
+        report_discard_supported: false
+        storage_protocol: iscsi
+        target_helper: tgtadm
+        target_ip_address: $my_ip
+        target_port: 3260
+        target_prefix: 'iqn.2010-10.org.openstack:'
+        target_protocol: iscsi
+        trace_flags__transform_csv: ''
+        use_chap_auth: false
+        volume_backend_name: ''
+        volume_clear: zero
+        volume_clear_ionice: ''
+        volume_clear_size: 0
+        volume_copy_blkio_cgroup_name: cinder-volume-copy
+        volume_copy_bps_limit: 0
+        volume_dd_blocksize: 1M
+        volumes_dir: $state_path/volumes
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

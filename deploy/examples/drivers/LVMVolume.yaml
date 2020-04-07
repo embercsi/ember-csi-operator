@@ -1,0 +1,54 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: LVMVolume
+        enable_unsupported_driver: false
+        iet_conf: /etc/iet/ietd.conf
+        iscsi_iotype: fileio
+        iscsi_secondary_ip_addresses__transform_csv: ''
+        iscsi_target_flags: ''
+        iscsi_write_cache: 'on'
+        lvm_conf_file: /etc/cinder/lvm.conf
+        lvm_mirrors: 0
+        lvm_suppress_fd_warnings: false
+        lvm_type: auto
+        name: ''
+        nvmet_port_id: 1
+        scst_target_driver: iscsi
+        scst_target_iqn_name: ''
+        spdk_max_queue_depth: '64'
+        spdk_rpc_ip: ''
+        spdk_rpc_password: ''
+        spdk_rpc_port: 8000
+        spdk_rpc_username: ''
+        target_helper: tgtadm
+        target_ip_address: $my_ip
+        target_port: 3260
+        target_prefix: 'iqn.2010-10.org.openstack:'
+        target_protocol: iscsi
+        volume_clear: zero
+        volume_clear_size: 0
+        volume_dd_blocksize: 1M
+        volume_group: cinder-volumes
+        volumes_dir: $state_path/volumes
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

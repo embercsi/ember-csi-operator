@@ -1,0 +1,46 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        cycle_period_seconds: 300
+        driver: StorwizeSVCFC
+        enable_unsupported_driver: false
+        name: ''
+        storwize_peer_pool: ''
+        storwize_preferred_host_site__transform_csv_kvs: ''
+        storwize_san_secondary_ip: ''
+        storwize_svc_allow_tenant_qos: false
+        storwize_svc_flashcopy_rate: 50
+        storwize_svc_flashcopy_timeout: 120
+        storwize_svc_mirror_pool: ''
+        storwize_svc_multipath_enabled: false
+        storwize_svc_stretched_cluster_partner: ''
+        storwize_svc_vol_autoexpand: true
+        storwize_svc_vol_compression: false
+        storwize_svc_vol_easytier: true
+        storwize_svc_vol_grainsize: 256
+        storwize_svc_vol_iogrp: '0'
+        storwize_svc_vol_nofmtdisk: false
+        storwize_svc_vol_rsize: 2
+        storwize_svc_vol_warning: 0
+        storwize_svc_volpool_name__transform_csv: volpool
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

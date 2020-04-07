@@ -1,0 +1,42 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: PureISCSI
+        driver_ssl_cert_path: ''
+        driver_ssl_cert_verify: false
+        enable_unsupported_driver: false
+        name: ''
+        pure_api_token: ''
+        pure_automatic_max_oversubscription_ratio: true
+        pure_eradicate_on_delete: false
+        pure_host_personality: ''
+        pure_iscsi_cidr: 0.0.0.0/0
+        pure_replica_interval_default: 3600
+        pure_replica_retention_long_term_default: 7
+        pure_replica_retention_long_term_per_day_default: 3
+        pure_replica_retention_short_term_default: 14400
+        pure_replication_pg_name: cinder-group
+        pure_replication_pod_name: cinder-pod
+        san_ip: ''
+        use_chap_auth: false
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

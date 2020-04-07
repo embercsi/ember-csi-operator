@@ -1,0 +1,41 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        default_timeout: 31536000
+        destroy_empty_storage_group: false
+        driver: VNX
+        enable_unsupported_driver: false
+        force_delete_lun_in_storagegroup: true
+        ignore_pool_full_threshold: false
+        initiator_auto_deregistration: false
+        initiator_auto_registration: false
+        io_port_list__transform_csv: ''
+        iscsi_initiators: ''
+        max_luns_per_storage_group: 255
+        name: ''
+        naviseccli_path: ''
+        storage_vnx_authentication_type: global
+        storage_vnx_pool_names__transform_csv: ''
+        storage_vnx_security_file_dir: ''
+        vnx_async_migrate: true
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

@@ -1,0 +1,37 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: ZadaraVPSAISCSI
+        enable_unsupported_driver: false
+        name: ''
+        zadara_access_key: ''
+        zadara_default_snap_policy: false
+        zadara_ssl_cert_verify: true
+        zadara_use_iser: true
+        zadara_vol_encrypt: false
+        zadara_vol_name_template: OS_%s
+        zadara_vpsa_host: ''
+        zadara_vpsa_poolname: ''
+        zadara_vpsa_port: ''
+        zadara_vpsa_use_ssl: false
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

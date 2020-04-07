@@ -1,0 +1,39 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: SolidFire
+        driver_ssl_cert_verify: false
+        enable_unsupported_driver: false
+        name: ''
+        san_ip: ''
+        san_login: admin
+        san_password: ''
+        sf_account_prefix: ''
+        sf_allow_tenant_qos: false
+        sf_api_port: 443
+        sf_emulate_512: true
+        sf_enable_vag: false
+        sf_provisioning_calc: maxProvisionedSpace
+        sf_svip: ''
+        sf_volume_prefix: UUID-
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

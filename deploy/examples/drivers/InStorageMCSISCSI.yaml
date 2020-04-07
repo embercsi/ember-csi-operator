@@ -1,0 +1,39 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: InStorageMCSISCSI
+        enable_unsupported_driver: false
+        instorage_mcs_allow_tenant_qos: false
+        instorage_mcs_localcopy_rate: 50
+        instorage_mcs_localcopy_timeout: 120
+        instorage_mcs_vol_autoexpand: true
+        instorage_mcs_vol_compression: false
+        instorage_mcs_vol_grainsize: 256
+        instorage_mcs_vol_intier: true
+        instorage_mcs_vol_iogrp: '0'
+        instorage_mcs_vol_rsize: 2
+        instorage_mcs_vol_warning: 0
+        instorage_mcs_volpool_name__transform_csv: volpool
+        instorage_san_secondary_ip: ''
+        name: ''
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

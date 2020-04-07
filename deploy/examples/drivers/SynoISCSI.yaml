@@ -1,0 +1,43 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        chap_password: ''
+        chap_username: ''
+        driver: SynoISCSI
+        driver_use_ssl: false
+        enable_unsupported_driver: false
+        iscsi_secondary_ip_addresses__transform_csv: ''
+        name: ''
+        synology_admin_port: 5000
+        synology_device_id: ''
+        synology_one_time_pass: ''
+        synology_password: ''
+        synology_pool_name: ''
+        synology_ssl_verify: true
+        synology_username: admin
+        target_ip_address: $my_ip
+        target_port: 3260
+        target_prefix: 'iqn.2010-10.org.openstack:'
+        target_protocol: iscsi
+        use_chap_auth: false
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

@@ -1,0 +1,43 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        deferred_deletion_delay: 0
+        deferred_deletion_purge_interval: 60
+        driver: RBD
+        enable_deferred_deletion: false
+        enable_unsupported_driver: false
+        name: ''
+        rados_connect_timeout: -1
+        rados_connection_interval: 5
+        rados_connection_retries: 3
+        rbd_ceph_conf: ''
+        rbd_cluster_name: ceph
+        rbd_exclusive_cinder_pool: false
+        rbd_flatten_volume_from_snapshot: false
+        rbd_max_clone_depth: 5
+        rbd_pool: rbd
+        rbd_secret_uuid: ''
+        rbd_store_chunk_size: 4
+        rbd_user: ''
+        report_dynamic_total_capacity: true
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''
