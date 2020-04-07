@@ -524,13 +524,13 @@ def additional_options():
             - 'urn:alm:descriptor:com.tectonic.ui:select:minix'
             - 'urn:alm:descriptor:com.tectonic.ui:select:xfs'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
-        # - description: Metadata persistence plugin selection and settings (must be valid JSON)
-        #   displayName: Persistence
-        #   path: config.envVars.X_CSI_PERSISTENCE_CONFIG
-        #   x-descriptors:
-        #     - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
-        #     - 'urn:alm:descriptor:com.tectonic.ui:text'
-        #     - 'urn:alm:descriptor:com.tectonic.ui:advanced'
+        - description: Metadata persistence plugin selection and settings (must be valid JSON)
+          displayName: Persistence
+          path: config.envVars.X_CSI_PERSISTENCE_CONFIG
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: Allow unsupported drivers to run
           displayName: Unsupported
           path: config.envVars.X_CSI_BACKEND_CONFIG.enable_unsupported_driver
