@@ -1,0 +1,54 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: NexentaISCSI
+        enable_unsupported_driver: false
+        name: ''
+        nexenta_blocksize: 4096
+        nexenta_dataset_compression: 'on'
+        nexenta_dataset_dedup: 'off'
+        nexenta_dataset_description: ''
+        nexenta_folder: ''
+        nexenta_group_snapshot_template: group-snapshot-%s
+        nexenta_host: ''
+        nexenta_host_group_prefix: cinder
+        nexenta_iscsi_target_host_group: all
+        nexenta_iscsi_target_portal_groups: ''
+        nexenta_iscsi_target_portal_port: 3260
+        nexenta_iscsi_target_portals: ''
+        nexenta_lu_writebackcache_disabled: false
+        nexenta_luns_per_target: 100
+        nexenta_ns5_blocksize: 32
+        nexenta_origin_snapshot_template: origin-snapshot-%s
+        nexenta_rest_backoff_factor: '0.5'
+        nexenta_rest_connect_timeout: '30'
+        nexenta_rest_protocol: auto
+        nexenta_rest_read_timeout: '300'
+        nexenta_rest_retry_count: 3
+        nexenta_sparse: false
+        nexenta_target_group_prefix: cinder
+        nexenta_target_prefix: iqn.1986-03.com.sun:02:cinder
+        nexenta_use_https: true
+        nexenta_volume: cinder
+        nexenta_volume_group: iscsi
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

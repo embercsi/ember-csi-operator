@@ -1,0 +1,33 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: GPFS
+        enable_unsupported_driver: false
+        gpfs_images_dir: ''
+        gpfs_images_share_mode__transform_empty_none: ''
+        gpfs_max_clone_depth: 0
+        gpfs_mount_point_base: ''
+        gpfs_sparse_volumes: true
+        gpfs_storage_pool: system
+        name: ''
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

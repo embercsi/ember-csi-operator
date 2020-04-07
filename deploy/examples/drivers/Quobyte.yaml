@@ -1,0 +1,34 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: Quobyte
+        enable_unsupported_driver: false
+        name: ''
+        quobyte_client_cfg: ''
+        quobyte_mount_point_base: $state_path/mnt
+        quobyte_overlay_volumes: false
+        quobyte_qcow2_volumes: true
+        quobyte_sparsed_volumes: true
+        quobyte_volume_from_snapshot_cache: false
+        quobyte_volume_url: ''
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

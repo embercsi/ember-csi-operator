@@ -1,0 +1,46 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: HPE3PARFC
+        enable_unsupported_driver: false
+        hpe3par_api_url: ''
+        hpe3par_cpg__transform_csv: OpenStack
+        hpe3par_cpg_snap: ''
+        hpe3par_debug: false
+        hpe3par_iscsi_chap_enabled: false
+        hpe3par_iscsi_ips__transform_csv: ''
+        hpe3par_password: ''
+        hpe3par_snapshot_expiration: ''
+        hpe3par_snapshot_retention: ''
+        hpe3par_target_nsp: ''
+        hpe3par_username: ''
+        name: ''
+        san_ip: ''
+        san_login: admin
+        san_password: ''
+        san_private_key: ''
+        san_ssh_port: 22
+        ssh_conn_timeout: 30
+        target_ip_address: $my_ip
+        target_port: 3260
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

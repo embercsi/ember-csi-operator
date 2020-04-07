@@ -1,0 +1,46 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: MStorageISCSI
+        enable_unsupported_driver: false
+        name: ''
+        nec_actual_free_capacity: false
+        nec_auto_accesscontrol: true
+        nec_backend_max_ld_count: 1024
+        nec_backup_ldname_format: LX:%s
+        nec_backup_pools__transform_csv: ''
+        nec_cv_ldname_format: LX:__ControlVolume_%xh
+        nec_diskarray_name: ''
+        nec_ismcli_fip: ''
+        nec_ismcli_password: ''
+        nec_ismcli_privkey: ''
+        nec_ismcli_user: ''
+        nec_ismview_alloptimize: false
+        nec_ismview_dir: /tmp/nec/cinder
+        nec_ldname_format: LX:%s
+        nec_ldset: ''
+        nec_pools__transform_csv: ''
+        nec_queryconfig_view: false
+        nec_ssh_pool_port_number: 22
+        nec_unpairthread_timeout: 3600
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

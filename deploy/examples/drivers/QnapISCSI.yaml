@@ -1,0 +1,37 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        chap_password: ''
+        chap_username: ''
+        driver: QnapISCSI
+        driver_ssl_cert_verify: false
+        enable_unsupported_driver: false
+        name: ''
+        qnap_management_url: ''
+        qnap_poolname: ''
+        qnap_storage_protocol: iscsi
+        san_login: admin
+        san_password: ''
+        target_ip_address: $my_ip
+        use_chap_auth: false
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

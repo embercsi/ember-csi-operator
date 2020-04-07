@@ -1,0 +1,36 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: InfortrendCLIISCSI
+        enable_unsupported_driver: false
+        infortrend_cli_cache: false
+        infortrend_cli_max_retries: 5
+        infortrend_cli_path: /opt/bin/Infortrend/raidcmd_ESDS10.jar
+        infortrend_cli_timeout: 60
+        infortrend_iqn_prefix: iqn.2002-10.com.infortrend
+        infortrend_pools_name__transform_csv: ''
+        infortrend_slots_a_channels_id__transform_csv: ''
+        infortrend_slots_b_channels_id__transform_csv: ''
+        java_path: /usr/bin/java
+        name: ''
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

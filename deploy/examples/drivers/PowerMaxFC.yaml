@@ -1,0 +1,45 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        driver: PowerMaxFC
+        driver_ssl_cert_verify: false
+        enable_unsupported_driver: false
+        initiator_check: false
+        interval: 3
+        name: ''
+        powermax_array: ''
+        powermax_port_groups__transform_csv: ''
+        powermax_service_level: ''
+        powermax_snapvx_unlink_limit: 3
+        powermax_srp: ''
+        retries: 200
+        san_ip: ''
+        san_login: admin
+        san_password: ''
+        u4p_failover_autofailback: true
+        u4p_failover_backoff_factor: 1
+        u4p_failover_retries: 3
+        u4p_failover_target__transform_csv_kvs: ''
+        u4p_failover_timeout: 20
+        vmax_workload: ''
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''

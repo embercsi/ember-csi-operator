@@ -1,0 +1,40 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_BACKEND_CONFIG:
+        dell_api_async_rest_timeout: 15
+        dell_api_sync_rest_timeout: 30
+        dell_sc_api_port: 3033
+        dell_sc_server_folder: openstack
+        dell_sc_ssn: 64702
+        dell_sc_verify_cert: false
+        dell_sc_volume_folder: openstack
+        dell_server_os: Red Hat Linux 6.x
+        driver: SCFC
+        enable_unsupported_driver: false
+        excluded_domain_ips__transform_csv: ''
+        name: ''
+        secondary_san_ip: ''
+        secondary_san_login: Admin
+        secondary_san_password: ''
+        secondary_sc_api_port: 3033
+      X_CSI_DEBUG_MODE: ''
+      X_CSI_DEFAULT_MOUNT_FS: ext4
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        disable_logs: false
+        disabled: []
+        enable_probe: false
+        grpc_workers: 30
+        plugin_name: ''
+        project_id: ember_csi.io
+        slow_operations: true
+        user_id: ember_csi.io
+      X_CSI_PERSISTENCE_CONFIG:
+        storage: crd
+    sysFiles:
+      name: ''
