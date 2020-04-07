@@ -11,7 +11,7 @@ spec:
         name: ''
         smbfs_default_volume_format: vhd
         smbfs_mount_point_base: C:\OpenStack\_mnt
-        smbfs_pool_mappings__transform_csv_kvs: ''
+        smbfs_pool_mappings: ''
         smbfs_shares_config: C:\OpenStack\smbfs_shares.txt
       X_CSI_DEBUG_MODE: ''
       X_CSI_DEFAULT_MOUNT_FS: ext4

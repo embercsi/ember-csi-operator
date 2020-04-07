@@ -13,7 +13,7 @@ spec:
         interval: 3
         name: ''
         powermax_array: ''
-        powermax_port_groups__transform_csv: ''
+        powermax_port_groups: ''
         powermax_service_level: ''
         powermax_snapvx_unlink_limit: 3
         powermax_srp: ''
@@ -24,7 +24,7 @@ spec:
         u4p_failover_autofailback: true
         u4p_failover_backoff_factor: 1
         u4p_failover_retries: 3
-        u4p_failover_target__transform_csv_kvs: ''
+        u4p_failover_target: ''
         u4p_failover_timeout: 20
         vmax_workload: ''
       X_CSI_DEBUG_MODE: ''

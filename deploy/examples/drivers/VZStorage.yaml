@@ -10,7 +10,7 @@ spec:
         enable_unsupported_driver: false
         name: ''
         vzstorage_default_volume_format: raw
-        vzstorage_mount_options__transform_csv: ''
+        vzstorage_mount_options: ''
         vzstorage_mount_point_base: $state_path/mnt
         vzstorage_shares_config: /etc/cinder/vzstorage_shares
         vzstorage_sparsed_volumes: true

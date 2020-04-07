@@ -11,7 +11,7 @@ spec:
         driver: SynoISCSI
         driver_use_ssl: false
         enable_unsupported_driver: false
-        iscsi_secondary_ip_addresses__transform_csv: ''
+        iscsi_secondary_ip_addresses: ''
         name: ''
         synology_admin_port: 5000
         synology_device_id: ''

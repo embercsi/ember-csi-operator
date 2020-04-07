@@ -8,7 +8,7 @@ spec:
       X_CSI_BACKEND_CONFIG:
         driver: HPMSAISCSI
         enable_unsupported_driver: false
-        hpmsa_iscsi_ips__transform_csv: ''
+        hpmsa_iscsi_ips: ''
         hpmsa_pool_name: A
         hpmsa_pool_type: virtual
         name: ''

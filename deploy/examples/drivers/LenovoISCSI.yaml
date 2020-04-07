@@ -8,7 +8,7 @@ spec:
       X_CSI_BACKEND_CONFIG:
         driver: LenovoISCSI
         enable_unsupported_driver: false
-        lenovo_iscsi_ips__transform_csv: ''
+        lenovo_iscsi_ips: ''
         lenovo_pool_name: A
         lenovo_pool_type: virtual
         name: ''

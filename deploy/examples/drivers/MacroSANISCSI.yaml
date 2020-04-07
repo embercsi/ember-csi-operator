@@ -22,7 +22,7 @@ spec:
         goodness_function: ''
         iet_conf: /etc/iet/ietd.conf
         iscsi_iotype: fileio
-        iscsi_secondary_ip_addresses__transform_csv: ''
+        iscsi_secondary_ip_addresses: ''
         iscsi_target_flags: ''
         iscsi_write_cache: 'on'
         name: ''
@@ -35,7 +35,7 @@ spec:
         target_port: 3260
         target_prefix: 'iqn.2010-10.org.openstack:'
         target_protocol: iscsi
-        trace_flags__transform_csv: ''
+        trace_flags: ''
         use_chap_auth: false
         volume_backend_name: ''
         volume_clear: zero

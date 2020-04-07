@@ -13,9 +13,9 @@ spec:
         infortrend_cli_path: /opt/bin/Infortrend/raidcmd_ESDS10.jar
         infortrend_cli_timeout: 60
         infortrend_iqn_prefix: iqn.2002-10.com.infortrend
-        infortrend_pools_name__transform_csv: ''
-        infortrend_slots_a_channels_id__transform_csv: ''
-        infortrend_slots_b_channels_id__transform_csv: ''
+        infortrend_pools_name: ''
+        infortrend_slots_a_channels_id: ''
+        infortrend_slots_b_channels_id: ''
         java_path: /usr/bin/java
         name: ''
       X_CSI_DEBUG_MODE: ''

@@ -11,7 +11,7 @@ spec:
         enable_unsupported_driver: false
         name: ''
         storwize_peer_pool: ''
-        storwize_preferred_host_site__transform_csv_kvs: ''
+        storwize_preferred_host_site: ''
         storwize_san_secondary_ip: ''
         storwize_svc_allow_tenant_qos: false
         storwize_svc_flashcopy_rate: 50
@@ -27,7 +27,7 @@ spec:
         storwize_svc_vol_nofmtdisk: false
         storwize_svc_vol_rsize: 2
         storwize_svc_vol_warning: 0
-        storwize_svc_volpool_name__transform_csv: volpool
+        storwize_svc_volpool_name: volpool
       X_CSI_DEBUG_MODE: ''
       X_CSI_DEFAULT_MOUNT_FS: ext4
       X_CSI_EMBER_CONFIG:

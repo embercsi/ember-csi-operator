@@ -18,7 +18,7 @@ spec:
         instorage_mcs_vol_iogrp: '0'
         instorage_mcs_vol_rsize: 2
         instorage_mcs_vol_warning: 0
-        instorage_mcs_volpool_name__transform_csv: volpool
+        instorage_mcs_volpool_name: volpool
         instorage_san_secondary_ip: ''
         name: ''
       X_CSI_DEBUG_MODE: ''

@@ -6,7 +6,7 @@ spec:
   config:
     envVars:
       X_CSI_BACKEND_CONFIG:
-        as13000_ipsan_pools__transform_csv: Pool0
+        as13000_ipsan_pools: Pool0
         as13000_meta_pool: ''
         as13000_token_available_time: 3300
         driver: AS13000

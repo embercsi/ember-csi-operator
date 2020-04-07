@@ -8,10 +8,10 @@ spec:
       X_CSI_BACKEND_CONFIG:
         driver: GPFSRemote
         enable_unsupported_driver: false
-        gpfs_hosts__transform_csv: ''
+        gpfs_hosts: ''
         gpfs_hosts_key_file: $state_path/ssh_known_hosts
         gpfs_images_dir: ''
-        gpfs_images_share_mode__transform_empty_none: ''
+        gpfs_images_share_mode: ''
         gpfs_max_clone_depth: 0
         gpfs_mount_point_base: ''
         gpfs_private_key: ''
