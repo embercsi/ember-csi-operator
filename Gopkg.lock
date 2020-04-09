@@ -138,12 +138,12 @@
   version = "v1.1.9"
 
 [[projects]]
-  digest = "1:1df903dbf4c6e8936f6080289110c4539cb1347b9d18295c1db5299c5ea180c9"
+  digest = "1:35e73300e6ff85afa2b3fb996978cbeae83fa08379822448f6a0ec179028cc1c"
   name = "github.com/kubernetes-csi/external-snapshotter"
-  packages = ["pkg/apis/volumesnapshot/v1alpha1"]
+  packages = ["pkg/apis/volumesnapshot/v1beta1"]
   pruneopts = ""
-  revision = "d5da3c1e527cd356696300222ebd8bf728971ae4"
-  version = "v1.2.2"
+  revision = "ed6cd4a7ec1ab012c1b4aa87f66c2f9f2f0d15f6"
+  version = "v2.1.0"
 
 [[projects]]
   digest = "1:63722a4b1e1717be7b98fc686e0b30d5e7f734b9e93d7dee86293b6deab7ea28"
@@ -641,7 +641,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/golang/glog",
-    "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1",
+    "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1beta1",
     "github.com/operator-framework/operator-sdk/pkg/k8sutil",
     "github.com/operator-framework/operator-sdk/pkg/leader",
     "github.com/operator-framework/operator-sdk/pkg/ready",
