@@ -7,7 +7,7 @@ import (
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	"github.com/embercsi/ember-csi-operator/version"
 	"github.com/golang/glog"
-	snapv1a1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1alpha1"
+	snapv1b1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -252,7 +252,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
 	if Conf.getCSISpecVersion() >= 1.0 && snapShotEnabled {
 		glog.V(3).Info("Trying to create a new volumeSnapshotClass")
-		vsc := &snapv1a1.VolumeSnapshotClass{}
+		vsc := &snapv1b1.VolumeSnapshotClass{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), Namespace: vsc.Namespace}, vsc)
 		if err != nil && errors.IsNotFound(err) {
 			// Define a new VolumeSnapshotClass
@@ -261,29 +261,25 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 			err = r.client.Create(context.TODO(), vsc)
 			if err != nil {
 				glog.Errorf("Failed to create a new VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace, err)
-				return err
 			}
 			glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace)
 		} else if err != nil {
-			glog.Error("failed to get VolumeSnapshotClass", err)
-			return err
+			glog.Error("Failed to get VolumeSnapshotClass: ", err)
 		}
 	}
 
 	// Remove the VolumeSnapshotClass and Update the controller and nodes 
 	if !snapShotEnabled {
 		glog.V(3).Info("Info: Request to disable VolumeSnapshotClass")
-		vsc := &snapv1a1.VolumeSnapshotClass{}
+		vsc := &snapv1b1.VolumeSnapshotClass{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), Namespace: vsc.Namespace}, vsc)
 		if err != nil && !errors.IsNotFound(err) {
 			err = r.client.Delete(context.TODO(), vsc)
 			if err != nil {
 				glog.Errorf("Failed to remove VolumeSnapshotClass %s in %s: %s", fmt.Sprintf("%s-vsc", GetPluginDomainName(instance.Name)), vsc.Namespace, err)
-				return err
 			}
 		} else if err != nil {
-			glog.Error("failed to get VolumeSnapshotClass", err)
-			return err
+			glog.Error("Failed to get VolumeSnapshotClass: ", err)
                 }
 
 		// Update the controller and node
