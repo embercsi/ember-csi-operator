@@ -66,6 +66,8 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 					ServiceAccountName: ControllerSA,
 					NodeSelector:       ecsi.Spec.NodeSelector,
 					Tolerations:        ecsi.Spec.Tolerations,
+					HostNetwork:        true,
+					HostIPC:            true,
 				},
 			},
 		},
