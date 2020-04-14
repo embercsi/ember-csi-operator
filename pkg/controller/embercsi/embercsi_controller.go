@@ -131,8 +131,7 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 	if err != nil {
 		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
 	}
-	plugin_name := request.Name + "-" + randomString(6)
-	setJsonKeyIfEmpty(&ember_config_json, "plugin_name", plugin_name)
+	setJsonKeyIfEmpty(&ember_config_json, "plugin_name", request.Name)
 	ember_config_map := make(map[string]interface{})
 	err = json.Unmarshal([]byte(ember_config_json), &ember_config_map)
 	if err == nil {

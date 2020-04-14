@@ -9,8 +9,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
 	"encoding/json"
-	"time"
-	"math/rand"
 )
 
 // Default values
@@ -641,15 +639,4 @@ func setJsonKeyIfEmpty(input *string, key string, val string) string {
 	}
 	*input = string(output)
 	return string(output)
-}
-
-
-func randomString(length int) string {
-    chars := []int32("abcdefghijklmnopqrstuvwxyz01234567890")
-    rand.Seed(time.Now().UnixNano())
-    a := make([]int32, length)
-    for i := range a {
-        a[i] = chars[rand.Intn(len(chars))]
-    }
-    return string(a)
 }

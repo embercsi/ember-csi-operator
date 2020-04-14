@@ -221,6 +221,7 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []co
 
 // construct EnvVars for the Driver Pod
 func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []corev1.EnvVar {
+
 	envVars := []corev1.EnvVar{
 		{
 			Name:  "PYTHONUNBUFFERED",
