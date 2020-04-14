@@ -14,7 +14,6 @@ import (
 // csiDriverForEmberCSI returns a EmberCSI CSIDriver object
 func (r *ReconcileEmberCSI) csiDriverForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *storagev1beta1.CSIDriver {
 	trueVar := true
-	falseVar := false
 
 	driver := &storagev1beta1.CSIDriver{
 		TypeMeta: metav1.TypeMeta{
@@ -25,7 +24,7 @@ func (r *ReconcileEmberCSI) csiDriverForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 			Name:      GetPluginDomainName(ecsi.Name),
 		},
 		Spec: storagev1beta1.CSIDriverSpec{
-			PodInfoOnMount: &falseVar,
+			PodInfoOnMount: &trueVar,
 			AttachRequired: &trueVar,
 		},
 	}
