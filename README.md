@@ -7,67 +7,63 @@ Kubernetes and OpenShift.
 #### Operatorhub installation
 You can use the operatorhub catalog to deploy the Ember CSI operator if you're
 using Openshift 4.  You'll find the Ember CSI operator in the "Storage"
-section. We recommend to create a custom namespace "ember-csi" and deploy the
-operator within this namespace.
+section.
 
-#### Manual installation
-The operator needs its own namespace, service account, security context, and a
-few roles and bindings. For example, to install these on OpenShift >= 3.10:
+### Install the operator
+> You can also use the latest development version of the operator. To do so,
+> please add another catalog entry and use this instead of the default one:
+>
+> ```
+> oc create -f deploy/examples/catalog.yaml
+> sed -ie 's/community-operators/external-operators/g' deploy/examples/subscription.yaml
+> ```
 
-    oc create -f deploy/service_account.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/crds/ember.crd.yaml -f deploy/scc.yaml -f deploy/operator.yaml
+You can install the operator using the catalog within the webinterface or using
+the command line like this:
 
-> You don't need to apply deploy/scc.yaml if you are using Kubernetes.
+    oc create -f deploy/examples/operatorgroup.yaml
+    oc create -f deploy/examples/subscription.yaml
+
+You need to wait until the operator has been installed, which might take a
+few minutes. You can check if the pod is running using the following command:
+
+    oc get -l name=ember-csi-operator pod
+    NAME                                 READY   STATUS    RESTARTS   AGE
+    ember-csi-operator-bb9777478-xz9c8   1/1     Running   0          67s
+
 
 ### Deploy and configure a storage backend
-You also need a storage backend, for example a lightweight Ceph pod for
+You also need a storage backend, for example a lightweight LVM/iscsi pod for
 development & testing:
 
-    oc create -f deploy/examples/ceph-demo.yaml
-
-> If your cluster runs multiple compute nodes you need to allow TCP traffic to
-> the Ceph pod on port 6800-7300. Please have a look at
-> [Ceph Network > Configuration > Reference](http://docs.ceph.com/docs/master/rados/configuration/network-config-ref/#mds-and-manager-ip-tables)
-> and [OpenShift Cluster Administration > Documentation](https://docs.openshift.com/container-platform/3.11/admin_guide/iptables.html)
-> for further reference.
-
-To use the Ceph container, you need to provide the ceph.conf configuration file
-and the keyring file as a secret. The following commands will extract these two
-files once the pod is ready to use and create a secret:
-
-    oc wait -n ceph-demo --timeout=300s --for=condition=Ready pod/ceph-demo-pod
-    oc -n ceph-demo cp ceph-demo/ceph-demo-pod:/etc/ceph/ etc/ceph/
-    echo -e "\n[client]\nrbd default features = 3\n" >> etc/ceph/ceph.conf
-    tar cf system-files.tar etc/ceph/ceph.conf etc/ceph/ceph.client.admin.keyring
-    oc create -n ember-csi secret generic sysfiles-secret --from-file=system-files.tar
+    oc create -f deploy/examples/lvmbackend.yaml
 
 Next, setup the storage backend using a custom resource file:
 
-    oc create -f deploy/examples/drivers/ceph.yaml
+    oc create -f deploy/examples/lvmdriver.yaml
 
 Now verify that the pods are created and the storage class exists:
 
-    oc get pods -n ember-csi
-    NAME                                  READY     STATUS    RESTARTS   AGE
-    ember-csi-operator-645585cdc8-m62mp   1/1       Running   0          2m
-    my-ceph-controller-0                  3/3       Running   0          11s
-    my-ceph-node-0-d6gg4                  2/2       Running   0          11s
-    my-ceph-node-0-lfzx6                  2/2       Running   0          11s
+    oc get pods
+    NAME                                 READY   STATUS    RESTARTS   AGE
+    ember-csi-operator-67985dbc7-fb98c   1/1     Running   0          92s
+    example-controller-0                 4/4     Running   0          83s
+    example-node-0-tshkq                 2/2     Running   0          83s
+    lvmiscsi                             1/1     Running   0          3m9s
 
-	oc get storageclass -n ember-csi
+    oc get storageclass
     NAME                      PROVISIONER            AGE
-    io.ember-csi.my-ceph-sc   io.ember-csi.my-ceph   15s
-
+    example.ember-csi.io-sc   example.ember-csi.io   4m29s
 
 ### Using the backend for your pods
 You're all set now! However, you likely want to test the deployment, so let's
 create a pvc and pod for testing.
 
-    oc create namespace demoapp
-    oc create -n demoapp -f deploy/examples/pvc.yaml -f deploy/examples/app.yaml
-    
+    oc create -f deploy/examples/pvc.yaml -f deploy/examples/app.yaml
+
 Once the pvc and pod are up and running, it will look like this:
 
-    oc describe -n demoapp pods my-csi-app | tail
+    oc describe pods my-csi-app | tail
 
     Type    Reason                  Age   From                        Message
     ----    ------                  ----  ----                        -------
@@ -81,22 +77,14 @@ Once the pvc and pod are up and running, it will look like this:
 Looking inside the container you will notice that the provided volume has been
 mounted:
 
-    oc exec -n demoapp -it my-csi-app  -- df -h | grep -B 1 /data
+    oc exec -it my-csi-app -- df -h /data
     /var/lib/ember-csi/vols/e1e57b59-f290-408f-87fa-540509bbe8b5 975.9M      2.5M    906.2M   0% /data
 
-### Uninstall the deployment
-Eventually you want to remove all the resources from your cluster. Just delete
-the projects, security context and storage class:
+### Testing
+There is also a script that uses [Code Ready Containers](https://code-ready.github.io/crc/)
+and executes all of the above commands, making it easy to start testing:
 
-    oc delete project demoapp
-    oc delete -f deploy/examples/drivers/ceph.yaml -f deploy/examples/ceph-demo.yaml
-
-#### Removing the operator using the operator catalog
-Simply select "Uninstall Operator" from the UI menu in "Operator" - "Installed Operators".
-
-#### Removing the operator manually
-
-    oc delete -f deploy/service_account.yaml -f deploy/role.yaml -f deploy/role_binding.yaml -f deploy/crds/ember.crd.yaml -f deploy/scc.yaml -f deploy/operator.yaml
+    deploy/examples/crclvm.sh
 
 ## Next steps
 Documentation is still a work in progress, but have a look into [docs/README.md](docs/README.md) for further infos.

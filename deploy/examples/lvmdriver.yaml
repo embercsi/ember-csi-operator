@@ -1,0 +1,16 @@
+apiVersion: ember-csi.io/v1alpha1
+kind: EmberCSI
+metadata:
+  name: example
+spec:
+  config:
+    envVars:
+      X_CSI_EMBER_CONFIG:
+        debug: false
+        plugin_name: example
+      X_CSI_BACKEND_CONFIG:
+        driver: LVMVolume
+        target_helper: lioadm
+        target_ip_address: 192.168.130.11
+        volume_group: ember-volumes
+        name: example
