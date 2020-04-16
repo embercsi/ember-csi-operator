@@ -1,0 +1,53 @@
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: lvmiscsi 
+spec:
+  hostNetwork: true
+  hostIPC: true
+  initContainers:
+    - name: lvmsetup
+      image: embercsi/lvmiscsi:latest
+      volumeMounts:
+        - name: dev
+          mountPath: /dev
+        - name: etc-iscsi
+          mountPath: /etc/iscsi
+        - name: etc-lvm
+          mountPath: /etc/lvm
+        - name: mnt
+          mountPath: /mnt
+      securityContext:
+        privileged: true
+      command: ["lvmsetup"]
+
+  containers:
+    - name: iscsid
+      image: embercsi/lvmiscsi:latest
+      volumeMounts:
+        - name: dev
+          mountPath: /dev
+        - name: etc-lvm
+          mountPath: /etc/lvm
+        - name: etc-iscsi
+          mountPath: /etc/iscsi
+        - name: mnt
+          mountPath: /mnt
+      securityContext:
+        privileged: true
+      command: ["iscsid", "-f"]
+
+  volumes:
+    - name: dev
+      hostPath:
+        path: /dev
+    - name: etc-lvm
+      hostPath:
+        path: /etc/lvm/
+    - name: etc-iscsi
+      hostPath:
+        path: /etc/iscsi/
+    - name: mnt
+      hostPath:
+        path: /mnt

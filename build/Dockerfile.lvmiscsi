@@ -1,0 +1,8 @@
+FROM centos:7
+
+RUN yum install -y epel-release
+RUN yum install -y iscsi-initiator-utils targetcli lvm2 util-linux
+
+COPY lvmsetup.sh /usr/local/bin/lvmsetup
+RUN chmod 755 /usr/local/bin/lvmsetup \
+    && rm /etc/iscsi/initiatorname.iscsi
