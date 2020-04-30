@@ -129,16 +129,11 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 // Construct a Containers PodSpec for Nodes
 func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []corev1.Container {
 	trueVar := true
-	backend_config, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
-	if err != nil {
-		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
-	}
-
 
 	containers := []corev1.Container{
 		{
 			Name:            "ember-csi-driver",
-			Image:           Conf.getDriverImage(backend_config),
+			Image:           Conf.getDriverImage(ecsi.Spec.Config),
 			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: &corev1.SecurityContext{
 				Privileged:               &trueVar,

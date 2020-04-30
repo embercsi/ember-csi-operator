@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 )
 
 type Versions struct {
@@ -29,18 +30,25 @@ type Config struct {
 	Drivers       map[string]string   `yaml:"drivers"`
 }
 
-func (config *Config) getDriverImage(backend_config string) string {
+func (config *Config) getDriverImage(spec_config embercsiv1alpha1.EmberCSIConfig) string {
+	backend_config, err := interfaceToString(spec_config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if err != nil {
+		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
+	}
+
 	var backend_config_map map[string]string
 	json.Unmarshal([]byte(backend_config), &backend_config_map)
 	backend := backend_config_map["driver"]
-	var image string
+	image := spec_config.DriverImage
 
-	if len(backend) > 0 && len(config.Drivers[backend]) > 0 {
-		image = config.Drivers[backend]
-	} else if len(config.Drivers["default"]) > 0 {
-		image = config.Drivers["default"]
-	} else {
-		image = "embercsi/ember-csi:master"
+	if len(image) == 0 {
+		if len(backend) > 0 && len(config.Drivers[backend]) > 0 {
+			image = config.Drivers[backend]
+		} else if len(config.Drivers["default"]) > 0 {
+			image = config.Drivers["default"]
+		} else {
+			image = "embercsi/ember-csi:master"
+		}
 	}
 	glog.Infof(fmt.Sprintf("Using driver image %s", image))
 	return image
