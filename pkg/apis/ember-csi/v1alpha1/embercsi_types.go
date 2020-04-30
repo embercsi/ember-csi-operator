@@ -43,6 +43,7 @@ type EmberCSI struct {
 type EmberCSIConfig struct {
 	EnvVars  EnvVars `json:"envVars"`
 	SysFiles Secrets `json:"sysFiles"`
+	DriverImage string `json:"driverImage",omitempty`
 }
 
 // +k8s:deepcopy-gen=false

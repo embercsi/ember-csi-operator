@@ -329,9 +329,13 @@ spec:
         - description: Define which Nodes the Pods are scheduled on.
           displayName: nodeSelect
           path: nodeSelector
-        - description: Ember CSI driver container image to use
-          displayName: image
-          path: image
+        - description: Ember CSI driver container image to use. Defaults to embercsi/ember-csi:master or driver-specific image.
+          displayName: Ember CSI driver container image
+          path: config.driverImage
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: Config for Ember
           displayName: config
           path: config
