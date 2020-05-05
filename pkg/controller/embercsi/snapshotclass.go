@@ -22,6 +22,8 @@ func (r *ReconcileEmberCSI) volumeSnapshotClassForEmberCSI(ecsi *embercsiv1alpha
 			Namespace: ecsi.Namespace,
 			Labels:    ls,
 		},
+		Driver: "ember-csi.io",
+		DeletionPolicy: "Delete",
 	}
 
 	controllerutil.SetControllerReference(ecsi, vsc, r.scheme)
