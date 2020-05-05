@@ -4,7 +4,7 @@ metadata:
   name: ember-csi-operator
   namespace: default
 spec:
-  channel: alpha
+  channel: beta
   name: ember-csi-operator
   source: community-operators
   sourceNamespace: openshift-marketplace
