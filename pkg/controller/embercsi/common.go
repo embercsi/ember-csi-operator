@@ -91,16 +91,6 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 	} else {
 		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
 	}
-	X_CSI_BACKEND_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
-	if err == nil {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  "X_CSI_BACKEND_CONFIG",
-			Value: X_CSI_BACKEND_CONFIG,
-		},
-		)
-	} else {
-		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
-	}
 	X_CSI_PERSISTENCE_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
 	if err == nil {
 		envVars = append(envVars, corev1.EnvVar{

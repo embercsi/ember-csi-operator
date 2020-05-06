@@ -143,6 +143,13 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []co
 			Env:          generateNodeEnvVars(ecsi, daemonSetIndex),
 			VolumeMounts: generateVolumeMounts(ecsi, "node"),
 			//LivenessProbe:		livenessProbe,
+			EnvFrom: []corev1.EnvFromSource{{
+				SecretRef: &corev1.SecretEnvSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("ember-csi-operator-%s", ecsi.Name),
+                                        },
+                                },
+			}},
 		},
 	}
 
@@ -243,16 +250,7 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 		},
 	}
 
-	X_CSI_BACKEND_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
-	if err == nil {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  "X_CSI_BACKEND_CONFIG",
-			Value: X_CSI_BACKEND_CONFIG,
-		},
-		)
-	} else {
-		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
-	}
+
 	X_CSI_PERSISTENCE_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
 	if err == nil {
 		envVars = append(envVars, corev1.EnvVar{

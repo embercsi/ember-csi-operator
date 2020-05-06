@@ -93,6 +93,13 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 			Env:          generateEnvVars(ecsi, "controller"),
 			VolumeMounts: generateVolumeMounts(ecsi, "controller"),
 			//	LivenessProbe:		livenessProbe,
+			EnvFrom: []corev1.EnvFromSource{{
+				SecretRef: &corev1.SecretEnvSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: fmt.Sprintf("ember-csi-operator-%s", ecsi.Name),
+                                        },
+                                },
+			}},
 		},
 	}
 
