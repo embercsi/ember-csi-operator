@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	storagev1beta1 "k8s.io/api/storage/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -119,9 +120,38 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
 	}
 	setJsonKeyIfEmpty(&backend_config_json, "name", request.Name)
+
+	secrets := map[string][]byte {
+		"X_CSI_BACKEND_CONFIG": []byte(backend_config_json),
+	}
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: fmt.Sprintf("ember-csi-operator-%s", request.Name),
+			Namespace: request.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion:	instance.APIVersion,
+					Kind:		instance.Kind,
+					Name:		instance.Name,
+					UID:		instance.UID,
+				},
+			},
+		},
+		Data: secrets,
+		Type: "ember-csi.io/backend-config",
+        }
+	err = r.client.Create(context.TODO(), secret)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		glog.Errorf("Failed to create a new secret %s in %s: %s", secret.Name, secret.Namespace, err)
+	}
+
 	backend_config_map := make(map[string]interface{})
 	err = json.Unmarshal([]byte(backend_config_json), &backend_config_map)
 	if err == nil {
+		// Delete clear-text values, these will be stored in the secret
+		for k, _ := range backend_config_map {
+			backend_config_map[k] = "REDACTED"
+		}
 		instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG = backend_config_map
 	} else {
 		glog.Error("Unmarshal of X_CSI_BACKEND_CONFIG failed: ", err)
