@@ -82,7 +82,7 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 
 	containers := []corev1.Container{
 		{
-			Name:            "ember-csi-driver",
+			Name:            "ember-csi",
 			Image:           Conf.getDriverImage(ecsi.Spec.Config),
 			ImagePullPolicy: corev1.PullAlways,
 			SecurityContext: &corev1.SecurityContext{
