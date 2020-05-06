@@ -1,12 +1,11 @@
 scorecard:
   plugins:
     - basic:
-        namespace: ember-csi
+        namespace: default
         cr-manifest:
-          - deploy/examples/drivers/ceph.yaml
+          - deploy/examples/lvmdriver.yaml
     - olm:
-        namespace: ember-csi
+        namespace: default
         cr-manifest:
-          - deploy/examples/drivers/ceph.yaml
-        csv-path: deploy/olm-catalog/ember-csi-operator/0.0.1/ember-csi-operator.v0.0.1.clusterserviceversion.yaml
-
+          - deploy/examples/lvmdriver.yaml
+        csv-path: deploy/olm-catalog/4.4.0/ember-csi-operator.v4.4.0.clusterserviceversion.yaml
