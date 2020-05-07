@@ -188,5 +188,27 @@ func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container
 		)
 	}
 
+	// Add External Resizer sidecar
+	if len(Conf.Sidecars[Cluster].Resizer) > 0 {
+		// Customize the arguments for the container
+		args := []string{
+			"--v=5",
+			"--csi-address=/csi-data/csi.sock",
+		}
+
+		containers = append(containers, corev1.Container{
+			Name:            "external-resizer",
+			Image:           Conf.Sidecars[Cluster].Resizer,
+			Args:            args,
+			VolumeMounts: []corev1.VolumeMount{
+				{
+					MountPath: "/csi-data",
+					Name:      "socket-dir",
+				},
+			},
+		},
+		)
+	}
+
 	return containers
 }
