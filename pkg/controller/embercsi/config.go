@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type Versions struct {
@@ -77,6 +79,28 @@ func (config *Config) getCSISpecVersion() float64 {
 	return spec
 }
 
+
+func getKubeletVersion() string {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		glog.Error(err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		glog.Error(err)
+	}
+
+	discoveryClient := clientset.Discovery()
+	serverVersion, err := discoveryClient.ServerVersion()
+	if err != nil {
+		glog.Error(err)
+	}
+	parts := strings.Split(serverVersion.String(), ".")
+	return strings.Join(parts[0:2], ".")
+}
+
+
 // Read Config and store values from Config File or Use DefaultConfig
 func ReadConfig(configFile *string) {
 	// If configFile is not specified. Lets use our default
@@ -97,10 +121,16 @@ func ReadConfig(configFile *string) {
 	if len(os.Getenv("X_EMBER_OPERATOR_CLUSTER")) > 0 {
 		Cluster = os.Getenv("X_EMBER_OPERATOR_CLUSTER")
 	} else {
-		Cluster = "default"
+		Cluster = fmt.Sprintf("k8s-%s", getKubeletVersion())
 	}
-	glog.Infof(fmt.Sprintf("Using config section %s", Cluster))
+
 	if _, ok := Conf.Sidecars[Cluster]; !ok {
-		glog.Fatalf("Invalid config - section %s is missing ", Cluster)
+		glog.Errorf("Invalid config - section %s is missing. Fallback to default", Cluster)
+		Cluster = "default"
+		if _, ok := Conf.Sidecars[Cluster]; !ok {
+			glog.Fatalf("Invalid config - section %s is missing", Cluster)
+		}
+	} else {
+		glog.Infof("Using config section %s", Cluster)
 	}
 }
