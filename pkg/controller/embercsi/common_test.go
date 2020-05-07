@@ -62,7 +62,14 @@ func TestMarshal(t *testing.T) {
 		t.Errorf("Error return is wrong, got %v\n",  err)
 	}
 
-
+	// nil
+	result, err = interfaceToString(nil)
+	if result != "{}" {
+		t.Errorf("Failed to marshal nil, got %v\n", result)
+	}
+	if err != nil {
+		t.Errorf("Error return is wrong, got %v\n",  err)
+	}
 }
 
 func TestConfigTransform(t *testing.T) {
