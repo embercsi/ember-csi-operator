@@ -517,6 +517,10 @@ func isFeatureEnabled(emberConfig string, feature string) bool {
 
 
 func interfaceToString(input interface{}) (string, error) {
+	if input == nil {
+		return "{}", nil
+	}
+
 	m, ok := input.(map[string]interface{})
 	if ok {
 		jsonString, _ := json.Marshal(m)
