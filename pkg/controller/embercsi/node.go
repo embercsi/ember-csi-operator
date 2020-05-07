@@ -224,6 +224,16 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []co
 // construct EnvVars for the Driver Pod
 func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []corev1.EnvVar {
 
+	ember_config_json, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if err != nil {
+		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
+	}
+	setJsonKeyIfEmpty(&ember_config_json, "plugin_name", GetPluginDomainName(ecsi.Name))
+	setJsonKeyIfEmpty(&ember_config_json, "project_id", "ember-csi.io")
+	setJsonKeyIfEmpty(&ember_config_json, "user_id", "ember-csi.io")
+	setJsonKeyIfEmpty(&ember_config_json, "root_helper", "sudo")
+	setJsonKeyIfEmpty(&ember_config_json, "request_multipath", "true")
+
 	envVars := []corev1.EnvVar{
 		{
 			Name:  "PYTHONUNBUFFERED",
@@ -236,7 +246,7 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 			Value: Conf.Sidecars[Cluster].CSISpecVersion,
 		}, {
 			Name:  "X_CSI_EMBER_CONFIG",
-			Value: fmt.Sprintf("%s%s%s", "{\"plugin_name\": \"", GetPluginDomainName(ecsi.Name), "\", \"project_id\": \"io.ember-csi\", \"user_id\": \"io.ember-csi\", \"root_helper\": \"sudo\", \"request_multipath\": \"true\" }"),
+			Value: ember_config_json,
 		}, {
 			Name: "X_CSI_NODE_ID",
 			ValueFrom: &corev1.EnvVarSource{
