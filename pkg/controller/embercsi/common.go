@@ -32,7 +32,7 @@ func GetPluginDomainName(instanceName string) string {
 }
 
 // construct EnvVars for the Driver Pod
-func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev1.EnvVar {
+func generateEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, driverMode string) []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{
 			Name:  "PYTHONUNBUFFERED",
@@ -161,9 +161,9 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberCSI, driverMode string) []corev
 	return envVars
 }
 
-// labelsForEmberCSI returns the labels for selecting the resources
-// belonging to the given EmberCSI CR name.
-func labelsForEmberCSI(name string) map[string]string {
+// labelsForEmberStorageBackend returns the labels for selecting the resources
+// belonging to the given EmberStorageBackend CR name.
+func labelsForEmberStorageBackend(name string) map[string]string {
 	return map[string]string{"app": "embercsi", "embercsi_cr": name}
 }
 
@@ -189,7 +189,7 @@ func getPodNames(pods []corev1.Pod) []string {
 // Return all accessible topologies known to the CSI Driver
 // A json array of topologies is returned to be consumed by
 // X_CSI_TOPOLOGIES
-func getAllCSITopologies(ecsi *embercsiv1alpha1.EmberCSI) string {
+func getAllCSITopologies(ecsi *embercsiv1alpha1.EmberStorageBackend) string {
 	glog.V(3).Info("Creating all known allowed_topologies array")
 
 	var buf bytes.Buffer
@@ -209,7 +209,7 @@ func getAllCSITopologies(ecsi *embercsiv1alpha1.EmberCSI) string {
 }
 
 // Construct a VolumeMount based on cluster type, secrets, etc
-func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1.VolumeMount {
+func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberStorageBackend, csiDriverMode string) []corev1.VolumeMount {
 	var bidirectional corev1.MountPropagationMode = corev1.MountPropagationBidirectional
 	var hostToContainer corev1.MountPropagationMode = corev1.MountPropagationHostToContainer
 
@@ -315,7 +315,7 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string)
 	return vm
 }
 
-func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []corev1.Volume {
+func generateVolumes(ecsi *embercsiv1alpha1.EmberStorageBackend, csiDriverMode string) []corev1.Volume {
 	var dirOrCreate corev1.HostPathType = corev1.HostPathDirectoryOrCreate
 
 	vol := []corev1.Volume{
@@ -494,10 +494,10 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberCSI, csiDriverMode string) []co
 
 // Check whether feature is enabled/disabled
 func isFeatureEnabled(emberConfig string, feature string) bool {
-	type EmberCSIConfig struct {
+	type EmberStorageBackendConfig struct {
 		Disabled        []string
 	}
-	var ecc EmberCSIConfig
+	var ecc EmberStorageBackendConfig
 
 	err := json.Unmarshal([]byte(emberConfig), &ecc)
 	if err != nil {

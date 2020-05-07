@@ -11,10 +11,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// daemonSetForEmberCSI returns a EmberCSI DaemonSet object
-func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) *appsv1.DaemonSet {
+// daemonSetForEmberStorageBackend returns a EmberStorageBackend DaemonSet object
+func (r *ReconcileEmberStorageBackend) daemonSetForEmberStorageBackend(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIndex int) *appsv1.DaemonSet {
 	newEcsi := ecsi.DeepCopy()
-	ls := labelsForEmberCSI(ecsi.Name)
+	ls := labelsForEmberStorageBackend(ecsi.Name)
 
 	if len(ecsi.Spec.Topologies) > 0 { // DaemonSet with specified topology
 
@@ -127,7 +127,7 @@ func (r *ReconcileEmberCSI) daemonSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 }
 
 // Construct a Containers PodSpec for Nodes
-func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []corev1.Container {
+func getNodeContainers(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIndex int) []corev1.Container {
 	trueVar := true
 
 	containers := []corev1.Container{
@@ -222,7 +222,7 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []co
 }
 
 // construct EnvVars for the Driver Pod
-func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []corev1.EnvVar {
+func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIndex int) []corev1.EnvVar {
 
 	ember_config_json, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
 	if err != nil {
@@ -344,7 +344,7 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberCSI, daemonSetIndex int) []
 }
 
 // Fetch topology based on index
-func getTopology(ecsi *embercsiv1alpha1.EmberCSI, index int) string {
+func getTopology(ecsi *embercsiv1alpha1.EmberStorageBackend, index int) string {
 	var buf bytes.Buffer
 	// Default topology
 	defaultTopology := fmt.Sprintf("{\"%s-%s\": \"%s\"}", GetPluginDomainName(ecsi.Name), "csi-topology", "not-used")
@@ -369,7 +369,7 @@ func getTopology(ecsi *embercsiv1alpha1.EmberCSI, index int) string {
 }
 
 // Fetch all nodes with topologies
-func getNodesWithTopologies(ecsi *embercsiv1alpha1.EmberCSI) []corev1.NodeSelectorRequirement {
+func getNodesWithTopologies(ecsi *embercsiv1alpha1.EmberStorageBackend) []corev1.NodeSelectorRequirement {
 	var nodesWithTopologies []corev1.NodeSelectorRequirement
 
 	if len(ecsi.Spec.Topologies) > 0 {

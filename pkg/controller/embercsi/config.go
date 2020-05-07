@@ -32,7 +32,7 @@ type Config struct {
 	Drivers       map[string]string   `yaml:"drivers"`
 }
 
-func (config *Config) getDriverImage(spec_config embercsiv1alpha1.EmberCSIConfig) string {
+func (config *Config) getDriverImage(spec_config embercsiv1alpha1.EmberStorageBackendConfig) string {
 	backend_config, err := interfaceToString(spec_config.EnvVars.X_CSI_BACKEND_CONFIG)
 	if err != nil {
 		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)

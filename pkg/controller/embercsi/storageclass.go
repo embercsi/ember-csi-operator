@@ -8,9 +8,9 @@ import (
 	"github.com/golang/glog"
 )
 
-// storageClassForEmberCSI returns a EmberCSI StorageClass object
-func (r *ReconcileEmberCSI) storageClassForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *storagev1.StorageClass {
-	ls := labelsForEmberCSI(ecsi.Name)
+// storageClassForEmberStorageBackend returns a EmberStorageBackend StorageClass object
+func (r *ReconcileEmberStorageBackend) storageClassForEmberStorageBackend(ecsi *embercsiv1alpha1.EmberStorageBackend) *storagev1.StorageClass {
+	ls := labelsForEmberStorageBackend(ecsi.Name)
 
 	// This binding mode is the default
 	volumeBindingMode := storagev1.VolumeBindingImmediate
