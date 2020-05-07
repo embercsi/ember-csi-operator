@@ -7,9 +7,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// volumeSnapshotClassForEmberCSI returns a EmberCSI VolumeSnapshotClass object
-func (r *ReconcileEmberCSI) volumeSnapshotClassForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *snapv1b1.VolumeSnapshotClass {
-	ls := labelsForEmberCSI(ecsi.Name)
+// volumeSnapshotClassForEmberStorageBackend returns a EmberStorageBackend VolumeSnapshotClass object
+func (r *ReconcileEmberStorageBackend) volumeSnapshotClassForEmberStorageBackend(ecsi *embercsiv1alpha1.EmberStorageBackend) *snapv1b1.VolumeSnapshotClass {
+	ls := labelsForEmberStorageBackend(ecsi.Name)
 
 	vsc := &snapv1b1.VolumeSnapshotClass{
 		TypeMeta: metav1.TypeMeta{

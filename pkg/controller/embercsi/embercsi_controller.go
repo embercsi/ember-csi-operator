@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// Add creates a new EmberCSI Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new EmberStorageBackend Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -32,7 +32,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileEmberCSI{client: mgr.GetClient(), scheme: mgr.GetScheme()}
+	return &ReconcileEmberStorageBackend{client: mgr.GetClient(), scheme: mgr.GetScheme()}
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
@@ -43,8 +43,8 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch for changes to primary resource EmberCSI
-	err = c.Watch(&source.Kind{Type: &embercsiv1alpha1.EmberCSI{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource EmberStorageBackend
+	err = c.Watch(&source.Kind{Type: &embercsiv1alpha1.EmberStorageBackend{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	ownerHandler := &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &embercsiv1alpha1.EmberCSI{},
+		OwnerType:    &embercsiv1alpha1.EmberStorageBackend{},
 	}
 	for _, watchObject := range watchOwnedObjects {
 		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
@@ -75,23 +75,23 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileEmberCSI{}
+var _ reconcile.Reconciler = &ReconcileEmberStorageBackend{}
 
-// ReconcileEmberCSI reconciles a EmberCSI object
-type ReconcileEmberCSI struct {
+// ReconcileEmberStorageBackend reconciles a EmberStorageBackend object
+type ReconcileEmberStorageBackend struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
 	scheme *runtime.Scheme
 }
 
-// Reconcile reads that state of the cluster for a EmberCSI object and makes changes based on the state read
-// and what is in the EmberCSI.Spec
-func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	glog.V(3).Infof("Reconciling EmberCSI %s/%s\n", request.Namespace, request.Name)
+// Reconcile reads that state of the cluster for a EmberStorageBackend object and makes changes based on the state read
+// and what is in the EmberStorageBackend.Spec
+func (r *ReconcileEmberStorageBackend) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	glog.V(3).Infof("Reconciling EmberStorageBackend %s/%s\n", request.Namespace, request.Name)
 
-	// Fetch the EmberCSI instance
-	instance := &embercsiv1alpha1.EmberCSI{}
+	// Fetch the EmberStorageBackend instance
+	instance := &embercsiv1alpha1.EmberStorageBackend{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -187,22 +187,22 @@ func (r *ReconcileEmberCSI) Reconcile(request reconcile.Request) (reconcile.Resu
 	instance.Status.Version = version.Version
 	err = r.client.Update(context.TODO(), instance)
 	if err != nil {
-		glog.Error("EmberCSI instance update failed: ", err)
+		glog.Error("EmberStorageBackend instance update failed: ", err)
 	}
 
 	// Manage objects created by the operator
-	return reconcile.Result{}, r.handleEmberCSIDeployment(instance)
+	return reconcile.Result{}, r.handleEmberStorageBackendDeployment(instance)
 }
 
 // Manage the Objects created by the Operator.
-func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.EmberCSI) error {
-	glog.V(3).Infof("Reconciling EmberCSI Deployment Objects")
+func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(instance *embercsiv1alpha1.EmberStorageBackend) error {
+	glog.V(3).Infof("Reconciling EmberStorageBackend Deployment Objects")
 	// Check if the statefuleSet already exists, if not create a new one
 	ss := &appsv1.StatefulSet{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-controller", instance.Name), Namespace: instance.Namespace}, ss)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new statefulset
-		ss = r.statefulSetForEmberCSI(instance)
+		ss = r.statefulSetForEmberStorageBackend(instance)
 		glog.V(3).Infof("Creating a new StatefulSet %s in %s", ss.Name, ss.Namespace)
 		err = r.client.Create(context.TODO(), ss)
 		if err != nil {
@@ -236,7 +236,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 		// Define new DaemonSet(s)
 		for _, daemonSetIndex := range dSNotFound {
 			glog.Infof("Trying to create Daemonset with index: %d", daemonSetIndex)
-			ds = r.daemonSetForEmberCSI(instance, daemonSetIndex)
+			ds = r.daemonSetForEmberStorageBackend(instance, daemonSetIndex)
 			glog.V(3).Infof("Creating a new Daemonset %s in %s", ds.Name, ds.Namespace)
 			err = r.client.Create(context.TODO(), ds)
 			if err != nil {
@@ -255,7 +255,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name), Namespace: sc.Namespace}, sc)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new StorageClass
-		sc = r.storageClassForEmberCSI(instance)
+		sc = r.storageClassForEmberStorageBackend(instance)
 		glog.V(3).Infof("Creating a new StorageClass %s in %s", sc.Name, sc.Namespace)
 		err = r.client.Create(context.TODO(), sc)
 		if err != nil {
@@ -285,7 +285,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name), Namespace: vsc.Namespace}, vsc)
 		if err != nil && errors.IsNotFound(err) {
 			// Define a new VolumeSnapshotClass
-			vsc = r.volumeSnapshotClassForEmberCSI(instance)
+			vsc = r.volumeSnapshotClassForEmberStorageBackend(instance)
 			glog.V(3).Infof("Creating a new VolumeSnapshotClass %s in %s", GetPluginDomainName(instance.Name), vsc.Namespace)
 			err = r.client.Create(context.TODO(), vsc)
 			if err != nil {
@@ -320,7 +320,7 @@ func (r *ReconcileEmberCSI) handleEmberCSIDeployment(instance *embercsiv1alpha1.
 		driver := &storagev1beta1.CSIDriver{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name)}, driver)
 		if err != nil && errors.IsNotFound(err) {
-			driver = r.csiDriverForEmberCSI(instance)
+			driver = r.csiDriverForEmberStorageBackend(instance)
 			glog.V(3).Infof("Creating a new CSIDriver %s", driver.Name)
 			err = r.client.Create(context.TODO(), driver)
 			if err != nil {

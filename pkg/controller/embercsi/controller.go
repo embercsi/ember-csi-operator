@@ -10,8 +10,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// csiDriverForEmberCSI returns a EmberCSI CSIDriver object
-func (r *ReconcileEmberCSI) csiDriverForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *storagev1beta1.CSIDriver {
+// csiDriverForEmberStorageBackend returns a EmberStorageBackend CSIDriver object
+func (r *ReconcileEmberStorageBackend) csiDriverForEmberStorageBackend(ecsi *embercsiv1alpha1.EmberStorageBackend) *storagev1beta1.CSIDriver {
 	trueVar := true
 
 	driver := &storagev1beta1.CSIDriver{
@@ -33,9 +33,9 @@ func (r *ReconcileEmberCSI) csiDriverForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI
 
 
 
-// statefulSetForEmberCSI returns a EmberCSI StatefulSet object
-func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberCSI) *appsv1.StatefulSet {
-	ls := labelsForEmberCSI(ecsi.Name)
+// statefulSetForEmberStorageBackend returns a EmberStorageBackend StatefulSet object
+func (r *ReconcileEmberStorageBackend) statefulSetForEmberStorageBackend(ecsi *embercsiv1alpha1.EmberStorageBackend) *appsv1.StatefulSet {
+	ls := labelsForEmberStorageBackend(ecsi.Name)
 
 	// There *must* only be one replica
 	var replicas int32 = 1
@@ -76,7 +76,7 @@ func (r *ReconcileEmberCSI) statefulSetForEmberCSI(ecsi *embercsiv1alpha1.EmberC
 }
 
 // Construct a Containers PodSpec for Controller
-func getControllerContainers(ecsi *embercsiv1alpha1.EmberCSI) []corev1.Container {
+func getControllerContainers(ecsi *embercsiv1alpha1.EmberStorageBackend) []corev1.Container {
 	trueVar := true
 
 

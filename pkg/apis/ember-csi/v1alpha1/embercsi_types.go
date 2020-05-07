@@ -5,9 +5,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EmberCSISpec defines the desired state of EmberCSI
-type EmberCSISpec struct {
-	Config       EmberCSIConfig    `json:"config"`
+// EmberStorageBackendSpec defines the desired state of EmberStorageBackend
+type EmberStorageBackendSpec struct {
+	Config       EmberStorageBackendConfig    `json:"config"`
 	Image        string            `json:"image",omitempty`
 	NodeSelector map[string]string `json:"nodeSelector",omitempty`
 	Tolerations  []v1.Toleration   `json:"tolerations",omitempty`
@@ -21,8 +21,8 @@ type Topologies struct {
 	Nodes []v1.NodeSelectorRequirement `json:"nodes,omitempty"`
 }
 
-// EmberCSIStatus defines the observed state of EmberCSI
-type EmberCSIStatus struct {
+// EmberStorageBackendStatus defines the observed state of EmberStorageBackend
+type EmberStorageBackendStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	Version string `json:"version"`
@@ -30,17 +30,17 @@ type EmberCSIStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// EmberCSI is the Schema for the embercsis API
+// EmberStorageBackend is the Schema for the embercsis API
 // +k8s:openapi-gen=true
-type EmberCSI struct {
+type EmberStorageBackend struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   EmberCSISpec   `json:"spec,omitempty"`
-	Status EmberCSIStatus `json:"status"`
+	Spec   EmberStorageBackendSpec   `json:"spec,omitempty"`
+	Status EmberStorageBackendStatus `json:"status"`
 }
 
-type EmberCSIConfig struct {
+type EmberStorageBackendConfig struct {
 	EnvVars  EnvVars `json:"envVars"`
 	SysFiles Secrets `json:"sysFiles"`
 	DriverImage string `json:"driverImage",omitempty`
@@ -73,13 +73,13 @@ type Secrets struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// EmberCSIList contains a list of EmberCSI
-type EmberCSIList struct {
+// EmberStorageBackendList contains a list of EmberStorageBackend
+type EmberStorageBackendList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []EmberCSI `json:"items"`
+	Items           []EmberStorageBackend `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&EmberCSI{}, &EmberCSIList{})
+	SchemeBuilder.Register(&EmberStorageBackend{}, &EmberStorageBackendList{})
 }
