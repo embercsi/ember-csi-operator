@@ -11,6 +11,12 @@ ${CRC} start -p ${SECRET}
 eval $(${CRC} oc-env)
 $(${CRC} console --credentials | grep -o "oc login -u kubeadmin.*443")
 
+# Enable the csi-snapshot-controller-operator. This has been disabled in crc to
+# save some memory, details on these commands in:
+# https://code-ready.github.io/crc/#starting-monitoring-alerting-telemetry_gsg
+ID=`oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{"\n"}{end}' | nl -v 0 -w 1 | grep csi-snapshot-controller-operator | cut -f 1`
+oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/'${ID}'"}]'
+
 # Deploy LVM container in the background
 oc create -f deploy/examples/lvmbackend.yaml
 
