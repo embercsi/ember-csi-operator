@@ -21,7 +21,7 @@ func (r *ReconcileEmberCSI) volumeSnapshotClassForEmberCSI(ecsi *embercsiv1alpha
 			Namespace: ecsi.Namespace,
 			Labels:    ls,
 		},
-		Driver: "ember-csi.io",
+		Driver: GetPluginDomainName(ecsi.Name),
 		DeletionPolicy: "Delete",
 	}
 
