@@ -17,7 +17,7 @@ metadata:
       [
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -421,7 +421,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -461,7 +461,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -502,7 +502,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -541,7 +541,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -580,7 +580,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -620,7 +620,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -660,7 +660,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -704,7 +704,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -755,7 +755,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -812,7 +812,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -869,7 +869,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -914,7 +914,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -954,7 +954,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -995,7 +995,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1033,7 +1033,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1078,7 +1078,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1123,7 +1123,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1165,7 +1165,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1215,7 +1215,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1265,7 +1265,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1312,7 +1312,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1359,7 +1359,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1403,7 +1403,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1468,7 +1468,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1508,7 +1508,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1549,7 +1549,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1594,7 +1594,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1639,7 +1639,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1696,7 +1696,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1753,7 +1753,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1827,7 +1827,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1901,7 +1901,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1940,7 +1940,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -1979,7 +1979,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2044,7 +2044,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2085,7 +2085,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2141,7 +2141,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2200,7 +2200,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2253,7 +2253,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2306,7 +2306,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2354,7 +2354,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2399,7 +2399,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2453,7 +2453,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2494,7 +2494,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2545,7 +2545,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2596,7 +2596,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2634,7 +2634,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2674,7 +2674,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2724,7 +2724,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2764,7 +2764,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2821,7 +2821,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2878,7 +2878,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2932,7 +2932,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -2973,7 +2973,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3031,7 +3031,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3089,7 +3089,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3141,7 +3141,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3185,7 +3185,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3230,7 +3230,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3269,7 +3269,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3311,7 +3311,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3358,7 +3358,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3405,7 +3405,7 @@ metadata:
         },
         {
           "apiVersion": "ember-csi.io/v1alpha1",
-          "kind": "EmberCSI",
+          "kind": "EmberStorageBackend",
           "metadata": {
             "name": "example"
           },
@@ -3741,11 +3741,11 @@ spec:
 
   customresourcedefinitions:
     owned:
-    - kind: EmberCSI
+    - kind: EmberStorageBackend
       name: embercsis.ember-csi.io
       version: v1alpha1
       displayName: Deployments
-      description: Represents a deployment of EmberCSI driver
+      description: Represents a deployment of EmberStorageBackend driver
       resources:
       - kind: StorageClass
         name: ''
@@ -3753,7 +3753,7 @@ spec:
       - kind: StatefulSet
         name: ''
         version: v1
-      - kind: EmberCSI
+      - kind: EmberStorageBackend
         name: ''
         version: v1alpha
       - kind: Daemonset
