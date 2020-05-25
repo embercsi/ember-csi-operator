@@ -3,7 +3,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    containerImage: docker.io/embercsi/ember-csi-operator:devel
+    containerImage: docker.io/embercsi/ember-csi-operator:latest
     categories: "Storage"
     capabilities: Basic Install
     description: |-
@@ -698,9 +698,10 @@ metadata:
   namespace: ember-csi
 spec:
   apiservicedefinitions: {}
-  maturity: alpha
+  maturity: beta
   version: 0.9.0
-  minKubeVersion: 1.17.0
+  replaces: ember-csi-operator.v0.0.1
+  minKubeVersion: 1.13.0
   description: |-
      Operator to deploy Ember-CSI, a multi-vendor CSI plugin driver supporting over 80 storage drivers in a single plugin to provide block and mount storage to container orchestration systems.
   displayName: Ember CSI Operator
@@ -710,8 +711,6 @@ spec:
     email: geguileo@redhat.com
   - name: Christian Schwede
     email: cschwede@redhat.com
-  - name: Kiran Thyagaraja
-    email: kthyagar@redhat.com
   provider:
     name: Red Hat
   labels:
@@ -978,7 +977,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: ember-csi-operator
-                image: docker.io/embercsi/ember-csi-operator:devel
+                image: docker.io/embercsi/ember-csi-operator:latest
                 imagePullPolicy: Always
                 name: ember-csi-operator
                 ports:
@@ -1020,9 +1019,9 @@ spec:
           displayName: Version
           path: version
       specDescriptors:
-        - description: Define which Nodes the Pods are scheduled on.
-          displayName: nodeSelect
-          path: nodeSelector
+        - description: Config for Ember
+          displayName: config
+          path: config
         - description: Ember CSI driver container image to use. Defaults to embercsi/ember-csi:master or driver-specific image.
           displayName: Ember CSI driver container image
           path: config.driverImage
@@ -1030,15 +1029,6 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
-        - description: Config for Ember
-          displayName: config
-          path: config
-        - description: Tolerations
-          displayName: tolerations
-          path: tolerations
-        - description: Topologies
-          displayName: topologies
-          path: topologies
         # BEGIN AUTO GENERATED CONFIGURATION OPTIONS
         - description: The type of storage backend
           displayName: Driver

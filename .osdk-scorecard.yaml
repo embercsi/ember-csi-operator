@@ -8,4 +8,4 @@ scorecard:
         namespace: default
         cr-manifest:
           - deploy/examples/lvmdriver.yaml
-        csv-path: deploy/olm-catalog/4.4.0/ember-csi-operator.v4.4.0.clusterserviceversion.yaml
+        csv-path: deploy/olm-catalog/0.9.0/ember-csi-operator.v0.9.0.clusterserviceversion.yaml
