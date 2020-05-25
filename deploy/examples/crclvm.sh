@@ -21,11 +21,13 @@ oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec
 oc create -f deploy/examples/lvmbackend.yaml
 
 # Setup custom marketplace to install devel branch of ember operator
-oc create -f deploy/examples/catalog.yaml
+if [ "$SOURCE" != "community-operators" ]; then
+  oc create -f deploy/examples/catalog.yaml
+fi
 
 # Subscribe (install) the operator
 oc create -f deploy/examples/operatorgroup.yaml
-cat deploy/examples/subscription.yaml | sed -e "s/community-operators/${SOURCE}/g" | oc create -f -
+sed -e "s/community-operators/${SOURCE}/g" deploy/examples/subscription.yaml | oc create -f -
 
 while true; do
   oc wait --for=condition=Ready --timeout=300s -l name=ember-csi-operator pod 2>/dev/null && break
