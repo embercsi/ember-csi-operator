@@ -1,7 +1,7 @@
 SHELL=/bin/bash -o pipefail
 
 REPO?=embercsi/ember-csi-operator
-TAG?="0.0.3"
+TAG?="0.9.0"
 
 GOLANG_FILES:=$(shell find . -name \*.go -print)
 pkgs = $(shell go list ./... | grep -v /vendor/ )
