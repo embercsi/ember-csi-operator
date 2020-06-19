@@ -2,7 +2,9 @@ package embercsi
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
+	"regexp"
 	"github.com/golang/glog"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -12,6 +14,9 @@ import (
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
 type Versions struct {
@@ -80,24 +85,50 @@ func (config *Config) getCSISpecVersion() float64 {
 }
 
 
-func getKubeletVersion() string {
-	config, err := rest.InClusterConfig()
+func getClusterVersion() string {
+	kubeconfig := flag.Lookup("kubeconfig").Value.(flag.Getter).Get().(string)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		glog.Error(err)
+		return "default"
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		glog.Error(err)
+		return "default"
 	}
+
 
 	discoveryClient := clientset.Discovery()
 	serverVersion, err := discoveryClient.ServerVersion()
 	if err != nil {
 		glog.Error(err)
+		return "default"
 	}
 	parts := strings.Split(serverVersion.String(), ".")
-	return strings.Join(parts[0:2], ".")
+	clusterVersion := fmt.Sprintf("k8s-%s", strings.Join(parts[0:2], "."))
+
+	// Educated guess if this is an OpenShift cluster
+	config.NegotiatedSerializer = serializer.NewCodecFactory(scheme.Scheme)
+	config.APIPath = "/apis/config.openshift.io/v1/clusterversions"
+	restClient, err := rest.UnversionedRESTClientFor(config)
+	if err != nil {
+		glog.Error(err)
+		return clusterVersion
+	}
+	result, err := restClient.Get().Do().Raw()
+	if err == nil {
+		// result is JSON, but there is no simple version key/val entry
+		// Thus using a regexp to just match major.minor version
+		re := regexp.MustCompile(`Cluster version is (\d+\.\d+)`)
+		match := re.FindSubmatch(result)
+		if len(match) > 0 {
+			clusterVersion = fmt.Sprintf("ocp-%s", match[1])
+		}
+	}
+
+	return clusterVersion
 }
 
 
@@ -121,7 +152,7 @@ func ReadConfig(configFile *string) {
 	if len(os.Getenv("X_EMBER_OPERATOR_CLUSTER")) > 0 {
 		Cluster = os.Getenv("X_EMBER_OPERATOR_CLUSTER")
 	} else {
-		Cluster = fmt.Sprintf("k8s-%s", getKubeletVersion())
+		Cluster = getClusterVersion()
 	}
 
 	if _, ok := Conf.Sidecars[Cluster]; !ok {
