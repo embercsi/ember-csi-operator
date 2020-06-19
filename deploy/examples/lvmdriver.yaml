@@ -4,6 +4,8 @@ metadata:
   name: example
 spec:
   config:
+    #driverImage: docker-registry.upshift.redhat.com/ember-csi/ember-csi-driver:centos8
+    driverImage: docker-registry.upshift.redhat.com/ember-csi/ember-csi-driver:rhel8
     envVars:
       X_CSI_EMBER_CONFIG:
         debug: false

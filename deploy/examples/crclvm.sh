@@ -11,6 +11,10 @@ ${CRC} start -p ${SECRET}
 eval $(${CRC} oc-env)
 $(${CRC} console --credentials | grep -o "oc login -u kubeadmin.*443")
 
+curl -O https://password.corp.redhat.com/RH-IT-Root-CA.crt
+oc create configmap upshift-registry -n openshift-config --from-file=docker-registry.upshift.redhat.com=RH-IT-Root-CA.crt
+oc patch image.config.openshift.io/cluster --patch '{"spec":{"additionalTrustedCA":{"name":"upshift-registry"}}}' --type=merge
+
 # Enable the csi-snapshot-controller-operator. This has been disabled in crc to
 # save some memory, details on these commands in:
 # https://code-ready.github.io/crc/#starting-monitoring-alerting-telemetry_gsg
