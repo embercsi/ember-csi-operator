@@ -29,6 +29,7 @@ func printVersion() {
 
 func main() {
 	flag.Set("logtostderr", "true")
+	configFile := flag.String("config", "", "Config file. (Optional)")
 	flag.Parse()
 	printVersion()
 
@@ -36,10 +37,6 @@ func main() {
 	if err != nil {
 		glog.Fatal("Failed to get watch namespace: ", err)
 	}
-
-	// Read Config File if provided
-	configFile := flag.String("config", "", "Config file. (Optional)")
-	flag.Parse()
 
 	// Config File
 	glog.Info("Reading Ember CSI Config File")
