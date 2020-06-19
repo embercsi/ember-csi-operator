@@ -29,8 +29,6 @@ func printVersion() {
 
 func main() {
 	flag.Set("logtostderr", "true")
-	flag.Parse()
-	printVersion()
 
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
@@ -40,6 +38,7 @@ func main() {
 	// Read Config File if provided
 	configFile := flag.String("config", "", "Config file. (Optional)")
 	flag.Parse()
+	printVersion()
 
 	// Config File
 	glog.Info("Reading Ember CSI Config File")

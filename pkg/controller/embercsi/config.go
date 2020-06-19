@@ -110,11 +110,11 @@ func ReadConfig(configFile *string) {
 
 	source, err := ioutil.ReadFile(*configFile)
 	if err != nil {
-		glog.Infof("Cannot Open Config File: %s. Will use defaults.\n", *configFile)
+		glog.Fatalf("Cannot Open Config File: %s\n", *configFile)
 	}
 	err = yaml.Unmarshal(source, &Conf)
 	if err != nil {
-		glog.Info("Cannot Unmarshal Config File. Will use defaults.\n")
+		glog.Fatalf("Cannot Unmarshal Config File\n")
 	}
 
 	// Read X_EMBER_OPERATOR_CLUSTER e.g ocp-3.11, k8s-1.13, k8s-1.14, etc
