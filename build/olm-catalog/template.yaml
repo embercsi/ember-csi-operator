@@ -11,17 +11,18 @@ metadata:
     certified: "false"
     support: http://readthedocs.org/projects/ember-csi/
     repository: https://github.com/embercsi/ember-csi-operator
-    createdAt: 2019-08-12:22:09:00
+    createdAt: 2020-05-07:10:00:00
     # BEGIN AUTO GENERATED EXAMPLES
 ${SAMPLE_CONFIG}
     # END AUTO GENERATED EXAMPLES
-  name: ember-csi-operator.v0.0.1
+  name: ember-csi-operator.v0.9.0
   namespace: ember-csi
 spec:
   apiservicedefinitions: {}
-  maturity: alpha
-  version: 0.0.1
-  minKubeVersion: 1.11.0
+  maturity: beta
+  version: 0.9.0
+  replaces: ember-csi-operator.v0.0.1
+  minKubeVersion: 1.13.0
   description: |-
      Operator to deploy Ember-CSI, a multi-vendor CSI plugin driver supporting over 80 storage drivers in a single plugin to provide block and mount storage to container orchestration systems.
   displayName: Ember CSI Operator
@@ -31,8 +32,6 @@ spec:
     email: geguileo@redhat.com
   - name: Christian Schwede
     email: cschwede@redhat.com
-  - name: Kiran Thyagaraja
-    email: kthyagar@redhat.com
   provider:
     name: Red Hat
   labels:
@@ -172,6 +171,7 @@ spec:
           - get
           - watch
           - update
+          - patch
         - apiGroups:
           - ""
           resources:
@@ -181,6 +181,13 @@ spec:
           - list
           - watch
           - update
+        - apiGroups:
+          - ""
+          resources:
+          - persistentvolumeclaims/status
+          verbs:
+          - update
+          - patch
         - apiGroups:
           - storage.k8s.io
           resources:
@@ -192,6 +199,7 @@ spec:
           - update
           - delete
           - create
+          - patch
         - apiGroups:
           - storage.k8s.io
           resources:
@@ -237,6 +245,12 @@ spec:
           - watch
           - update
           - delete
+        - apiGroups:
+          - snapshot.storage.k8s.io
+          resources:
+          - volumesnapshotcontents/status
+          verbs:
+          - update
         - apiGroups:
           - snapshot.storage.k8s.io
           resources:
@@ -303,11 +317,11 @@ spec:
 
   customresourcedefinitions:
     owned:
-    - kind: EmberCSI
+    - kind: EmberStorageBackend
       name: embercsis.ember-csi.io
       version: v1alpha1
-      displayName: Deployments
-      description: Represents a deployment of EmberCSI driver
+      displayName: Storage Backends
+      description: Represents an Ember CSI storage backend
       resources:
       - kind: StorageClass
         name: ''
@@ -315,7 +329,7 @@ spec:
       - kind: StatefulSet
         name: ''
         version: v1
-      - kind: EmberCSI
+      - kind: EmberStorageBackend
         name: ''
         version: v1alpha
       - kind: Daemonset
@@ -326,9 +340,9 @@ spec:
           displayName: Version
           path: version
       specDescriptors:
-        - description: Define which Nodes the Pods are scheduled on.
-          displayName: nodeSelect
-          path: nodeSelector
+        - description: Config for Ember
+          displayName: config
+          path: config
         - description: Ember CSI driver container image to use. Defaults to embercsi/ember-csi:master or driver-specific image.
           displayName: Ember CSI driver container image
           path: config.driverImage
@@ -336,15 +350,6 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:AdvancedSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
-        - description: Config for Ember
-          displayName: config
-          path: config
-        - description: Tolerations
-          displayName: tolerations
-          path: tolerations
-        - description: Topologies
-          displayName: topologies
-          path: topologies
         # BEGIN AUTO GENERATED CONFIGURATION OPTIONS
 ${DRIVER_OPTIONS}
         # END AUTO GENERATED CONFIGURATION OPTIONS

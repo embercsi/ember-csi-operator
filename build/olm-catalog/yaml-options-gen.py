@@ -235,7 +235,7 @@ DROPDOWN_TEMPLATE = """        - description: The type of storage backend
 ${DROPDOWN_OPTIONS}"""
 SAMPLE_TEMPLATE = collections.OrderedDict([
     ("apiVersion", "ember-csi.io/v1alpha1"),
-    ("kind", "EmberCSI"),
+    ("kind", "EmberStorageBackend"),
     ("metadata", {"name": "example"}),
     ("spec", {
         "config": collections.OrderedDict([
@@ -412,7 +412,7 @@ def render_option(option, driver, group_options=False):
 
     # The only way to present the groups folded is to set them as advanced
     if group_options:
-        result += 8 * ' ' + "- 'urn:alm:descriptor:com.tectonic.ui:advanced'"
+        result += 12 * ' ' + "- 'urn:alm:descriptor:com.tectonic.ui:advanced'"
     # We don't indent here, it's the caller's responsibility
     return result
 
