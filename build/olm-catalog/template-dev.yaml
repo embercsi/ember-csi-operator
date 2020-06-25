@@ -12,14 +12,14 @@ ${SAMPLE_CONFIG}
     capabilities: Basic Install
     olm.operatorNamespace: default
     containerImage: 'docker.io/embercsi/ember-csi-operator:latest'
-    createdAt: '2019-08-12:22:09:00'
+    createdAt: 2020-06-25:16:07:00
     categories: Storage
     description: Multi-vendor CSI plugin supporting 80+ storage drivers
     olm.operatorGroup: default-xkq2c
   selfLink: >-
-    /apis/operators.coreos.com/v1alpha1/namespaces/default/clusterserviceversions/ember-csi-operator.v0.9.0
-  name: ember-csi-operator.v0.9.0
-  creationTimestamp: '2020-05-07:10:00:00Z'
+    /apis/operators.coreos.com/v1alpha1/namespaces/default/clusterserviceversions/ember-csi-operator.v0.9.1
+  name: ember-csi-operator.v0.9.1
+  creationTimestamp: '2020-06-25:16:07:00Z'
   generation: 1
   namespace: default
   labels:
