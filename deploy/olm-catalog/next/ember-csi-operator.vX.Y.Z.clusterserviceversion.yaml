@@ -228,14 +228,14 @@ metadata:
                   "driver__LinstorDrbd__linstor_default_storage_pool_name": "DfltStorPool",
                   "driver__LinstorDrbd__linstor_default_uri": "linstor://localhost",
                   "driver__LinstorDrbd__linstor_default_volume_group_name": "drbd-vg",
-                  "driver__LinstorDrbd__linstor_volume_downsize_factor": "4096",
+                  "driver__LinstorDrbd__linstor_volume_downsize_factor__transform_string_float": "4096",
                   "driver__LinstorIscsi__linstor_autoplace_count": 0,
                   "driver__LinstorIscsi__linstor_controller_diskless": true,
                   "driver__LinstorIscsi__linstor_default_blocksize": 4096,
                   "driver__LinstorIscsi__linstor_default_storage_pool_name": "DfltStorPool",
                   "driver__LinstorIscsi__linstor_default_uri": "linstor://localhost",
                   "driver__LinstorIscsi__linstor_default_volume_group_name": "drbd-vg",
-                  "driver__LinstorIscsi__linstor_volume_downsize_factor": "4096",
+                  "driver__LinstorIscsi__linstor_volume_downsize_factor__transform_string_float": "4096",
                   "driver__MStorageFC__nec_actual_free_capacity": false,
                   "driver__MStorageFC__nec_auto_accesscontrol": true,
                   "driver__MStorageFC__nec_backend_max_ld_count": 1024,
@@ -366,10 +366,10 @@ metadata:
                   "driver__NexentaISCSI__nexenta_luns_per_target": 100,
                   "driver__NexentaISCSI__nexenta_ns5_blocksize": 32,
                   "driver__NexentaISCSI__nexenta_origin_snapshot_template": "origin-snapshot-%s",
-                  "driver__NexentaISCSI__nexenta_rest_backoff_factor": "0.5",
-                  "driver__NexentaISCSI__nexenta_rest_connect_timeout": "30",
+                  "driver__NexentaISCSI__nexenta_rest_backoff_factor__transform_string_float": "0.5",
+                  "driver__NexentaISCSI__nexenta_rest_connect_timeout__transform_string_float": "30",
                   "driver__NexentaISCSI__nexenta_rest_protocol": "auto",
-                  "driver__NexentaISCSI__nexenta_rest_read_timeout": "300",
+                  "driver__NexentaISCSI__nexenta_rest_read_timeout__transform_string_float": "300",
                   "driver__NexentaISCSI__nexenta_rest_retry_count": 3,
                   "driver__NexentaISCSI__nexenta_sparse": false,
                   "driver__NexentaISCSI__nexenta_target_group_prefix": "cinder",
@@ -600,7 +600,7 @@ metadata:
                   "driver__VMwareVStorageObject__vmware_lazy_create": true,
                   "driver__VMwareVStorageObject__vmware_max_objects_retrieval": 100,
                   "driver__VMwareVStorageObject__vmware_snapshot_format": "template",
-                  "driver__VMwareVStorageObject__vmware_task_poll_interval": "2.0",
+                  "driver__VMwareVStorageObject__vmware_task_poll_interval__transform_string_float": "2.0",
                   "driver__VMwareVStorageObject__vmware_tmp_dir": "/tmp",
                   "driver__VMwareVStorageObject__vmware_volume_folder": "Volumes",
                   "driver__VMwareVStorageObject__vmware_wsdl_location": "",
@@ -620,7 +620,7 @@ metadata:
                   "driver__VMwareVcVmdk__vmware_lazy_create": true,
                   "driver__VMwareVcVmdk__vmware_max_objects_retrieval": 100,
                   "driver__VMwareVcVmdk__vmware_snapshot_format": "template",
-                  "driver__VMwareVcVmdk__vmware_task_poll_interval": "2.0",
+                  "driver__VMwareVcVmdk__vmware_task_poll_interval__transform_string_float": "2.0",
                   "driver__VMwareVcVmdk__vmware_tmp_dir": "/tmp",
                   "driver__VMwareVcVmdk__vmware_volume_folder": "Volumes",
                   "driver__VMwareVcVmdk__vmware_wsdl_location": "",
@@ -643,9 +643,9 @@ metadata:
                   "driver__VZStorage__vzstorage_mount_point_base": "$state_path/mnt",
                   "driver__VZStorage__vzstorage_shares_config": "/etc/cinder/vzstorage_shares",
                   "driver__VZStorage__vzstorage_sparsed_volumes": true,
-                  "driver__VZStorage__vzstorage_used_ratio": "0.95",
+                  "driver__VZStorage__vzstorage_used_ratio__transform_string_float": "0.95",
                   "driver__VxFlexOS__vxflexos_allow_non_padded_volumes": false,
-                  "driver__VxFlexOS__vxflexos_max_over_subscription_ratio": "10.0",
+                  "driver__VxFlexOS__vxflexos_max_over_subscription_ratio__transform_string_float": "10.0",
                   "driver__VxFlexOS__vxflexos_rest_server_port": 443,
                   "driver__VxFlexOS__vxflexos_round_volume_capacity": true,
                   "driver__VxFlexOS__vxflexos_server_api_version": "",
@@ -2399,7 +2399,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:LinstorDrbd'
         - description: "Default Volume Downscale Size In Kib = 4 Mib."
           displayName: Linstor Volume Downsize Factor
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__LinstorDrbd__linstor_volume_downsize_factor
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__LinstorDrbd__linstor_volume_downsize_factor__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -2448,7 +2448,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:LinstorIscsi'
         - description: "Default Volume Downscale Size In Kib = 4 Mib."
           displayName: Linstor Volume Downsize Factor
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__LinstorIscsi__linstor_volume_downsize_factor
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__LinstorIscsi__linstor_volume_downsize_factor__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -3335,7 +3335,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:NexentaISCSI'
         - description: "Specifies The Backoff Factor To Apply Between Connection Attempts To Nexentastor Management Rest Api Server"
           displayName: Nexenta Rest Backoff Factor
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__NexentaISCSI__nexenta_rest_backoff_factor
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__NexentaISCSI__nexenta_rest_backoff_factor__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -3426,14 +3426,14 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:NexentaISCSI'
         - description: "Specifies The Time Limit (In Seconds), Within Which Nexentastor Management Rest Api Server Must Send A Response"
           displayName: Nexenta Rest Read Timeout
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__NexentaISCSI__nexenta_rest_read_timeout
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__NexentaISCSI__nexenta_rest_read_timeout__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:NexentaISCSI'
         - description: "Specifies The Time Limit (In Seconds), Within Which The Connection To Nexentastor Management Rest Api Server Must Be Established"
           displayName: Nexenta Rest Connect Timeout
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__NexentaISCSI__nexenta_rest_connect_timeout
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__NexentaISCSI__nexenta_rest_connect_timeout__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -5037,7 +5037,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:VMwareVStorageObject'
         - description: "The Interval (In Seconds) For Polling Remote Tasks Invoked On Vmware Vcenter Server."
           displayName: Vmware Task Poll Interval
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VMwareVStorageObject__vmware_task_poll_interval
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VMwareVStorageObject__vmware_task_poll_interval__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -5182,7 +5182,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:VMwareVcVmdk'
         - description: "The Interval (In Seconds) For Polling Remote Tasks Invoked On Vmware Vcenter Server."
           displayName: Vmware Task Poll Interval
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VMwareVcVmdk__vmware_task_poll_interval
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VMwareVcVmdk__vmware_task_poll_interval__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -5357,7 +5357,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:VNX'
         - description: "Percent Of Actual Usage Of The Underlying Volume Before No New Volumes Can Be Allocated To The Volume Destination."
           displayName: Vzstorage Used Ratio
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VZStorage__vzstorage_used_ratio
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VZStorage__vzstorage_used_ratio__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -5441,7 +5441,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:VxFlexOS'
         - description: "Max_Over_Subscription_Ratio Setting For The Driver. Maximum Value Allowed Is 10.0."
           displayName: Vxflexos Max Over Subscription Ratio
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VxFlexOS__vxflexos_max_over_subscription_ratio
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__VxFlexOS__vxflexos_max_over_subscription_ratio__transform_string_float
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'

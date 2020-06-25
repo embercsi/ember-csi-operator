@@ -26,6 +26,9 @@ TRANSFORM_LIST_OF_STRINGS = '__transform_csv'
 TRANSFORM_DICT_OF_STRING = '__transform_csv_kvs'
 # Empty string means None
 TRANSFORM_POSSIBLE_NONE = '__transform_empty_none'
+# Transform a string to a float
+TRANSFORM_STRING_FLOAT = '__transform_string_float'
+
 
 MISSING_OPTIONS = (
     {"default": "$my_ip",
@@ -314,6 +317,9 @@ class Option(object):
             self._set_default(option)
             if '(' in option['type']:
                 self.help += ' ' + option['type'][option['type'].index('('):]
+            # Tell the operator that this needs to be transformed
+            if option['type'] == 'Float':
+                self.name += TRANSFORM_STRING_FLOAT
 
         # booleanSwitch looks better, but it doesn't work for duplicated items
         elif option['type'] == 'Boolean':
