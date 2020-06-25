@@ -107,6 +107,18 @@ func TestConfigTransform(t *testing.T) {
 	if result != expected {
 		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
 	}
+	input = "{\"key__transform_string_float\":\"3.14159\"}"
+	expected = "{\"key\":3.14159}"
+	result = configTransform(input)
+	if result != expected {
+		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
+	}
+	input = "{\"key__transform_string_float\":\"pi\"}"
+	expected = "{\"key\":\"pi\"}"
+	result = configTransform(input)
+	if result != expected {
+		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
+	}
 }
 
 

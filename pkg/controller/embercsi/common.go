@@ -7,6 +7,7 @@ import (
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strconv"
 	"strings"
 	"encoding/json"
 )
@@ -585,6 +586,17 @@ func configTransform(input string) string {
 					submap[subkey] = subval
 					m[newkey] = submap
 				}
+			}
+			delete(m, k)
+		}
+		if strings.HasSuffix(k, "__transform_string_float") {
+			newkey := strings.Replace(k, "__transform_string_float", "", -1)
+			val, err := strconv.ParseFloat(v.(string), 64)
+			if err != nil {
+				glog.Error(err)
+				m[newkey] = v.(string)
+			} else {
+				m[newkey] = val
 			}
 			delete(m, k)
 		}

@@ -14,7 +14,7 @@ import yaml
 
 
 # We don't support NFS drivers right now
-EXCLUDE_DRIVERS = ['.*?nfs.*?']
+EXCLUDE_DRIVERS = ['.*?nfs.*?', '.*vmware.*']
 INCLUDE_DRIVERS = None
 
 DEVELOPMENT = bool(int(os.environ.get('DEVELOPMENT', 0) or 0))
@@ -26,6 +26,9 @@ TRANSFORM_LIST_OF_STRINGS = '__transform_csv'
 TRANSFORM_DICT_OF_STRING = '__transform_csv_kvs'
 # Empty string means None
 TRANSFORM_POSSIBLE_NONE = '__transform_empty_none'
+# Transform a string to a float
+TRANSFORM_STRING_FLOAT = '__transform_string_float'
+
 
 MISSING_OPTIONS = (
     {"default": "$my_ip",
@@ -235,7 +238,7 @@ DROPDOWN_TEMPLATE = """        - description: The type of storage backend
 ${DROPDOWN_OPTIONS}"""
 SAMPLE_TEMPLATE = collections.OrderedDict([
     ("apiVersion", "ember-csi.io/v1alpha1"),
-    ("kind", "EmberCSI"),
+    ("kind", "EmberStorageBackend"),
     ("metadata", {"name": "example"}),
     ("spec", {
         "config": collections.OrderedDict([
@@ -314,6 +317,9 @@ class Option(object):
             self._set_default(option)
             if '(' in option['type']:
                 self.help += ' ' + option['type'][option['type'].index('('):]
+            # Tell the operator that this needs to be transformed
+            if option['type'] == 'Float':
+                self.name += TRANSFORM_STRING_FLOAT
 
         # booleanSwitch looks better, but it doesn't work for duplicated items
         elif option['type'] == 'Boolean':
@@ -412,7 +418,7 @@ def render_option(option, driver, group_options=False):
 
     # The only way to present the groups folded is to set them as advanced
     if group_options:
-        result += 8 * ' ' + "- 'urn:alm:descriptor:com.tectonic.ui:advanced'"
+        result += 12 * ' ' + "- 'urn:alm:descriptor:com.tectonic.ui:advanced'"
     # We don't indent here, it's the caller's responsibility
     return result
 
