@@ -14,7 +14,7 @@ import yaml
 
 
 # We don't support NFS drivers right now
-EXCLUDE_DRIVERS = ['.*?nfs.*?']
+EXCLUDE_DRIVERS = ['.*?nfs.*?', '.*vmware.*']
 INCLUDE_DRIVERS = None
 
 DEVELOPMENT = bool(int(os.environ.get('DEVELOPMENT', 0) or 0))
