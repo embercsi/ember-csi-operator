@@ -19,6 +19,7 @@ spec:
         rbd_cluster_name: ceph
         rbd_exclusive_cinder_pool: false
         rbd_flatten_volume_from_snapshot: false
+        rbd_keyring_conf: ''
         rbd_max_clone_depth: 5
         rbd_pool: rbd
         rbd_secret_uuid: ''
