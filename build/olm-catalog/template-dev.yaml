@@ -14,10 +14,7 @@ ${SAMPLE_CONFIG}
     containerImage: 'docker.io/embercsi/ember-csi-operator:latest'
     createdAt: '2019-08-12:22:09:00'
     categories: Storage
-    description: >-
-      Operator to deploy Ember-CSI, a multi-vendor CSI plugin driver supporting
-      over 80 storage drivers in a single plugin to provide block and mount
-      storage to container orchestration systems
+    description: Multi-vendor CSI plugin supporting 80+ storage drivers
     olm.operatorGroup: default-xkq2c
   selfLink: >-
     /apis/operators.coreos.com/v1alpha1/namespaces/default/clusterserviceversions/ember-csi-operator.v0.9.0
@@ -352,10 +349,7 @@ ${DRIVER_OPTIONS}
       name: Gorka Eguileor
     - email: cschwede@redhat.com
       name: Christian Schwede
-  description: >-
-    Operator to deploy Ember-CSI, a multi-vendor CSI plugin driver supporting
-    over 80 storage drivers in a single plugin to provide block and mount
-    storage to container orchestration systems.
+    description: Multi-vendor CSI plugin supporting 80+ storage drivers
   selector:
     matchLabels:
       operated-by: ember-csi.io

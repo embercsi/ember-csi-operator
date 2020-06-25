@@ -6,8 +6,7 @@ metadata:
     containerImage: docker.io/embercsi/ember-csi-operator:latest
     categories: "Storage"
     capabilities: Basic Install
-    description: |-
-         Operator to deploy Ember-CSI, a multi-vendor CSI plugin driver supporting over 80 storage drivers in a single plugin to provide block and mount storage to container orchestration systems
+    description: Multi-vendor CSI plugin supporting 80+ storage drivers
     certified: "false"
     support: http://readthedocs.org/projects/ember-csi/
     repository: https://github.com/embercsi/ember-csi-operator
@@ -662,8 +661,31 @@ spec:
   version: 0.9.0
   replaces: ember-csi-operator.v0.0.1
   minKubeVersion: 1.13.0
-  description: |-
-     Operator to deploy Ember-CSI, a multi-vendor CSI plugin driver supporting over 80 storage drivers in a single plugin to provide block and mount storage to container orchestration systems.
+  description: |
+    Ember-CSI is a multi-vendor CSI plugin driver supporting
+    over 80 storage drivers in a single plugin to provide block and mount
+    storage to container orchestration systems.
+
+    The operator adds support for management of multiple Ember CSI instances
+    within a cluster and simplifies storage backend deployments.
+
+    ### Getting started
+    Please have a look at our quick start documentation on how to get started:
+    [github.com/embercsi/ember-csi-operator#quick-start](https://github.com/embercsi/ember-csi-operator#quick-start).
+    We recommend to use the user friendly "Edit Form" when creating a new
+    EmberStorageBackend. You'll find the link in the upper right corner of the
+    editor.
+
+    ### Documentation
+    Documentation on Ember CSI itself can be found at [docs.ember-csi.io](http://docs.ember-csi.io/).
+
+    ### Getting help
+    Please contact us if you encounter any issues while using Ember CSI.
+    Get in touch through the #ember-csi channel on Freenode, also accessible through
+    [Kiwi IRC](https://kiwiirc.com/nextclient/irc.freenode.net/ember-csi).
+
+    You can also create an issue on the [Github project](https://github.com/embercsi/ember-csi-operator)
+    for bugs, enhancements, or other requests.
   displayName: Ember CSI Operator
   keywords: ['Ember-CSI', 'CSI']
   maintainers:
