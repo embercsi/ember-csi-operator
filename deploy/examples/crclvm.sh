@@ -6,6 +6,7 @@ SECRET=${2:-pull-secret}
 SOURCE=${3:-community-operators}
 
 # Setup CRC env
+[ ! -e ${SECRET} ] && echo '{"auths":{"fake":{"auth": "bar"}}}' > ${SECRET}
 ${CRC} delete -f || true
 ${CRC} start -p ${SECRET}
 eval $(${CRC} oc-env)
