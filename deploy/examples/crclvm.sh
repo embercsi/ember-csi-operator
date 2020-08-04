@@ -19,7 +19,7 @@ ID=`oc get clusterversion version -ojsonpath='{range .spec.overrides[*]}{.name}{
 oc patch clusterversion/version --type='json' -p '[{"op":"remove", "path":"/spec/overrides/'${ID}'"}]'
 
 # Deploy LVM container in the background
-oc create -f deploy/examples/lvmbackend.yaml
+sed -e "s/latest/7/g" deploy/examples/lvmbackend.yaml | oc create -f -
 
 # Setup custom marketplace to install devel branch of ember operator
 if [ "$SOURCE" != "community-operators" ]; then
