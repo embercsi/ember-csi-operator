@@ -35,9 +35,12 @@ while true; do
   sleep 5
 done
 
+# Get IP of ISCI backend
+ISCSI_IP=`oc get pod/lvmiscsi -o jsonpath='{ $.status.podIP }'`
+sed -e "s/target_ip_address.*/target_ip_address: ${ISCSI_IP}/g" deploy/examples/lvmdriver.yaml | oc create -f -
+
 # Deploy LVM backend, PVC, and demo app
 oc create \
--f deploy/examples/lvmdriver.yaml \
 -f deploy/examples/pvc.yaml \
 -f deploy/examples/app.yaml
 
