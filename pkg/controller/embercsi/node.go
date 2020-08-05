@@ -1,7 +1,6 @@
 package embercsi
 
 import (
-	"bytes"
 	"fmt"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	"github.com/golang/glog"
@@ -9,6 +8,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"encoding/json"
 )
 
 // daemonSetForEmberStorageBackend returns a EmberStorageBackend DaemonSet object
@@ -345,7 +345,6 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIn
 
 // Fetch topology based on index
 func getTopology(ecsi *embercsiv1alpha1.EmberStorageBackend, index int) string {
-	var buf bytes.Buffer
 	// Default topology
 	defaultTopology := fmt.Sprintf("{\"%s-%s\": \"%s\"}", GetPluginDomainName(ecsi.Name), "csi-topology", "not-used")
 
@@ -355,17 +354,13 @@ func getTopology(ecsi *embercsiv1alpha1.EmberStorageBackend, index int) string {
 		return defaultTopology
 	}
 
-	topologyItem := ecsi.Spec.Topologies[index-1]
-	fmt.Fprintf(&buf, "{")
-	for topology, value := range topologyItem.Topology {
-		fmt.Fprintf(&buf, "\"%s\":\"%s\",", topology, value)
+	jsonBytes := []byte("{}")
+	if len(ecsi.Spec.Topologies[index-1].Topology) > 0 {
+		jsonBytes, _ = json.Marshal(ecsi.Spec.Topologies[index-1].Topology)
 	}
-	buf.Truncate(buf.Len() - 1) // Remove trailing ','
-	fmt.Fprintf(&buf, "},")
-	buf.Truncate(buf.Len() - 1) // Remove trailing ','
 
-	glog.Infof("Using topology for daemonSet: node-%d : %s\n", index, buf.String())
-	return buf.String()
+	glog.Infof("Using topology for daemonSet: node-%d : %s\n", index, string(jsonBytes))
+	return string(jsonBytes)
 }
 
 // Fetch all nodes with topologies
