@@ -39,10 +39,10 @@ done
 ISCSI_IP=`oc get pod/lvmiscsi -o jsonpath='{ $.status.podIP }'`
 sed -e "s/target_ip_address.*/target_ip_address: ${ISCSI_IP}/g" deploy/examples/lvmdriver.yaml | oc create -f -
 
-oc create -f deploy/examples/pvc.yaml
-
-ISCSI_NODENAME=`oc get pod/lvmiscsi -o jsonpath='{ $.spec.nodeName }'`
-sed "s/ISCSI_NODENAME/${ISCSI_NODENAME}/g" deploy/examples/app.yaml | oc create -f -
+# Deploy LVM backend, PVC, and demo app
+oc create \
+-f deploy/examples/pvc.yaml \
+-f deploy/examples/app.yaml
 
 # Most simple check if volume has been mounted
 oc wait --timeout=300s --for=condition=Ready pod my-csi-app
