@@ -11,6 +11,5 @@ spec:
       X_CSI_BACKEND_CONFIG:
         driver: LVMVolume
         target_helper: lioadm
-        target_ip_address: 192.168.130.11
         volume_group: ember-volumes
         name: example
