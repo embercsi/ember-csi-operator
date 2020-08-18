@@ -84,6 +84,7 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, driverMode stri
 	}
 	X_CSI_EMBER_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
 	if err == nil {
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "plugin_name", GetPluginDomainName(ecsi.Name))
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_EMBER_CONFIG",
 			Value: X_CSI_EMBER_CONFIG,
@@ -92,8 +93,11 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, driverMode stri
 	} else {
 		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
 	}
+
 	X_CSI_PERSISTENCE_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
 	if err == nil {
+		setJsonKeyIfEmpty(&X_CSI_PERSISTENCE_CONFIG, "storage", "crd")
+		setJsonKeyIfEmpty(&X_CSI_PERSISTENCE_CONFIG, "namespace", ecsi.Namespace)
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_PERSISTENCE_CONFIG",
 			Value: X_CSI_PERSISTENCE_CONFIG,
@@ -102,6 +106,7 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, driverMode stri
 	} else {
 		glog.Errorf("Error parsing X_CSI_PERSISTENCE_CONFIG,: %v\n", err)
 	}
+
 	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_DEBUG_MODE",
@@ -257,6 +262,7 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberStorageBackend, csiDriverM
 	// Check to see if the volume driver is LVM
 	X_CSI_BACKEND_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
 	if err == nil {
+		setJsonKeyIfEmpty(&X_CSI_BACKEND_CONFIG, "name", ecsi.Name)
 		if strings.Contains(strings.ToLower(X_CSI_BACKEND_CONFIG), "lvmvolume") {
 			vm = append(vm, corev1.VolumeMount{
 				Name:             "etc-lvm",
@@ -505,7 +511,6 @@ func isFeatureEnabled(emberConfig string, feature string) bool {
 		glog.Warningf("Forwarding unmodified input %v (type %T) to Ember\n", emberConfig, emberConfig)
 		glog.Error(err)
 	}
-	glog.V(3).Infof("Info: X_CSI_EMBER_CONFIG Disabled Features: %v", ecc.Disabled)
 
 	for i := 0; i < len(ecc.Disabled); i++ {
                 if ecc.Disabled[i] == feature {

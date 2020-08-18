@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
-	"github.com/embercsi/ember-csi-operator/version"
 	"github.com/golang/glog"
 	snapv1b1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -49,28 +49,31 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// Watch owned objects
-	watchOwnedObjects := []runtime.Object{
-		&appsv1.StatefulSet{},
-		&appsv1.DaemonSet{},
-		&storagev1.StorageClass{},
-		&storagev1beta1.CSIDriver{},
-	}
-	// Enable objects based on CSI Spec
-	//if Conf.getCSISpecVersion() >= 1.0 {
-	//	watchOwnedObjects = append(watchOwnedObjects, &snapv1a1.VolumeSnapshotClass{})
-	//}
+        // Watch owned objects
+        watchOwnedObjects := []runtime.Object{
+		&corev1.Secret{},
+                &appsv1.StatefulSet{},
+                &appsv1.DaemonSet{},
+                &storagev1.StorageClass{},
+                &storagev1beta1.CSIDriver{},
+        }
+        // Enable objects based on CSI Spec
+        if Conf.getCSISpecVersion() >= 1.0 {
+              watchOwnedObjects = append(watchOwnedObjects, &snapv1b1.VolumeSnapshotClass{})
+        }
 
-	ownerHandler := &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &embercsiv1alpha1.EmberStorageBackend{},
-	}
-	for _, watchObject := range watchOwnedObjects {
-		err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
-		if err != nil {
-			return err
-		}
-	}
+        ownerHandler := &handler.EnqueueRequestForOwner{
+                IsController: true,
+                OwnerType:    &embercsiv1alpha1.EmberStorageBackend{},
+        }
+        for _, watchObject := range watchOwnedObjects {
+                err = c.Watch(&source.Kind{Type: watchObject}, ownerHandler)
+                if err != nil {
+                        return err
+                }
+        }
+
+
 
 	return nil
 }
@@ -88,8 +91,6 @@ type ReconcileEmberStorageBackend struct {
 // Reconcile reads that state of the cluster for a EmberStorageBackend object and makes changes based on the state read
 // and what is in the EmberStorageBackend.Spec
 func (r *ReconcileEmberStorageBackend) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	glog.V(3).Infof("Reconciling EmberStorageBackend %s/%s\n", request.Namespace, request.Name)
-
 	// Fetch the EmberStorageBackend instance
 	instance := &embercsiv1alpha1.EmberStorageBackend{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
@@ -100,6 +101,8 @@ func (r *ReconcileEmberStorageBackend) Reconcile(request reconcile.Request) (rec
 		glog.Warningf("Failed to get %v: %v", request.NamespacedName, err)
 		return reconcile.Result{}, err
 	}
+
+	glog.V(3).Infof("Reconciling EmberStorageBackend %s in namespace %s\n", request.Name, request.Namespace)
 
 	if len(instance.Spec.Config.SysFiles.Name) > 0 {
 		key := types.NamespacedName{Namespace: instance.Namespace, Name: instance.Spec.Config.SysFiles.Name}
@@ -112,107 +115,118 @@ func (r *ReconcileEmberStorageBackend) Reconcile(request reconcile.Request) (rec
 		// If multiple keys are found only last one is used
 		for key, _ := range secret.Data {
 			instance.Spec.Config.SysFiles.Key = key
+			glog.Warningf("Found more than one value in Data in secret %s\n", instance.Spec.Config.SysFiles.Name)
 		}
+		r.client.Update(context.TODO(), instance)
 	}
-
-	backend_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
-	if err != nil {
-		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
-	}
-	setJsonKeyIfEmpty(&backend_config_json, "name", request.Name)
-
-	secrets := map[string][]byte {
-		"X_CSI_BACKEND_CONFIG": []byte(backend_config_json),
-	}
-	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: fmt.Sprintf("ember-csi-operator-%s", request.Name),
-			Namespace: request.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion:	instance.APIVersion,
-					Kind:		instance.Kind,
-					Name:		instance.Name,
-					UID:		instance.UID,
-				},
-			},
-		},
-		Data: secrets,
-		Type: "ember-csi.io/backend-config",
-        }
-	err = r.client.Create(context.TODO(), secret)
-	if err != nil && !errors.IsAlreadyExists(err) {
-		glog.Errorf("Failed to create a new secret %s in %s: %s", secret.Name, secret.Namespace, err)
-	}
-
-	backend_config_map := make(map[string]interface{})
-	err = json.Unmarshal([]byte(backend_config_json), &backend_config_map)
-	if err == nil {
-		// Delete clear-text values, these will be stored in the secret
-		for k, _ := range backend_config_map {
-			backend_config_map[k] = "REDACTED"
-		}
-		instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG = backend_config_map
-	} else {
-		glog.Error("Unmarshal of X_CSI_BACKEND_CONFIG failed: ", err)
-	}
-
-	ember_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
-	if err != nil {
-		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
-	}
-	setJsonKeyIfEmpty(&ember_config_json, "plugin_name", request.Name)
-	ember_config_map := make(map[string]interface{})
-	err = json.Unmarshal([]byte(ember_config_json), &ember_config_map)
-	if err == nil {
-		instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG = ember_config_map
-	} else {
-		glog.Error("Unmarshal of X_CSI_EMBER_CONFIG failed: ", err)
-	}
-
-	persistence_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
-	if err != nil {
-		glog.Errorf("Error parsing X_CSI_PERSISTENCE_CONFIG: %v\n", err)
-	}
-	setJsonKeyIfEmpty(&persistence_config_json, "storage", "crd")
-	setJsonKeyIfEmpty(&persistence_config_json, "namespace", instance.Namespace)
-	persistence_config_map := make(map[string]interface{})
-	err = json.Unmarshal([]byte(persistence_config_json), &persistence_config_map)
-	if err == nil {
-		instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG = persistence_config_map
-	} else {
-		glog.Error("Unmarshal of X_CSI_PERSISTENCE_CONFIG failed: ", err)
-	}
-
-	instance.Status.Version = version.Version
-	err = r.client.Update(context.TODO(), instance)
-	if err != nil {
-		glog.Error("EmberStorageBackend instance update failed: ", err)
-	}
-
 	// Manage objects created by the operator
 	return reconcile.Result{}, r.handleEmberStorageBackendDeployment(instance)
 }
 
 // Manage the Objects created by the Operator.
 func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(instance *embercsiv1alpha1.EmberStorageBackend) error {
-	glog.V(3).Infof("Reconciling EmberStorageBackend Deployment Objects")
+	persistence_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
+	if err == nil {
+		setJsonKeyIfEmpty(&persistence_config_json, "storage", "crd")
+	}
+	persistence_config_map := make(map[string]interface{})
+	_ = json.Unmarshal([]byte(persistence_config_json), &persistence_config_map)
+	instance.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG = persistence_config_map
+
+	backend_config_json, err := interfaceToString(instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG)
+	if err != nil {
+		glog.Errorf("Error parsing X_CSI_BACKEND_CONFIG: %v\n", err)
+	}
+	setJsonKeyIfEmpty(&backend_config_json, "name", instance.Name)
+
+	// Redact backend config if needed
+	keyName := fmt.Sprintf("ember-csi-operator-%s", instance.Name)
+	already_redacted := false
+	backend_config_map := make(map[string]interface{})
+	err = json.Unmarshal([]byte(backend_config_json), &backend_config_map)
+	if err == nil {
+		for k, _ := range backend_config_map {
+			if backend_config_map[k] == "REDACTED" {
+				already_redacted = true
+			}
+			backend_config_map[k] = "REDACTED"
+		}
+		if !already_redacted {
+			instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG = backend_config_map
+			err = r.client.Update(context.TODO(), instance)
+			if err == nil {
+				glog.Errorf("Updated EmberStorageBackend %s", instance.Name)
+			} else {
+				glog.Errorf("EmberStorageBackend instance %s update failed: %s", instance.Name, err)
+			}
+		}
+	}
+
+	// Create or update backend config secret
+	key := types.NamespacedName{Namespace: instance.Namespace, Name: keyName}
+	secret := &corev1.Secret{}
+	err = r.client.Get(context.TODO(), key, secret)
+	if err != nil && errors.IsNotFound(err) && already_redacted {
+		glog.Errorf("Only redacted X_CSI_BACKEND_CONFIG given and secret %s not found", keyName)
+	}
+	if !already_redacted {
+		secret_data := map[string][]byte {
+			"X_CSI_BACKEND_CONFIG": []byte(backend_config_json),
+		}
+		if err != nil && errors.IsNotFound(err) {
+			secret = &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: keyName,
+					Namespace: instance.Namespace,
+					OwnerReferences: []metav1.OwnerReference{
+						{
+							APIVersion:	instance.APIVersion,
+							Kind:		instance.Kind,
+							Name:		instance.Name,
+							UID:		instance.UID,
+						},
+					},
+				},
+				Data: secret_data,
+				Type: "ember-csi.io/backend-config",
+		        }
+			err = r.client.Create(context.TODO(), secret)
+			if err == nil  {
+				glog.V(3).Infof("Created Secret %s", keyName)
+			} else {
+				glog.Errorf("Failed to create Secret %s: %s", secret.Name, err)
+			}
+		} else {
+			secret.Data = secret_data
+			err = r.client.Update(context.TODO(), secret)
+			if err == nil  {
+				glog.V(3).Infof("Updated Secret %s", keyName)
+			} else {
+				glog.Errorf("Failed to update Secret %s: %s", secret.Name, err)
+			}
+		}
+	} else {
+		glog.V(3).Infof("Secret %s already exists", keyName)
+	}
+
 	// Check if the statefuleSet already exists, if not create a new one
 	ss := &appsv1.StatefulSet{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-controller", instance.Name), Namespace: instance.Namespace}, ss)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-controller", instance.Name), Namespace: instance.Namespace}, ss)
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new statefulset
 		ss = r.statefulSetForEmberStorageBackend(instance)
-		glog.V(3).Infof("Creating a new StatefulSet %s in %s", ss.Name, ss.Namespace)
 		err = r.client.Create(context.TODO(), ss)
 		if err != nil {
-			glog.Errorf("Failed to create a new StatefulSet %s in %s: %s", ss.Name, ss.Namespace, err)
+			glog.Errorf("Failed to create StatefulSet %s: %s", ss.Name, err)
 			return err
+		} else {
+			glog.V(3).Infof("Created StatefulSet %s", ss.Name)
 		}
-		glog.V(3).Infof("Successfully Created a new StatefulSet %s in %s", ss.Name, ss.Namespace)
 	} else if err != nil {
-		glog.Error("Failed to get StatefulSet", err)
+		glog.Errorf("Failed to get StatefulSet %s: %s", ss.Name, err)
 		return err
+	} else {
+		glog.V(3).Infof("StatefulSet %s already exists", ss.Name)
 	}
 
 	// Check if the daemonSet already exists, if not create a new one
@@ -235,19 +249,20 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 	if len(dSNotFound) > 0 {
 		// Define new DaemonSet(s)
 		for _, daemonSetIndex := range dSNotFound {
-			glog.Infof("Trying to create Daemonset with index: %d", daemonSetIndex)
 			ds = r.daemonSetForEmberStorageBackend(instance, daemonSetIndex)
-			glog.V(3).Infof("Creating a new Daemonset %s in %s", ds.Name, ds.Namespace)
 			err = r.client.Create(context.TODO(), ds)
 			if err != nil {
-				glog.Errorf("Failed to create a new Daemonset %s in %s: %s", ds.Name, ds.Namespace, err)
+				glog.Errorf("Failed to create Daemonset %s: %s", ds.Name, err)
 				return err
+			} else {
+				glog.V(3).Infof("Created Daemonset %s", ds.Name)
 			}
-			glog.V(3).Infof("Successfully Created a new Daemonset %s in %s", ds.Name, ds.Namespace)
 		}
 	} else if err != nil {
-		glog.Error("failed to get DaemonSet", err)
+		glog.Errorf("Failed to get Daemonset %s: %s", ds.Name, err)
 		return err
+	} else {
+		glog.V(3).Infof("Daemonset %s already exists", ds.Name)
 	}
 
 	// Check if the storageclass already exists, if not create a new one
@@ -256,16 +271,18 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 	if err != nil && errors.IsNotFound(err) {
 		// Define a new StorageClass
 		sc = r.storageClassForEmberStorageBackend(instance)
-		glog.V(3).Infof("Creating a new StorageClass %s in %s", sc.Name, sc.Namespace)
 		err = r.client.Create(context.TODO(), sc)
 		if err != nil {
-			glog.Errorf("Failed to create a new StorageClass %s in %s: %s", sc.Name, sc.Namespace, err)
+			glog.Errorf("Failed to create StorageClass %s: %s", sc.Name, err)
 			return err
+		} else {
+			glog.V(3).Infof("Created StorageClass %s", sc.Name)
 		}
-		glog.V(3).Infof("Successfully Created a new StorageClass %s in %s", sc.Name, sc.Namespace)
 	} else if err != nil {
-		glog.Error("failed to get StorageClass", err)
+		glog.Errorf("Failed to get StorageClass %s: %s", sc.Name, err)
 		return err
+	} else {
+		glog.V(3).Infof("StorageClass %s already exists", sc.Name)
 	}
 
 	snapShotEnabled := true
@@ -280,20 +297,20 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
 	if Conf.getCSISpecVersion() >= 1.0 && snapShotEnabled {
-		glog.V(3).Info("Trying to create a new volumeSnapshotClass")
 		vsc := &snapv1b1.VolumeSnapshotClass{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name), Namespace: vsc.Namespace}, vsc)
 		if err != nil && errors.IsNotFound(err) {
 			// Define a new VolumeSnapshotClass
 			vsc = r.volumeSnapshotClassForEmberStorageBackend(instance)
-			glog.V(3).Infof("Creating a new VolumeSnapshotClass %s in %s", GetPluginDomainName(instance.Name), vsc.Namespace)
 			err = r.client.Create(context.TODO(), vsc)
 			if err != nil {
-				glog.Errorf("Failed to create a new VolumeSnapshotClass %s in %s: %s", GetPluginDomainName(instance.Name), vsc.Namespace, err)
+				glog.Errorf("Failed to create VolumeSnapshotClass %s: %s", GetPluginDomainName(instance.Name), err)
+				return err
+			} else {
+				glog.V(3).Infof("Created VolumeSnapshotClass %s", GetPluginDomainName(instance.Name))
 			}
-			glog.V(3).Infof("Successfully Created a new VolumeSnapshotClass %s in %s", GetPluginDomainName(instance.Name), vsc.Namespace)
 		} else if err != nil {
-			glog.Error("Failed to get VolumeSnapshotClass: ", err)
+			glog.Errorf("Failed to get VolumeSnapshotClass %s: %s", GetPluginDomainName(instance.Name), err)
 		}
 	}
 
@@ -305,13 +322,14 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 		if err != nil && !errors.IsNotFound(err) {
 			err = r.client.Delete(context.TODO(), vsc)
 			if err != nil {
-				glog.Errorf("Failed to remove VolumeSnapshotClass %s in %s: %s", GetPluginDomainName(instance.Name), vsc.Namespace, err)
+				glog.Errorf("Failed to remove VolumeSnapshotClass %s: %s", GetPluginDomainName(instance.Name), err)
+				return err
+			} else {
+				glog.V(3).Infof("Successfully removed VolumeSnapshotClass %s: %s", GetPluginDomainName(instance.Name), err)
 			}
 		} else if err != nil {
-			glog.Error("Failed to get VolumeSnapshotClass: ", err)
+			glog.Errorf("Failed to get VolumeSnapshotClass %s: %s", GetPluginDomainName(instance.Name), err)
                 }
-
-		// Update the controller and node
 	}
 
 	// Only valid for cluster without using a driver registrar, ie k8s >= 1.13 / ocp >= 4.
@@ -321,18 +339,24 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name)}, driver)
 		if err != nil && errors.IsNotFound(err) {
 			driver = r.csiDriverForEmberStorageBackend(instance)
-			glog.V(3).Infof("Creating a new CSIDriver %s", driver.Name)
 			err = r.client.Create(context.TODO(), driver)
 			if err != nil {
-				glog.Errorf("Failed to create a new CSIDriver %s: %s", driver.Name, err)
+				glog.Errorf("Failed to create CSIDriver %s: %s", driver.Name, err)
 				return err
+			} else {
+				glog.V(3).Infof("Created CSIDriver %s", driver.Name)
 			}
-			glog.V(3).Infof("Successfully created a new CSIDriver %s", driver.Name)
 		} else if err != nil {
 			glog.Errorf("Failed to get CSIDriver %s: %s", driver.Name, err)
 			return err
+		} else {
+			glog.V(3).Infof("CSIDriver %s already exists", driver.Name)
 		}
         }
+
+	// Sleep a few seconds, otherwise reconciliation is
+	// triggered a couple of times due to new objects
+	time.Sleep(time.Second*5)
 
 	return nil
 }

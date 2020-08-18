@@ -224,16 +224,6 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetInde
 // construct EnvVars for the Driver Pod
 func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIndex int) []corev1.EnvVar {
 
-	ember_config_json, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
-	if err != nil {
-		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
-	}
-	setJsonKeyIfEmpty(&ember_config_json, "plugin_name", GetPluginDomainName(ecsi.Name))
-	setJsonKeyIfEmpty(&ember_config_json, "project_id", "ember-csi.io")
-	setJsonKeyIfEmpty(&ember_config_json, "user_id", "ember-csi.io")
-	setJsonKeyIfEmpty(&ember_config_json, "root_helper", "sudo")
-	setJsonKeyIfEmpty(&ember_config_json, "request_multipath", "true")
-
 	envVars := []corev1.EnvVar{
 		{
 			Name:  "PYTHONUNBUFFERED",
@@ -244,9 +234,6 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIn
 		}, {
 			Name:  "X_CSI_SPEC_VERSION",
 			Value: Conf.Sidecars[Cluster].CSISpecVersion,
-		}, {
-			Name:  "X_CSI_EMBER_CONFIG",
-			Value: ember_config_json,
 		}, {
 			Name: "X_CSI_NODE_ID",
 			ValueFrom: &corev1.EnvVarSource{
@@ -260,21 +247,34 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIn
 		},
 	}
 
+	X_CSI_EMBER_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
+	if err == nil {
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "plugin_name", GetPluginDomainName(ecsi.Name))
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "project_id", "ember-csi.io")
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "user_id", "ember-csi.io")
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "root_helper", "sudo")
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "request_multipath", "true")
+
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  "X_CSI_EMBER_CONFIG",
+			Value: X_CSI_EMBER_CONFIG,
+		})
+	} else {
+		glog.Errorf("Error parsing X_CSI_EMBER_CONFIG: %v\n", err)
+	}
 
 	X_CSI_PERSISTENCE_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_PERSISTENCE_CONFIG)
 	if err == nil {
+		setJsonKeyIfEmpty(&X_CSI_PERSISTENCE_CONFIG, "storage", "crd")
+		setJsonKeyIfEmpty(&X_CSI_PERSISTENCE_CONFIG, "namespace", ecsi.Namespace)
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_PERSISTENCE_CONFIG",
 			Value: X_CSI_PERSISTENCE_CONFIG,
-		},
-		)
-	} else { // Use CRD as the default persistence
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  "X_CSI_PERSISTENCE_CONFIG",
-			Value: fmt.Sprintf("{\"storage\":\"crd\",\"namespace\":\"%s\"}", ecsi.Namespace),
-		},
-		)
+		})
+	} else {
+		glog.Errorf("Error parsing X_CSI_PERSISTENCE_CONFIG: %v\n", err)
 	}
+
 	if len(ecsi.Spec.Config.EnvVars.X_CSI_DEBUG_MODE) > 0 {
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_DEBUG_MODE",

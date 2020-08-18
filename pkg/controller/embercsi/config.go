@@ -57,7 +57,6 @@ func (config *Config) getDriverImage(spec_config embercsiv1alpha1.EmberStorageBa
 			image = "embercsi/ember-csi:master"
 		}
 	}
-	glog.Infof(fmt.Sprintf("Using driver image %s", image))
 	return image
 }
 
