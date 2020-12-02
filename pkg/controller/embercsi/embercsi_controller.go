@@ -59,7 +59,14 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
         }
         // Enable objects based on CSI Spec
         if Conf.getCSISpecVersion() >= 1.0 {
-              watchOwnedObjects = append(watchOwnedObjects, &snapv1b1.VolumeSnapshotClass{})
+               vsc := &snapv1b1.VolumeSnapshotClass{}
+               c := mgr.GetClient()
+               err := c.Get(context.TODO(), types.NamespacedName{}, vsc)
+               if err == nil {
+                       watchOwnedObjects = append(watchOwnedObjects, vsc)
+               } else {
+                       glog.Errorf("%s", err)
+               }
         }
 
         ownerHandler := &handler.EnqueueRequestForOwner{
