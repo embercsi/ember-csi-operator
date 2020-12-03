@@ -87,6 +87,14 @@ func TestConfigTransform(t *testing.T) {
 		t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
 	}
 
+        input = "{\"key__transform_csv\":\"\"}"
+        expected = "{\"key\":[]}"
+        result = configTransform(input)
+        if result != expected {
+                t.Errorf("Failed to transform, got %v, expected %v\n", result, expected)
+        }
+
+
 	input = "{\"key__transform_csv_kvs\":\"a:b\"}"
 	expected = "{\"key\":{\"a\":\"b\"}}"
 	result = configTransform(input)
