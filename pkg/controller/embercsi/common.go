@@ -575,7 +575,11 @@ func configTransform(input string) string {
 
 		if strings.HasSuffix(k, "__transform_csv") {
 			newkey := strings.Replace(k, "__transform_csv", "", -1)
-			m[newkey] = strings.Split(v.(string), ",")
+			if len(v.(string)) > 0 {
+				m[newkey] = strings.Split(v.(string), ",")
+			} else {
+				m[newkey] = []string{}
+			}
 			delete(m, k)
 		}
 
