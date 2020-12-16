@@ -54,7 +54,7 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.0
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   # k8s 1.18
@@ -63,7 +63,7 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.1
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   # k8s ?.??
@@ -72,7 +72,7 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.1
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.10:
@@ -130,7 +130,7 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.0
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.18:
@@ -138,7 +138,7 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.1
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.19:
@@ -146,7 +146,7 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.1
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.20:
@@ -154,7 +154,7 @@ sidecars:
     external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
     external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
     node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.1
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
 drivers:
