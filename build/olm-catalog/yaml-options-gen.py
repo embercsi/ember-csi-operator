@@ -173,6 +173,16 @@ MISSING_OPTIONS = (
      "type": "Integer(min=1, max=128)"},
 )
 
+EMBER_OPTIONS = [
+    {"default": "",
+     "deprecated_for_removal": "False",
+     "help": "Path to the ceph keyring file",
+     "name": "rbd_keyring_conf",
+     "required": "False",
+     "secret": "False",
+     "type": "String"},
+]
+
 MISSING_DRIVER_OPTIONS = {
     'QnapISCSI': ('target_ip_address', 'san_login', 'san_password',
                   'use_chap_auth', 'chap_username', 'chap_password',
@@ -215,6 +225,7 @@ MISSING_DRIVER_OPTIONS = {
                'use_chap_auth'),
     'SolidFire': ('san_ip', 'san_login', 'san_password',
                   'driver_ssl_cert_verify'),
+    'RBD': ('rbd_keyring_conf',),
 }
 
 IGNORE_OPTIONS = ['max_over_subscription_ratio',
@@ -645,6 +656,11 @@ def generate_examples(original_drivers, options):
 def add_missing_config_options(backends, options):
     for option_data in MISSING_OPTIONS:
         options.setdefault(option_data['name'], Option(option_data))
+
+    # These are options that we are forcing the tool to have for Ember-CSI,
+    # even if they are deprecated or no longer exist in Cinder.
+    for option_data in EMBER_OPTIONS:
+        options[option_data['name']] = Option(option_data)
 
     for driver_name, option_names in MISSING_DRIVER_OPTIONS.items():
         if driver_name in backends:

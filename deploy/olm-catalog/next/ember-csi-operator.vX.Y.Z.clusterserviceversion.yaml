@@ -475,6 +475,7 @@ metadata:
                   "driver__RBD__rbd_cluster_name": "ceph",
                   "driver__RBD__rbd_exclusive_cinder_pool": false,
                   "driver__RBD__rbd_flatten_volume_from_snapshot": false,
+                  "driver__RBD__rbd_keyring_conf": "",
                   "driver__RBD__rbd_max_clone_depth": 5,
                   "driver__RBD__rbd_pool": "rbd",
                   "driver__RBD__rbd_secret_uuid": "",
@@ -4149,6 +4150,13 @@ spec:
         - description: "Path To The Ceph Configuration File"
           displayName: Rbd Ceph Conf
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__RBD__rbd_ceph_conf
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:RBD'
+        - description: "Path To The Ceph Keyring File"
+          displayName: Rbd Keyring Conf
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__RBD__rbd_keyring_conf
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
