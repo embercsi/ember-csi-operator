@@ -1,5 +1,5 @@
 #!/bin/bash
-# The Python script accepts CONSOLE_VERSION and DEVLOPMENT env variables
+# The Python script accepts CONSOLE_VERSION and DEVELOPMENT env variables
 TAG="${1:-master}"
 
 if [[ -z "${DEVELOPMENT}" ]]; then

@@ -215,6 +215,10 @@ MISSING_DRIVER_OPTIONS = {
                'use_chap_auth'),
     'SolidFire': ('san_ip', 'san_login', 'san_password',
                   'driver_ssl_cert_verify'),
+    'HPMSAISCSI': ('san_ip', 'san_login', 'san_password', 'driver_use_ssl',
+                   'driver_ssl_cert_verify', 'driver_ssl_cert_path'),
+    'HPMSAFC': ('san_ip', 'san_login', 'san_password', 'driver_use_ssl',
+                'driver_ssl_cert_verify', 'driver_ssl_cert_path'),
 }
 
 IGNORE_OPTIONS = ['max_over_subscription_ratio',

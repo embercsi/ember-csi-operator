@@ -118,11 +118,23 @@ metadata:
                   "driver__HPELeftHandISCSI__hpelefthand_password": "",
                   "driver__HPELeftHandISCSI__hpelefthand_ssh_port": 16022,
                   "driver__HPELeftHandISCSI__hpelefthand_username": "",
+                  "driver__HPMSAFC__driver_ssl_cert_path": "",
+                  "driver__HPMSAFC__driver_ssl_cert_verify": false,
+                  "driver__HPMSAFC__driver_use_ssl": false,
                   "driver__HPMSAFC__hpmsa_pool_name": "A",
                   "driver__HPMSAFC__hpmsa_pool_type": "virtual",
+                  "driver__HPMSAFC__san_ip": "",
+                  "driver__HPMSAFC__san_login": "admin",
+                  "driver__HPMSAFC__san_password": "",
+                  "driver__HPMSAISCSI__driver_ssl_cert_path": "",
+                  "driver__HPMSAISCSI__driver_ssl_cert_verify": false,
+                  "driver__HPMSAISCSI__driver_use_ssl": false,
                   "driver__HPMSAISCSI__hpmsa_iscsi_ips__transform_csv": "",
                   "driver__HPMSAISCSI__hpmsa_pool_name": "A",
                   "driver__HPMSAISCSI__hpmsa_pool_type": "virtual",
+                  "driver__HPMSAISCSI__san_ip": "",
+                  "driver__HPMSAISCSI__san_login": "admin",
+                  "driver__HPMSAISCSI__san_password": "",
                   "driver__HuaweiFC__cinder_huawei_conf_file": "/etc/cinder/cinder_huawei_conf.xml",
                   "driver__HuaweiFC__hypermetro_devices": "",
                   "driver__HuaweiFC__metro_domain_name": "",
@@ -1607,12 +1619,12 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPELeftHandISCSI'
-        - description: "Pool Or Vdisk Name To Use For Volume Creation."
-          displayName: Hpmsa Pool Name
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__hpmsa_pool_name
+        - description: "Password For San Controller"
+          displayName: San Password
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__san_password
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:password'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
         - description: "Linear (For Vdisk) Or Virtual (For Pool)."
           displayName: Hpmsa Pool Type
@@ -1622,6 +1634,55 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:select:linear'
             - 'urn:alm:descriptor:com.tectonic.ui:select:virtual'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
+        - description: "If Set To True The Http Client Will Validate The Ssl Certificate Of The Backend Endpoint."
+          displayName: Driver Ssl Cert Verify
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__driver_ssl_cert_verify
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
+        - description: "Username For San Controller"
+          displayName: San Login
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__san_login
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
+        - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
+          displayName: Driver Ssl Cert Path
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__driver_ssl_cert_path
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
+        - description: "Pool Or Vdisk Name To Use For Volume Creation."
+          displayName: Hpmsa Pool Name
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__hpmsa_pool_name
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
+        - description: "Ip Address Of San Controller"
+          displayName: San Ip
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__san_ip
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
+        - description: "Tell Driver To Use Ssl For Connection To Backend Storage If The Driver Supports It."
+          displayName: Driver Use Ssl
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAFC__driver_use_ssl
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAFC'
+        - description: "Password For San Controller"
+          displayName: San Password
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__san_password
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:password'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
         - description: "Linear (For Vdisk) Or Virtual (For Pool)."
           displayName: Hpmsa Pool Type
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__hpmsa_pool_type
@@ -1630,9 +1691,30 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:select:linear'
             - 'urn:alm:descriptor:com.tectonic.ui:select:virtual'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
+        - description: "If Set To True The Http Client Will Validate The Ssl Certificate Of The Backend Endpoint."
+          displayName: Driver Ssl Cert Verify
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__driver_ssl_cert_verify
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
         - description: "List Of Comma-Separated Target Iscsi Ip Addresses. [ie: v1,v2]"
           displayName: Hpmsa Iscsi Ips
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__hpmsa_iscsi_ips__transform_csv
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
+        - description: "Username For San Controller"
+          displayName: San Login
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__san_login
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
+        - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
+          displayName: Driver Ssl Cert Path
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__driver_ssl_cert_path
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
@@ -1643,6 +1725,20 @@ spec:
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
+        - description: "Ip Address Of San Controller"
+          displayName: San Ip
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__san_ip
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
+        - description: "Tell Driver To Use Ssl For Connection To Backend Storage If The Driver Supports It."
+          displayName: Driver Use Ssl
+          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HPMSAISCSI__driver_use_ssl
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
+            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:HPMSAISCSI'
         - description: "The Remote Metro Device Request Url."
           displayName: Metro San Address
