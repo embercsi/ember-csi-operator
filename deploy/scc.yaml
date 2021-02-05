@@ -8,7 +8,7 @@ allowPrivilegeEscalation: true
 allowHostDirVolumePlugin: true
 allowHostIPC: true
 allowHostNetwork: true
-allowHostPID: false
+allowHostPID: true
 allowHostPorts: false
 runAsUser:
   type: RunAsAny

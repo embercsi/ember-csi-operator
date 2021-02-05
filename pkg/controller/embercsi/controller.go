@@ -67,6 +67,7 @@ func (r *ReconcileEmberStorageBackend) statefulSetForEmberStorageBackend(ecsi *e
 					Tolerations:        ecsi.Spec.Tolerations,
 					HostNetwork:        true,
 					HostIPC:            true,
+					HostPID:            true,
 				},
 			},
 		},

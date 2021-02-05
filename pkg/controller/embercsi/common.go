@@ -229,18 +229,6 @@ func generateVolumeMounts(ecsi *embercsiv1alpha1.EmberStorageBackend, csiDriverM
 			Name:             "iscsi-dir",
 			MountPropagation: &bidirectional,
 		}, {
-			MountPath:        "/var/lib/iscsi",
-			Name:             "var-lib-iscsi",
-			MountPropagation: &bidirectional,
-		}, {
-			MountPath:        "/etc/multipath",
-			Name:             "multipath-dir",
-			MountPropagation: &bidirectional,
-		}, {
-			MountPath:        "/etc/multipath.conf",
-			Name:             "multipath-conf",
-			MountPropagation: &hostToContainer,
-		}, {
 			MountPath:        "/lib/modules",
 			Name:             "modules-dir",
 			MountPropagation: &hostToContainer,
@@ -345,27 +333,6 @@ func generateVolumes(ecsi *embercsiv1alpha1.EmberStorageBackend, csiDriverMode s
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
 					Path: "/etc/iscsi",
-				},
-			},
-		}, {
-			Name: "var-lib-iscsi",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/var/lib/iscsi",
-				},
-			},
-		}, {
-			Name: "multipath-dir",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/etc/multipath",
-				},
-			},
-		}, {
-			Name: "multipath-conf",
-			VolumeSource: corev1.VolumeSource{
-				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/etc/multipath.conf",
 				},
 			},
 		}, {
