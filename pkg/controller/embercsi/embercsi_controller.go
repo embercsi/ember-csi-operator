@@ -158,15 +158,6 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 			}
 			backend_config_map[k] = "REDACTED"
 		}
-		if !already_redacted {
-			instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG = backend_config_map
-			err = r.client.Update(context.TODO(), instance)
-			if err == nil {
-				glog.Errorf("Updated EmberStorageBackend %s", instance.Name)
-			} else {
-				glog.Errorf("EmberStorageBackend instance %s update failed: %s", instance.Name, err)
-			}
-		}
 	}
 
 	// Create or update backend config secret
@@ -176,6 +167,7 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 	if err != nil && errors.IsNotFound(err) && already_redacted {
 		glog.Errorf("Only redacted X_CSI_BACKEND_CONFIG given and secret %s not found", keyName)
 	}
+	secret_changed := false
 	if !already_redacted {
 		secret_data := map[string][]byte {
 			"X_CSI_BACKEND_CONFIG": []byte(backend_config_json),
@@ -200,6 +192,7 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 			err = r.client.Create(context.TODO(), secret)
 			if err == nil  {
 				glog.V(3).Infof("Created Secret %s", keyName)
+				secret_changed = true
 			} else {
 				glog.Errorf("Failed to create Secret %s: %s", secret.Name, err)
 			}
@@ -208,12 +201,25 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 			err = r.client.Update(context.TODO(), secret)
 			if err == nil  {
 				glog.V(3).Infof("Updated Secret %s", keyName)
+				secret_changed = true
 			} else {
 				glog.Errorf("Failed to update Secret %s: %s", secret.Name, err)
 			}
 		}
 	} else {
 		glog.V(3).Infof("Secret %s already exists", keyName)
+	}
+
+	// Redact credentials, but only if not redacted yet and the
+	// secret has been successfully created or updated before
+	if !already_redacted && secret_changed {
+		instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG = backend_config_map
+		err = r.client.Update(context.TODO(), instance)
+		if err == nil {
+			glog.Errorf("Updated EmberStorageBackend %s", instance.Name)
+		} else {
+			glog.Errorf("EmberStorageBackend instance %s update failed: %s", instance.Name, err)
+		}
 	}
 
 	// Check if the statefuleSet already exists, if not create a new one
