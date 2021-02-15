@@ -7,11 +7,10 @@ import (
 	"time"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	"github.com/golang/glog"
-	snapv1b1 "github.com/kubernetes-csi/external-snapshotter/pkg/apis/volumesnapshot/v1beta1"
+	snapv1b1 "github.com/kubernetes-csi/external-snapshotter/client/v3/apis/volumesnapshot/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
-	storagev1beta1 "k8s.io/api/storage/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,12 +49,12 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
         // Watch owned objects
-        watchOwnedObjects := []runtime.Object{
+        watchOwnedObjects := []client.Object{
 		&corev1.Secret{},
                 &appsv1.StatefulSet{},
                 &appsv1.DaemonSet{},
                 &storagev1.StorageClass{},
-                &storagev1beta1.CSIDriver{},
+                &storagev1.CSIDriver{},
         }
         // Enable objects based on CSI Spec
         if Conf.getCSISpecVersion() >= 1.0 {
@@ -97,10 +96,10 @@ type ReconcileEmberStorageBackend struct {
 
 // Reconcile reads that state of the cluster for a EmberStorageBackend object and makes changes based on the state read
 // and what is in the EmberStorageBackend.Spec
-func (r *ReconcileEmberStorageBackend) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileEmberStorageBackend) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	// Fetch the EmberStorageBackend instance
 	instance := &embercsiv1alpha1.EmberStorageBackend{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
+	err := r.client.Get(ctx, request.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -114,7 +113,7 @@ func (r *ReconcileEmberStorageBackend) Reconcile(request reconcile.Request) (rec
 	if len(instance.Spec.Config.SysFiles.Name) > 0 {
 		key := types.NamespacedName{Namespace: instance.Namespace, Name: instance.Spec.Config.SysFiles.Name}
 		secret := &corev1.Secret{}
-		err := r.client.Get(context.TODO(), key, secret)
+		err := r.client.Get(ctx, key, secret)
 		if err != nil {
 			glog.Warningf("Failed to get secret %s: %s\n", instance.Spec.Config.SysFiles.Name, err)
 		}
@@ -124,7 +123,7 @@ func (r *ReconcileEmberStorageBackend) Reconcile(request reconcile.Request) (rec
 			instance.Spec.Config.SysFiles.Key = key
 			glog.Warningf("Found more than one value in Data in secret %s\n", instance.Spec.Config.SysFiles.Name)
 		}
-		r.client.Update(context.TODO(), instance)
+		r.client.Update(ctx, instance)
 	}
 	// Manage objects created by the operator
 	return reconcile.Result{}, r.handleEmberStorageBackendDeployment(instance)
@@ -348,7 +347,7 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 	// Only valid for cluster without using a driver registrar, ie k8s >= 1.13 / ocp >= 4.
 	if len(Conf.Sidecars[Cluster].ClusterRegistrar) == 0 && len(Conf.Sidecars[Cluster].Registrar) == 0 {
 		// Check if the CSIDriver already exists, if not create a new one
-		driver := &storagev1beta1.CSIDriver{}
+		driver := &storagev1.CSIDriver{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name)}, driver)
 		if err != nil && errors.IsNotFound(err) {
 			driver = r.csiDriverForEmberStorageBackend(instance)

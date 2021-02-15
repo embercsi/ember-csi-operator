@@ -5,16 +5,16 @@ import (
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	storagev1beta1 "k8s.io/api/storage/v1beta1"
+	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // csiDriverForEmberStorageBackend returns a EmberStorageBackend CSIDriver object
-func (r *ReconcileEmberStorageBackend) csiDriverForEmberStorageBackend(ecsi *embercsiv1alpha1.EmberStorageBackend) *storagev1beta1.CSIDriver {
+func (r *ReconcileEmberStorageBackend) csiDriverForEmberStorageBackend(ecsi *embercsiv1alpha1.EmberStorageBackend) *storagev1.CSIDriver {
 	trueVar := true
 
-	driver := &storagev1beta1.CSIDriver{
+	driver := &storagev1.CSIDriver{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "storage.k8s.io/v1beta1",
 			Kind:       "CSIDriver",
@@ -22,7 +22,7 @@ func (r *ReconcileEmberStorageBackend) csiDriverForEmberStorageBackend(ecsi *emb
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      GetPluginDomainName(ecsi.Name),
 		},
-		Spec: storagev1beta1.CSIDriverSpec{
+		Spec: storagev1.CSIDriverSpec{
 			PodInfoOnMount: &trueVar,
 			AttachRequired: &trueVar,
 		},

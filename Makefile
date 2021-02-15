@@ -9,7 +9,7 @@ pkgs = $(shell go list ./... | grep -v /vendor/ )
 all: dep compile build 
 
 dep:
-	dep ensure -v
+	go mod vendor
 
 clean:
 	# Remove all files and directories ignored by git.

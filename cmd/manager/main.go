@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"os"
 	"runtime"
 
 	"github.com/embercsi/ember-csi-operator/pkg/apis"
@@ -10,21 +11,17 @@ import (
 	"github.com/embercsi/ember-csi-operator/pkg/controller/embercsi"
 	"github.com/embercsi/ember-csi-operator/version"
 	"github.com/golang/glog"
-	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
-	"github.com/operator-framework/operator-sdk/pkg/leader"
-	"github.com/operator-framework/operator-sdk/pkg/ready"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
+	"github.com/operator-framework/operator-lib/leader"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 func printVersion() {
 	glog.Infof("ember-csi-operator Version: %v", version.Version)
 	glog.Infof("Go Version: %s", runtime.Version())
 	glog.Infof("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
-	glog.Infof("operator-sdk Version: %v", sdkVersion.Version)
 }
 
 func main() {
@@ -33,9 +30,9 @@ func main() {
 	flag.Parse()
 	printVersion()
 
-	namespace, err := k8sutil.GetWatchNamespace()
-	if err != nil {
-		glog.Fatal("Failed to get watch namespace: ", err)
+	namespace, found := os.LookupEnv("WATCH_NAMESPACE")
+	if !found {
+		glog.Fatal("Failed to get watch namespace: ", found)
 	}
 
 	// Config File
@@ -49,14 +46,10 @@ func main() {
 	}
 
 	// Become the leader before proceeding
-	leader.Become(context.TODO(), "ember-csi-operator-lock")
-
-	r := ready.NewFileReady()
-	err = r.Set()
+	err = leader.Become(context.TODO(), "ember-csi-operator-lock")
 	if err != nil {
 		glog.Fatal("Error becoming leader", err)
 	}
-	defer r.Unset()
 
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
@@ -78,8 +71,14 @@ func main() {
 
 	glog.Info("Starting the Cmd.")
 
+	f, err := os.Create("/tmp/operator-sdk-ready")
+	f.Close()
+	defer os.Remove("/tmp/operator-sdk-ready")
+
 	// Start the Cmd
-	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
+	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
 		glog.Fatal("Error starting Cmd: ", err)
 	}
+
+
 }

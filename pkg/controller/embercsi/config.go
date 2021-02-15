@@ -1,6 +1,7 @@
 package embercsi
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -116,7 +117,7 @@ func getClusterVersion() string {
 		glog.Error(err)
 		return clusterVersion
 	}
-	result, err := restClient.Get().Do().Raw()
+	result, err := restClient.Get().Do(context.TODO()).Raw()
 	if err == nil {
 		// result is JSON, but there is no simple version key/val entry
 		// Thus using a regexp to just match major.minor version
