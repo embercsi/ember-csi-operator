@@ -953,6 +953,24 @@ spec:
     The operator adds support for management of multiple Ember CSI instances
     within a cluster and simplifies storage backend deployments.
 
+    ### Supported drivers
+    Ember-CSI includes a good number of storage drivers, but due to limitation on hardware availability only a small number of them have been validated at one point or another. In alphabetical order they are:
+
+    * HPE3PARFC
+    * HPE3PARISCSI
+    * KaminarioISCSI
+    * LVMVolume
+    * PowerMaxFC
+    * PowerMaxISCSI
+    * PureFC
+    * PureISCSI
+    * QnapISCSI
+    * RBD
+    * SolidFire
+    * SynoISCSI
+    * XtremIOFC
+    * XtremIOISCSI
+
     ### Getting started
     Please have a look at our quick start documentation on how to get started:
     [github.com/embercsi/ember-csi-operator#quick-start](https://github.com/embercsi/ember-csi-operator#quick-start).
