@@ -412,7 +412,7 @@ def render_option(option, driver, group_options=False):
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:{group}'
             - {opt_type}
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:spec.config.envVars.X_CSI_BACKEND_CONFIG.driver:{driver}'""".format(
+            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:{driver}'\n""".format(
                name=option.option_name(driver),  # noqa
                display_name=option.display_name,
                description='"' + option.help + '"',
