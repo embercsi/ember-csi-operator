@@ -10,17 +10,17 @@ metadata:
     certified: "false"
     support: http://readthedocs.org/projects/ember-csi/
     repository: https://github.com/embercsi/ember-csi-operator
-    createdAt: 2020-06-25:16:07:00
+    createdAt: 2021-02-22:17:47:00
     # BEGIN AUTO GENERATED EXAMPLES
 ${SAMPLE_CONFIG}
     # END AUTO GENERATED EXAMPLES
-  name: ember-csi-operator.v0.9.1
+  name: ember-csi-operator.v0.9.4
   namespace: ember-csi
 spec:
   apiservicedefinitions: {}
   maturity: beta
-  version: 0.9.1
-  replaces: ember-csi-operator.v0.9.0
+  version: 0.9.4
+  replaces: ember-csi-operator.v0.9.3
   minKubeVersion: 1.13.0
   description: |
     Ember-CSI is a multi-vendor CSI plugin driver supporting
