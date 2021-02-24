@@ -129,6 +129,29 @@ spec:
           - '*'
           verbs:
           - '*'
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - "get"
+          - "watch"
+          - "list"
+          - "delete"
+          - "update"
+          - "create"
+        - apiGroups:
+          - storage.k8s.io
+          resources:
+          - csistoragecapacities
+          verbs:
+          - "get"
+          - "list"
+          - "watch"
+          - "create"
+          - "update"
+          - "patch"
+          - "delete"
 
       clusterPermissions:
       - serviceAccountName: ember-csi-operator
@@ -173,8 +196,11 @@ spec:
           - ""
           resources:
           - nodes
+          - pods
           verbs:
-          - "*"
+          - get
+          - list
+          - watch
         - apiGroups:
           - ""
           resources:
@@ -225,6 +251,12 @@ spec:
         - apiGroups:
           - storage.k8s.io
           resources:
+          - volumeattachments/status
+          verbs:
+          - patch
+        - apiGroups:
+          - storage.k8s.io
+          resources:
           - storageclasses
           - csinodes
           - csidrivers
@@ -245,6 +277,7 @@ spec:
           - watch
           - update
           - delete
+          - patch
         - apiGroups:
           - snapshot.storage.k8s.io
           resources:
@@ -281,6 +314,12 @@ spec:
           - get
           - list
           - watch
+          - update
+        - apiGroups:
+          - snapshot.storage.k8s.io
+          resources:
+          - volumesnapshots/status
+          verbs:
           - update
         - apiGroups:
           - csi.storage.k8s.io
