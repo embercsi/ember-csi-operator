@@ -27,3 +27,27 @@ If the used Docker release supports multistage builds, you can enable this by se
 ```
 $ MULTISTAGE_BUILD=1 make build
 ```
+
+## Catalog build
+1. Create a new CSV file using the latest ember-csi container. Replace 0.9.x
+   with the next version you want to use.
+```
+$ pushd build/olm-catalog/
+$ CONSOLE_VERSION=4.6 ./olm-csv-gen.sh
+$ popd
+$ mkdir -p deploy/olm-catalog/0.9.x
+$ cp deploy/olm-catalog/0.9.4/ember-csi-operator.crd.yaml deploy/olm-catalog/0.9.x/ember-csi-operator.crd.yaml
+$ cp deploy/olm-catalog/next/ember-csi-operator.vX.Y.Z.clusterserviceversion.yaml deploy/olm-catalog/0.9.x/ember-csi-operator.v0.9.x.clusterserviceversion.yaml
+```
+
+2. Update deploy/olm-catalog/ember-csi-operator.package.yaml to your next
+   version.
+
+3. Build and push a new catalog container
+
+```
+$ podman build -f build/Dockerfile.catalog -t quay.io/embercsi/embercsi-catalog:latest deploy/olm-catalog
+$ podman push quay.io/embercsi/embercsi-catalog:latest
+```
+
+4. Deploy using ember-catalog operator
