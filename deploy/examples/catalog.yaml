@@ -1,9 +1,8 @@
-apiVersion: operators.coreos.com/v1
-kind: OperatorSource
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
 metadata:
-  name: external-operators
+  name: ember-catalog
   namespace: openshift-marketplace
 spec:
-  type: appregistry
-  endpoint: https://quay.io/cnr
-  registryNamespace: embercsi
+  sourceType: grpc
+  image: quay.io/embercsi/embercsi-catalog:latest

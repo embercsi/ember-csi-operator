@@ -10,5 +10,7 @@ else
   dest_file=./out.yaml
 fi
 
+podman pull embercsi/ember-csi:$TAG
+
 echo "Getting driver config from tag $TAG and writing result to $dest_file"
 docker run --rm embercsi/ember-csi:$TAG ember-list-drivers -d | python ./yaml-options-gen.py > $dest_file
