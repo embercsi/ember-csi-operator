@@ -11,7 +11,7 @@ ${SAMPLE_CONFIG}
     # END AUTO GENERATED EXAMPLES
     capabilities: Basic Install
     olm.operatorNamespace: default
-    containerImage: 'docker.io/embercsi/ember-csi-operator:latest'
+    containerImage: 'quay.io/embercsi/ember-csi-operator:latest'
     createdAt: 2020-06-25:16:07:00
     categories: Storage
     description: Multi-vendor CSI plugin supporting 80+ storage drivers
@@ -284,7 +284,7 @@ ${DRIVER_OPTIONS}
                             fieldPath: metadata.name
                       - name: OPERATOR_NAME
                         value: ember-csi-operator
-                    image: 'docker.io/embercsi/ember-csi-operator:latest'
+                    image: 'quay.io/embercsi/ember-csi-operator:latest'
                     imagePullPolicy: Always
                     name: ember-csi-operator
                     ports:

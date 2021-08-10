@@ -3,7 +3,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
   annotations:
-    containerImage: docker.io/embercsi/ember-csi-operator:latest
+    containerImage: quay.io/embercsi/ember-csi-operator:latest
     categories: "Storage"
     capabilities: Basic Install
     description: Multi-vendor CSI plugin supporting 80+ storage drivers
@@ -377,7 +377,7 @@ spec:
                       fieldPath: metadata.name
                 - name: OPERATOR_NAME
                   value: ember-csi-operator
-                image: docker.io/embercsi/ember-csi-operator:latest
+                image: quay.io/embercsi/ember-csi-operator:latest
                 imagePullPolicy: Always
                 name: ember-csi-operator
                 ports:

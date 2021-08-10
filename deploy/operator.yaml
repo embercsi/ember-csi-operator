@@ -17,7 +17,7 @@ spec:
       terminationGracePeriodSeconds: 120
       containers:
         - name: ember-csi-operator
-          image: docker.io/embercsi/ember-csi-operator:latest
+          image: quay.io/embercsi/ember-csi-operator:latest
           ports:
           - containerPort: 60000
             name: metrics
