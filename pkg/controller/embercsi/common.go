@@ -85,6 +85,10 @@ func generateEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, driverMode stri
 	X_CSI_EMBER_CONFIG, err := interfaceToString(ecsi.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG)
 	if err == nil {
 		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "plugin_name", GetPluginDomainName(ecsi.Name))
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "project_id", "ember-csi.io")
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "user_id", "ember-csi.io")
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "root_helper", "sudo")
+		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "request_multipath", "true")
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_EMBER_CONFIG",
 			Value: X_CSI_EMBER_CONFIG,
