@@ -255,7 +255,6 @@ func generateNodeEnvVars(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetIn
 		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "project_id", "ember-csi.io")
 		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "user_id", "ember-csi.io")
 		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "root_helper", "sudo")
-		setJsonKeyIfEmpty(&X_CSI_EMBER_CONFIG, "request_multipath", "true")
 
 		envVars = append(envVars, corev1.EnvVar{
 			Name:  "X_CSI_EMBER_CONFIG",
