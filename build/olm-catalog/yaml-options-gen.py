@@ -223,11 +223,13 @@ MISSING_DRIVER_OPTIONS = {
 
 IGNORE_OPTIONS = ['max_over_subscription_ratio',
                   'reserved_percentage',
-                  'use_multipath_for_image_xfer',
+                  'use_multipath_for_image_xfer',  # Use global option instead
+                  'enforce_multipath_for_image_xfer',  # Not avilable for now
                   'xtremio_volumes_per_glance_cache',
                   'auto_calc_max_oversubscription_ratio',
                   'replication_device',
                   'replication_connect_timeout',
+                  'enable_unsupported_driver',  # Use global option instead
                   ]
 
 CONSOLE_VERSION = os.environ.get('CONSOLE_VERSION', '').strip() or '4.0'
