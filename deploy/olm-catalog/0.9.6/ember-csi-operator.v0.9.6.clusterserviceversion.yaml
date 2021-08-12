@@ -68,7 +68,6 @@ metadata:
                   "driver__Datera__driver_ssl_cert_path": "",
                   "driver__Datera__driver_ssl_cert_verify": false,
                   "driver__Datera__driver_use_ssl": false,
-                  "driver__Datera__enable_unsupported_driver": false,
                   "driver__Datera__filter_function": "",
                   "driver__Datera__goodness_function": "",
                   "driver__Datera__iscsi_iotype": "fileio",
@@ -129,7 +128,6 @@ metadata:
                   "driver__HBSDFC__driver_ssl_cert_path": "",
                   "driver__HBSDFC__driver_ssl_cert_verify": false,
                   "driver__HBSDFC__driver_use_ssl": false,
-                  "driver__HBSDFC__enable_unsupported_driver": false,
                   "driver__HBSDFC__filter_function": "",
                   "driver__HBSDFC__goodness_function": "",
                   "driver__HBSDFC__iscsi_iotype": "fileio",
@@ -165,7 +163,6 @@ metadata:
                   "driver__HBSDISCSI__driver_ssl_cert_path": "",
                   "driver__HBSDISCSI__driver_ssl_cert_verify": false,
                   "driver__HBSDISCSI__driver_use_ssl": false,
-                  "driver__HBSDISCSI__enable_unsupported_driver": false,
                   "driver__HBSDISCSI__filter_function": "",
                   "driver__HBSDISCSI__goodness_function": "",
                   "driver__HBSDISCSI__iscsi_iotype": "fileio",
@@ -292,7 +289,6 @@ metadata:
                   "driver__InStorageMCSISCSI__instorage_san_secondary_ip": "",
                   "driver__InfiniboxVolume__chap_password": "",
                   "driver__InfiniboxVolume__chap_username": "",
-                  "driver__InfiniboxVolume__enforce_multipath_for_image_xfer": false,
                   "driver__InfiniboxVolume__infinidat_iscsi_netspaces__transform_csv": "",
                   "driver__InfiniboxVolume__infinidat_pool_name": "",
                   "driver__InfiniboxVolume__infinidat_storage_protocol": "fc",
@@ -332,7 +328,6 @@ metadata:
                   "driver__JovianISCSI__driver_ssl_cert_path": "",
                   "driver__JovianISCSI__driver_ssl_cert_verify": false,
                   "driver__JovianISCSI__driver_use_ssl": false,
-                  "driver__JovianISCSI__enable_unsupported_driver": false,
                   "driver__JovianISCSI__filter_function": "",
                   "driver__JovianISCSI__goodness_function": "",
                   "driver__JovianISCSI__iscsi_iotype": "fileio",
@@ -457,7 +452,6 @@ metadata:
                   "driver__MacroSANFC__driver_ssl_cert_path": "",
                   "driver__MacroSANFC__driver_ssl_cert_verify": false,
                   "driver__MacroSANFC__driver_use_ssl": false,
-                  "driver__MacroSANFC__enable_unsupported_driver": false,
                   "driver__MacroSANFC__filter_function": "",
                   "driver__MacroSANFC__goodness_function": "",
                   "driver__MacroSANFC__iscsi_iotype": "fileio",
@@ -493,7 +487,6 @@ metadata:
                   "driver__MacroSANISCSI__driver_ssl_cert_path": "",
                   "driver__MacroSANISCSI__driver_ssl_cert_verify": false,
                   "driver__MacroSANISCSI__driver_use_ssl": false,
-                  "driver__MacroSANISCSI__enable_unsupported_driver": false,
                   "driver__MacroSANISCSI__filter_function": "",
                   "driver__MacroSANISCSI__goodness_function": "",
                   "driver__MacroSANISCSI__iscsi_iotype": "fileio",
@@ -770,7 +763,6 @@ metadata:
                   "driver__SdsISCSI__driver_ssl_cert_path": "",
                   "driver__SdsISCSI__driver_ssl_cert_verify": false,
                   "driver__SdsISCSI__driver_use_ssl": false,
-                  "driver__SdsISCSI__enable_unsupported_driver": false,
                   "driver__SdsISCSI__filter_function": "",
                   "driver__SdsISCSI__goodness_function": "",
                   "driver__SdsISCSI__iscsi_iotype": "fileio",
@@ -937,13 +929,13 @@ metadata:
         }
       ]
     # END AUTO GENERATED EXAMPLES
-  name: ember-csi-operator.v0.9.5
+  name: ember-csi-operator.v0.9.6
   namespace: ember-csi
 spec:
   apiservicedefinitions: {}
   maturity: beta
-  version: 0.9.5
-  replaces: ember-csi-operator.v0.9.4
+  version: 0.9.6
+  replaces: ember-csi-operator.v0.9.5
   minKubeVersion: 1.13.0
   description: |
     Ember-CSI is a multi-vendor CSI plugin driver supporting
@@ -1806,14 +1798,6 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:Datera'
 
-        - description: "Set This To True When You Want To Allow An Unsupported Driver To Start.  Drivers That Haven'T Maintained A Working Ci System And Testing Are Marked As Unsupported Until Ci Is Working Again.  This Also Marks A Driver As Deprecated And May Be Removed In The Next Release."
-          displayName: Enable Unsupported Driver
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__Datera__enable_unsupported_driver
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:Datera'
-
         - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
           displayName: Driver Ssl Cert Path
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__Datera__driver_ssl_cert_path
@@ -2312,14 +2296,6 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:HBSDFC'
 
-        - description: "Set This To True When You Want To Allow An Unsupported Driver To Start.  Drivers That Haven'T Maintained A Working Ci System And Testing Are Marked As Unsupported Until Ci Is Working Again.  This Also Marks A Driver As Deprecated And May Be Removed In The Next Release."
-          displayName: Enable Unsupported Driver
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HBSDFC__enable_unsupported_driver
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:HBSDFC'
-
         - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
           displayName: Driver Ssl Cert Path
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HBSDFC__driver_ssl_cert_path
@@ -2612,14 +2588,6 @@ spec:
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:HBSDISCSI'
-
-        - description: "Set This To True When You Want To Allow An Unsupported Driver To Start.  Drivers That Haven'T Maintained A Working Ci System And Testing Are Marked As Unsupported Until Ci Is Working Again.  This Also Marks A Driver As Deprecated And May Be Removed In The Next Release."
-          displayName: Enable Unsupported Driver
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__HBSDISCSI__enable_unsupported_driver
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:HBSDISCSI'
 
         - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
@@ -3563,14 +3531,6 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:InfiniboxVolume'
 
-        - description: "If This Is Set To True, Attachment Of Volumes For Image Transfer Will Be Aborted When Multipathd Is Not Running. Otherwise, It Will Fallback To Single Path. This Parameter Needs To Be Configured For Each Backend Section Or In [Backend_Defaults] Section As A Common Configuration For All Backends."
-          displayName: Enforce Multipath For Image Xfer
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__InfiniboxVolume__enforce_multipath_for_image_xfer
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:InfiniboxVolume'
-
         - description: "Infortrend Raid Channel Id List On Slot B For Openstack Usage. It Is Separated With Comma. [ie: v1,v2]"
           displayName: Infortrend Slots B Channels Id
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__InfortrendCLIFC__infortrend_slots_b_channels_id__transform_csv
@@ -3967,14 +3927,6 @@ spec:
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:JovianISCSI'
-
-        - description: "Set This To True When You Want To Allow An Unsupported Driver To Start.  Drivers That Haven'T Maintained A Working Ci System And Testing Are Marked As Unsupported Until Ci Is Working Again.  This Also Marks A Driver As Deprecated And May Be Removed In The Next Release."
-          displayName: Enable Unsupported Driver
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__JovianISCSI__enable_unsupported_driver
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:JovianISCSI'
 
         - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
@@ -5000,14 +4952,6 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:MacroSANFC'
 
-        - description: "Set This To True When You Want To Allow An Unsupported Driver To Start.  Drivers That Haven'T Maintained A Working Ci System And Testing Are Marked As Unsupported Until Ci Is Working Again.  This Also Marks A Driver As Deprecated And May Be Removed In The Next Release."
-          displayName: Enable Unsupported Driver
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__MacroSANFC__enable_unsupported_driver
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:MacroSANFC'
-
         - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
           displayName: Driver Ssl Cert Path
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__MacroSANFC__driver_ssl_cert_path
@@ -5300,14 +5244,6 @@ spec:
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:text'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:MacroSANISCSI'
-
-        - description: "Set This To True When You Want To Allow An Unsupported Driver To Start.  Drivers That Haven'T Maintained A Working Ci System And Testing Are Marked As Unsupported Until Ci Is Working Again.  This Also Marks A Driver As Deprecated And May Be Removed In The Next Release."
-          displayName: Enable Unsupported Driver
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__MacroSANISCSI__enable_unsupported_driver
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:MacroSANISCSI'
 
         - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
@@ -7567,14 +7503,6 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:text'
             - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:SdsISCSI'
 
-        - description: "Set This To True When You Want To Allow An Unsupported Driver To Start.  Drivers That Haven'T Maintained A Working Ci System And Testing Are Marked As Unsupported Until Ci Is Working Again.  This Also Marks A Driver As Deprecated And May Be Removed In The Next Release."
-          displayName: Enable Unsupported Driver
-          path: config.envVars.X_CSI_BACKEND_CONFIG.driver__SdsISCSI__enable_unsupported_driver
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
-            - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
-            - 'urn:alm:descriptor:com.tectonic.ui:fieldDependency:config.envVars.X_CSI_BACKEND_CONFIG.driver:SdsISCSI'
-
         - description: "Can Be Used To Specify A Non Default Path To A Ca_Bundle File Or Directory With Certificates Of Trusted Cas, Which Will Be Used To Validate The Backend"
           displayName: Driver Ssl Cert Path
           path: config.envVars.X_CSI_BACKEND_CONFIG.driver__SdsISCSI__driver_ssl_cert_path
@@ -8791,7 +8719,7 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: Use multipath if driver supports it
           displayName: Multipath
-          path: config.X_CSI_BACKEND_CONFIG.multipath
+          path: config.envVars.X_CSI_BACKEND_CONFIG.multipath
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:checkbox'
