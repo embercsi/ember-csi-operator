@@ -557,7 +557,7 @@ def additional_options():
             - 'urn:alm:descriptor:com.tectonic.ui:advanced'
         - description: Use multipath if driver supports it
           displayName: Multipath
-          path: config.X_CSI_BACKEND_CONFIG.multipath
+          path: config.envVars.X_CSI_BACKEND_CONFIG.multipath
           x-descriptors:
             - 'urn:alm:descriptor:com.tectonic.ui:fieldGroup:DriverSettings'
             - 'urn:alm:descriptor:com.tectonic.ui:checkbox'"""  # noqa

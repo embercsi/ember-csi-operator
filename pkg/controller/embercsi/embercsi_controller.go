@@ -145,6 +145,15 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 	}
 	setJsonKeyIfEmpty(&backend_config_json, "name", instance.Name)
 
+	// Set multipath option correctly
+	backend_cfg, _ := instance.Spec.Config.EnvVars.X_CSI_BACKEND_CONFIG.(map[string]interface{})
+	multipath, ok := backend_cfg["multipath"]
+	if ok {
+		ember_cfg, _ := instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG.(map[string]interface{})
+		ember_cfg["request_multipath"] = multipath
+		instance.Spec.Config.EnvVars.X_CSI_EMBER_CONFIG = ember_cfg
+	}
+
 	// Redact backend config if needed
 	keyName := fmt.Sprintf("ember-csi-operator-%s", instance.Name)
 	already_redacted := false
