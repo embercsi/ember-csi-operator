@@ -145,13 +145,6 @@ func getNodeContainers(ecsi *embercsiv1alpha1.EmberStorageBackend, daemonSetInde
 			Env:          generateNodeEnvVars(ecsi, daemonSetIndex),
 			VolumeMounts: generateVolumeMounts(ecsi, "node"),
 			//LivenessProbe:		livenessProbe,
-			EnvFrom: []corev1.EnvFromSource{{
-				SecretRef: &corev1.SecretEnvSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: fmt.Sprintf("ember-csi-operator-%s", ecsi.Name),
-                                        },
-                                },
-			}},
 		},
 	}
 
