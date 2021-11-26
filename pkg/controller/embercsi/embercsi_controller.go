@@ -7,7 +7,7 @@ import (
 	"time"
 	embercsiv1alpha1 "github.com/embercsi/ember-csi-operator/pkg/apis/ember-csi/v1alpha1"
 	"github.com/golang/glog"
-	snapv1b1 "github.com/kubernetes-csi/external-snapshotter/client/v3/apis/volumesnapshot/v1beta1"
+	snapv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -58,7 +58,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
         }
         // Enable objects based on CSI Spec
         if Conf.getCSISpecVersion() >= 1.0 {
-               vsc := &snapv1b1.VolumeSnapshotClass{}
+               vsc := &snapv1.VolumeSnapshotClass{}
                c := mgr.GetClient()
                err := c.Get(context.TODO(), types.NamespacedName{}, vsc)
                if err == nil {
@@ -318,7 +318,7 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 
 	// Check if the volumeSnapshotClass already exists, if not create a new one. Only valid with CSI Spec > 1.0
 	if Conf.getCSISpecVersion() >= 1.0 && snapShotEnabled {
-		vsc := &snapv1b1.VolumeSnapshotClass{}
+		vsc := &snapv1.VolumeSnapshotClass{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name), Namespace: vsc.Namespace}, vsc)
 		if err != nil && errors.IsNotFound(err) {
 			// Define a new VolumeSnapshotClass
@@ -338,7 +338,7 @@ func (r *ReconcileEmberStorageBackend) handleEmberStorageBackendDeployment(insta
 	// Remove the VolumeSnapshotClass and Update the controller and nodes 
 	if !snapShotEnabled {
 		glog.V(3).Info("Info: Request to disable VolumeSnapshotClass")
-		vsc := &snapv1b1.VolumeSnapshotClass{}
+		vsc := &snapv1.VolumeSnapshotClass{}
 		err = r.client.Get(context.TODO(), types.NamespacedName{Name: GetPluginDomainName(instance.Name), Namespace: vsc.Namespace}, vsc)
 		if err != nil && !errors.IsNotFound(err) {
 			err = r.client.Delete(context.TODO(), vsc)

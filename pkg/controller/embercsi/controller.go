@@ -16,7 +16,7 @@ func (r *ReconcileEmberStorageBackend) csiDriverForEmberStorageBackend(ecsi *emb
 
 	driver := &storagev1.CSIDriver{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "storage.k8s.io/v1beta1",
+			APIVersion: "storage.k8s.io/v1",
 			Kind:       "CSIDriver",
 		},
 		ObjectMeta: metav1.ObjectMeta{
