@@ -66,13 +66,40 @@ sidecars:
     external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
-  # k8s ?.??
+  # k8s 1.19
   ocp-4.6:
     X_CSI_SPEC_VERSION: v1.1
-    external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
-    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v3.0.3
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
+
+  # k8s 1.20
+  ocp-4.7:
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v4.0.0
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
+
+  # k8s 1.21
+  ocp-4.8:
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.3.0
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v4.0.0
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
+
+  # k8s 1.22
+  ocp-4.9:
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.3.0
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v4.0.0
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.10:
@@ -127,34 +154,50 @@ sidecars:
 
   k8s-v1.17:
     X_CSI_SPEC_VERSION: v1.1
-    external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
-    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.18:
     X_CSI_SPEC_VERSION: v1.1
-    external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
-    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.19:
     X_CSI_SPEC_VERSION: v1.1
-    external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
-    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.3
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
   k8s-v1.20:
     X_CSI_SPEC_VERSION: v1.1
-    external-attacher: quay.io/k8scsi/csi-attacher:v2.2.0
-    external-provisioner: quay.io/k8scsi/csi-provisioner:v1.6.0
-    node-driver-registrar: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
-    external-snapshotter: quay.io/k8scsi/csi-snapshotter:v2.1.3
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: k8s.gcr.io/sig-storage/csi-snapshotter:v4.1.1
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
+
+  k8s-v1.21:
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.3.0
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: k8s.gcr.io/sig-storage/csi-snapshotter:v4.1.1
+    external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
+
+  k8s-v1.22:
+    X_CSI_SPEC_VERSION: v1.1
+    external-attacher: k8s.gcr.io/sig-storage/csi-attacher:v3.3.0
+    external-provisioner: quay.io/k8scsi/csi-provisioner:v2.1.2
+    node-driver-registrar: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.3.0
+    external-snapshotter: k8s.gcr.io/sig-storage/csi-snapshotter:v4.2.1
     external-resizer: quay.io/k8scsi/csi-resizer:v0.5.0
 
 drivers:
