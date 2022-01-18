@@ -4,6 +4,9 @@ Kubernetes and OpenShift.
 
 ## Quick Start
 ### Installing the operator
+You will need a K8s or Openshift deployment to run Ember-CSI. Currently
+supported versions are K8s >= 1.16 and OpenShift >= 4.3.
+
 #### Operatorhub installation
 You can use the operatorhub catalog to deploy the Ember CSI operator if you're
 using Openshift 4.  You'll find the Ember CSI operator in the "Storage"
