@@ -3,7 +3,7 @@ module github.com/embercsi/ember-csi-operator
 go 1.14
 
 require (
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/golang/glog v1.2.4
 	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.2.0
 	github.com/operator-framework/operator-lib v0.4.0
 	gopkg.in/yaml.v2 v2.4.0
